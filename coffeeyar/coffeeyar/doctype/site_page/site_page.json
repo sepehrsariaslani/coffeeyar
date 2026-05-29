@@ -1,0 +1,121 @@
+{
+ "actions": [],
+ "allow_rename": 0,
+ "autoname": "field:slug",
+ "creation": "2026-05-28 00:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "title",
+  "slug",
+  "page_type",
+  "hero_title",
+  "hero_subtitle",
+  "hero_image",
+  "body_html",
+  "featured_category",
+  "is_published",
+  "seo_title",
+  "seo_description"
+ ],
+ "fields": [
+  {
+   "fieldname": "title",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "عنوان صفحه",
+   "reqd": 1
+  },
+  {
+   "fieldname": "slug",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "اسلاگ",
+   "reqd": 1,
+   "unique": 1
+  },
+  {
+   "default": "Content",
+   "fieldname": "page_type",
+   "fieldtype": "Select",
+   "label": "نوع صفحه",
+   "options": "Home\nContent"
+  },
+  {
+   "fieldname": "hero_title",
+   "fieldtype": "Data",
+   "label": "عنوان هیرو"
+  },
+  {
+   "fieldname": "hero_subtitle",
+   "fieldtype": "Small Text",
+   "label": "زیرعنوان هیرو"
+  },
+  {
+   "fieldname": "hero_image",
+   "fieldtype": "Attach Image",
+   "label": "تصویر هیرو"
+  },
+  {
+   "fieldname": "body_html",
+   "fieldtype": "Text Editor",
+   "label": "محتوا"
+  },
+  {
+   "fieldname": "featured_category",
+   "fieldtype": "Link",
+   "label": "گروه محصولات منتخب",
+   "options": "Product Category"
+  },
+  {
+   "default": "1",
+   "fieldname": "is_published",
+   "fieldtype": "Check",
+   "in_list_view": 1,
+   "label": "منتشر شده"
+  },
+  {
+   "fieldname": "seo_title",
+   "fieldtype": "Data",
+   "label": "عنوان سئو"
+  },
+  {
+   "fieldname": "seo_description",
+   "fieldtype": "Small Text",
+   "label": "توضیح سئو"
+  }
+ ],
+ "links": [],
+ "modified": "2026-05-28 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Coffeeyar",
+ "name": "Site Page",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Website Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "translated_doctype": 1
+}

@@ -1,0 +1,121 @@
+{
+ "actions": [],
+ "allow_rename": 0,
+ "autoname": "field:sku",
+ "creation": "2026-05-28 00:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "product",
+  "title",
+  "sku",
+  "image",
+  "price_toman",
+  "discount_toman",
+  "stock_qty",
+  "display_order",
+  "is_published",
+  "attributes"
+ ],
+ "fields": [
+  {
+   "fieldname": "product",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "محصول",
+   "options": "Product",
+   "reqd": 1
+  },
+  {
+   "fieldname": "title",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "عنوان تنوع"
+  },
+  {
+   "fieldname": "sku",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "SKU",
+   "unique": 1
+  },
+  {
+   "fieldname": "image",
+   "fieldtype": "Attach Image",
+   "label": "تصویر"
+  },
+  {
+   "default": "0",
+   "fieldname": "price_toman",
+   "fieldtype": "Int",
+   "in_list_view": 1,
+   "label": "قیمت (تومان)"
+  },
+  {
+   "default": "0",
+   "fieldname": "discount_toman",
+   "fieldtype": "Int",
+   "label": "تخفیف (تومان)"
+  },
+  {
+   "default": "0",
+   "fieldname": "stock_qty",
+   "fieldtype": "Int",
+   "in_list_view": 1,
+   "label": "موجودی"
+  },
+  {
+   "default": "0",
+   "fieldname": "display_order",
+   "fieldtype": "Int",
+   "label": "ترتیب نمایش"
+  },
+  {
+   "default": "1",
+   "fieldname": "is_published",
+   "fieldtype": "Check",
+   "in_list_view": 1,
+   "label": "منتشر شده"
+  },
+  {
+   "fieldname": "attributes",
+   "fieldtype": "Table",
+   "label": "ویژگی‌ها",
+   "options": "Product Variant Attribute",
+   "mandatory_depends_on": "product"
+  }
+ ],
+ "links": [],
+ "modified": "2026-05-28 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Coffeeyar",
+ "name": "Product Variant",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Website Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "display_order",
+ "sort_order": "ASC",
+ "translated_doctype": 1
+}

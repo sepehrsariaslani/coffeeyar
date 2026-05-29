@@ -1,0 +1,140 @@
+{
+ "actions": [],
+ "allow_rename": 0,
+ "autoname": "field:slug",
+ "creation": "2026-05-28 00:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "title",
+  "slug",
+  "display_order",
+  "is_filterable",
+  "is_active",
+  "disabled",
+  "numeric_section",
+  "numeric_values",
+  "from_range",
+  "to_range",
+  "increment",
+  "values_section",
+  "attribute_values"
+ ],
+ "fields": [
+  {
+   "fieldname": "title",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "عنوان ویژگی",
+   "reqd": 1
+  },
+  {
+   "fieldname": "slug",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "اسلاگ",
+   "reqd": 1,
+   "unique": 1
+  },
+  {
+   "default": "0",
+   "fieldname": "display_order",
+   "fieldtype": "Int",
+   "label": "ترتیب نمایش"
+  },
+  {
+   "default": "1",
+   "fieldname": "is_filterable",
+   "fieldtype": "Check",
+   "label": "قابل فیلتر"
+  },
+  {
+   "default": "1",
+   "fieldname": "is_active",
+   "fieldtype": "Check",
+   "in_list_view": 1,
+   "label": "فعال"
+  },
+  {
+   "default": "0",
+   "fieldname": "disabled",
+   "fieldtype": "Check",
+   "label": "غیرفعال"
+  },
+  {
+   "fieldname": "numeric_section",
+   "fieldtype": "Section Break",
+   "label": "مقادیر عددی"
+  },
+  {
+   "default": "0",
+   "fieldname": "numeric_values",
+   "fieldtype": "Check",
+   "label": "مقادیر عددی"
+  },
+  {
+   "depends_on": "numeric_values",
+   "fieldname": "from_range",
+   "fieldtype": "Float",
+   "label": "از مقدار"
+  },
+  {
+   "depends_on": "numeric_values",
+   "fieldname": "to_range",
+   "fieldtype": "Float",
+   "label": "تا مقدار"
+  },
+  {
+   "depends_on": "numeric_values",
+   "fieldname": "increment",
+   "fieldtype": "Float",
+   "label": "گام افزایش"
+  },
+  {
+   "depends_on": "eval:!doc.numeric_values",
+   "fieldname": "values_section",
+   "fieldtype": "Section Break",
+   "label": "مقادیر ویژگی"
+  },
+  {
+   "depends_on": "eval:!doc.numeric_values",
+   "fieldname": "attribute_values",
+   "fieldtype": "Table",
+   "label": "مقادیر ویژگی",
+   "options": "Product Attribute Value"
+  }
+ ],
+ "links": [],
+ "modified": "2026-05-28 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Coffeeyar",
+ "name": "Product Attribute",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Website Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "display_order",
+ "sort_order": "ASC",
+ "translated_doctype": 1
+}

@@ -1,0 +1,191 @@
+{
+ "actions": [],
+ "allow_rename": 0,
+ "autoname": "field:slug",
+ "creation": "2026-05-27 00:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "item_name",
+  "slug",
+  "item_group",
+  "image",
+  "gallery_json",
+  "short_description",
+  "description",
+  "price_toman",
+  "discount_toman",
+  "stock_qty",
+  "has_variants",
+  "variants_section",
+  "variant_based_on",
+  "attributes",
+  "sku",
+  "display_order",
+  "is_featured",
+  "is_published",
+  "seo_title",
+  "seo_description"
+ ],
+ "fields": [
+  {
+   "fieldname": "item_name",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "نام محصول",
+   "reqd": 1
+  },
+  {
+   "fieldname": "slug",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "اسلاگ",
+   "reqd": 1,
+   "unique": 1
+  },
+  {
+   "fieldname": "item_group",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "گروه محصول",
+   "options": "Product Category",
+   "reqd": 1
+  },
+  {
+   "fieldname": "image",
+   "fieldtype": "Attach Image",
+   "label": "تصویر"
+  },
+  {
+   "fieldname": "gallery_json",
+   "fieldtype": "Long Text",
+   "label": "گالری JSON"
+  },
+  {
+   "fieldname": "short_description",
+   "fieldtype": "Small Text",
+   "label": "توضیح کوتاه"
+  },
+  {
+   "fieldname": "description",
+   "fieldtype": "Text Editor",
+   "label": "توضیحات"
+  },
+  {
+   "fieldname": "price_toman",
+   "fieldtype": "Int",
+   "in_list_view": 1,
+   "label": "قیمت پایه (تومان)",
+   "reqd": 1
+  },
+  {
+   "default": "0",
+   "fieldname": "discount_toman",
+   "fieldtype": "Int",
+   "label": "تخفیف پایه (تومان)"
+  },
+  {
+   "default": "0",
+   "fieldname": "stock_qty",
+   "fieldtype": "Int",
+   "in_list_view": 1,
+   "label": "موجودی پایه"
+  },
+  {
+   "default": "0",
+   "fieldname": "has_variants",
+   "fieldtype": "Check",
+   "in_list_view": 1,
+   "label": "دارای تنوع"
+  },
+  {
+   "collapsible": 1,
+   "fieldname": "variants_section",
+   "fieldtype": "Section Break",
+   "label": "تنوع‌ها"
+  },
+  {
+   "default": "Product Attribute",
+   "depends_on": "has_variants",
+   "fieldname": "variant_based_on",
+   "fieldtype": "Select",
+   "label": "تنوع بر اساس",
+   "options": "Product Attribute"
+  },
+  {
+   "depends_on": "eval:doc.has_variants && doc.variant_based_on === 'Product Attribute'",
+   "fieldname": "attributes",
+   "fieldtype": "Table",
+   "label": "ویژگی‌های تنوع",
+   "mandatory_depends_on": "eval:doc.has_variants && doc.variant_based_on === 'Product Attribute'",
+   "options": "Product Variant Attribute"
+  },
+  {
+   "fieldname": "sku",
+   "fieldtype": "Data",
+   "label": "SKU"
+  },
+  {
+   "default": "0",
+   "fieldname": "display_order",
+   "fieldtype": "Int",
+   "label": "ترتیب نمایش"
+  },
+  {
+   "default": "0",
+   "fieldname": "is_featured",
+   "fieldtype": "Check",
+   "label": "محصول ویژه"
+  },
+  {
+   "default": "1",
+   "fieldname": "is_published",
+   "fieldtype": "Check",
+   "in_list_view": 1,
+   "label": "منتشر شده"
+  },
+  {
+   "fieldname": "seo_title",
+   "fieldtype": "Data",
+   "label": "عنوان سئو"
+  },
+  {
+   "fieldname": "seo_description",
+   "fieldtype": "Small Text",
+   "label": "توضیح سئو"
+  }
+ ],
+ "links": [],
+ "modified": "2026-05-28 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Coffeeyar",
+ "name": "Product",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Website Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "display_order",
+ "sort_order": "ASC",
+ "translated_doctype": 1
+}

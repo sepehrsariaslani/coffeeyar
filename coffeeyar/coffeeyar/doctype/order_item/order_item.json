@@ -1,0 +1,74 @@
+{
+ "actions": [],
+ "autoname": "hash",
+ "creation": "2026-05-27 00:00:00.000000",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "product",
+  "variant",
+  "product_slug",
+  "product_title",
+  "variant_title",
+  "qty",
+  "unit_price_toman",
+  "row_total_toman"
+ ],
+ "fields": [
+  {
+   "fieldname": "product",
+   "fieldtype": "Link",
+   "label": "محصول",
+   "options": "Product",
+   "reqd": 1
+  },
+  {
+   "fieldname": "variant",
+   "fieldtype": "Link",
+   "label": "تنوع محصول",
+   "options": "Product Variant"
+  },
+  {
+   "fieldname": "product_slug",
+   "fieldtype": "Data",
+   "label": "اسلاگ محصول"
+  },
+  {
+   "fieldname": "product_title",
+   "fieldtype": "Data",
+   "label": "نام محصول"
+  },
+  {
+   "fieldname": "variant_title",
+   "fieldtype": "Data",
+   "label": "عنوان تنوع"
+  },
+  {
+   "fieldname": "qty",
+   "fieldtype": "Int",
+   "label": "تعداد"
+  },
+  {
+   "fieldname": "unit_price_toman",
+   "fieldtype": "Int",
+   "label": "قیمت واحد (تومان)"
+  },
+  {
+   "fieldname": "row_total_toman",
+   "fieldtype": "Int",
+   "label": "جمع ردیف (تومان)"
+  }
+ ],
+ "istable": 1,
+ "links": [],
+ "modified": "2026-05-28 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Coffeeyar",
+ "name": "Order Item",
+ "owner": "Administrator",
+ "permissions": [],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "translated_doctype": 1
+}

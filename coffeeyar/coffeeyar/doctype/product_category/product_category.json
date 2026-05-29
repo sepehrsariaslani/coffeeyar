@@ -1,0 +1,137 @@
+{
+ "actions": [],
+ "allow_import": 1,
+ "allow_rename": 1,
+ "autoname": "field:slug",
+ "creation": "2026-05-27 00:00:00.000000",
+ "default_view": "Tree",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "item_group_name",
+  "slug",
+  "parent_item_group",
+  "is_group",
+  "is_active",
+  "image",
+  "description",
+  "display_order",
+  "lft",
+  "old_parent",
+  "rgt"
+ ],
+ "fields": [
+  {
+   "fieldname": "item_group_name",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "نام گروه محصول",
+   "reqd": 1
+  },
+  {
+   "fieldname": "slug",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "اسلاگ",
+   "reqd": 1,
+   "unique": 1
+  },
+  {
+   "fieldname": "parent_item_group",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "گروه والد",
+   "options": "Product Category"
+  },
+  {
+   "default": "0",
+   "fieldname": "is_group",
+   "fieldtype": "Check",
+   "in_list_view": 1,
+   "label": "گروه والد است"
+  },
+  {
+   "default": "1",
+   "fieldname": "is_active",
+   "fieldtype": "Check",
+   "in_list_view": 1,
+   "label": "فعال"
+  },
+  {
+   "fieldname": "image",
+   "fieldtype": "Attach Image",
+   "label": "تصویر"
+  },
+  {
+   "fieldname": "description",
+   "fieldtype": "Small Text",
+   "label": "توضیحات"
+  },
+  {
+   "default": "0",
+   "fieldname": "display_order",
+   "fieldtype": "Int",
+   "label": "ترتیب نمایش"
+  },
+  {
+   "fieldname": "lft",
+   "fieldtype": "Int",
+   "hidden": 1,
+   "label": "lft",
+   "no_copy": 1,
+   "search_index": 1
+  },
+  {
+   "fieldname": "rgt",
+   "fieldtype": "Int",
+   "hidden": 1,
+   "label": "rgt",
+   "no_copy": 1,
+   "search_index": 1
+  },
+  {
+   "fieldname": "old_parent",
+   "fieldtype": "Link",
+   "hidden": 1,
+   "label": "old_parent",
+   "no_copy": 1,
+   "options": "Product Category"
+  }
+ ],
+ "is_tree": 1,
+ "links": [],
+ "modified": "2026-05-28 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Coffeeyar",
+ "name": "Product Category",
+ "nsm_parent_field": "parent_item_group",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Website Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "search_fields": "parent_item_group",
+ "sort_field": "display_order",
+ "sort_order": "ASC",
+ "translated_doctype": 1
+}

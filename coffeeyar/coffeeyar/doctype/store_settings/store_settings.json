@@ -1,0 +1,100 @@
+{
+ "actions": [],
+ "allow_rename": 0,
+ "creation": "2026-05-27 00:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "store_name",
+  "home_page",
+  "shipping_fee_toman",
+  "use_sandbox",
+  "zarinpal_merchant_id",
+  "zarinpal_request_url",
+  "zarinpal_verify_url",
+  "zarinpal_startpay_url"
+ ],
+ "fields": [
+  {
+   "default": "فروشگاه",
+   "fieldname": "store_name",
+   "fieldtype": "Data",
+   "label": "نام فروشگاه"
+  },
+  {
+   "default": "home",
+   "fieldname": "home_page",
+   "fieldtype": "Data",
+   "label": "اسلاگ صفحه اصلی"
+  },
+  {
+   "default": "120000",
+   "fieldname": "shipping_fee_toman",
+   "fieldtype": "Int",
+   "label": "هزینه ارسال (تومان)"
+  },
+  {
+   "default": "1",
+   "fieldname": "use_sandbox",
+   "fieldtype": "Check",
+   "label": "استفاده از سندباکس"
+  },
+  {
+   "fieldname": "zarinpal_merchant_id",
+   "fieldtype": "Data",
+   "label": "مرچنت آیدی زرین‌پال"
+  },
+  {
+   "default": "https://sandbox.zarinpal.com/pg/v4/payment/request.json",
+   "fieldname": "zarinpal_request_url",
+   "fieldtype": "Data",
+   "label": "آدرس درخواست زرین‌پال"
+  },
+  {
+   "default": "https://sandbox.zarinpal.com/pg/v4/payment/verify.json",
+   "fieldname": "zarinpal_verify_url",
+   "fieldtype": "Data",
+   "label": "آدرس تایید زرین‌پال"
+  },
+  {
+   "default": "https://sandbox.zarinpal.com/pg/StartPay/",
+   "fieldname": "zarinpal_startpay_url",
+   "fieldtype": "Data",
+   "label": "آدرس StartPay زرین‌پال"
+  }
+ ],
+ "issingle": 1,
+ "links": [],
+ "modified": "2026-05-28 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Coffeeyar",
+ "name": "Store Settings",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Website Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "translated_doctype": 1
+}

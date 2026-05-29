@@ -1,0 +1,173 @@
+{
+ "actions": [],
+ "allow_rename": 0,
+ "autoname": "ORD-.YYYY.-.#####",
+ "creation": "2026-05-27 00:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "customer",
+  "customer_user",
+  "address",
+  "customer_name",
+  "mobile",
+  "shipping_address",
+  "notes",
+  "order_status",
+  "payment_status",
+  "public_token",
+  "payment_authority",
+  "payment_ref_id",
+  "subtotal_toman",
+  "shipping_fee_toman",
+  "total_toman",
+  "payment_response_json",
+  "items"
+ ],
+ "fields": [
+  {
+   "fieldname": "customer",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "پروفایل مشتری",
+   "options": "Customer Profile"
+  },
+  {
+   "fieldname": "customer_user",
+   "fieldtype": "Link",
+   "label": "کاربر مشتری",
+   "options": "User"
+  },
+  {
+   "fieldname": "address",
+   "fieldtype": "Link",
+   "label": "آدرس مشتری",
+   "options": "Customer Address"
+  },
+  {
+   "fieldname": "customer_name",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "نام مشتری",
+   "reqd": 1
+  },
+  {
+   "fieldname": "mobile",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "موبایل",
+   "reqd": 1
+  },
+  {
+   "fieldname": "shipping_address",
+   "fieldtype": "Small Text",
+   "label": "آدرس ارسال",
+   "reqd": 1
+  },
+  {
+   "fieldname": "notes",
+   "fieldtype": "Small Text",
+   "label": "توضیحات"
+  },
+  {
+   "default": "Draft",
+   "fieldname": "order_status",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "وضعیت سفارش",
+   "options": "Draft\nPending Payment\nPaid\nPayment Failed\nProcessing\nShipped\nDelivered\nCancelled"
+  },
+  {
+   "default": "Pending",
+   "fieldname": "payment_status",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "وضعیت پرداخت",
+   "options": "Pending\nPaid\nFailed"
+  },
+  {
+   "fieldname": "public_token",
+   "fieldtype": "Data",
+   "hidden": 1,
+   "label": "توکن عمومی",
+   "read_only": 1
+  },
+  {
+   "fieldname": "payment_authority",
+   "fieldtype": "Data",
+   "label": "شناسه پرداخت",
+   "read_only": 1
+  },
+  {
+   "fieldname": "payment_ref_id",
+   "fieldtype": "Data",
+   "label": "کد رهگیری پرداخت",
+   "read_only": 1
+  },
+  {
+   "fieldname": "subtotal_toman",
+   "fieldtype": "Int",
+   "label": "جمع کالاها (تومان)",
+   "read_only": 1
+  },
+  {
+   "fieldname": "shipping_fee_toman",
+   "fieldtype": "Int",
+   "label": "هزینه ارسال (تومان)",
+   "read_only": 1
+  },
+  {
+   "fieldname": "total_toman",
+   "fieldtype": "Int",
+   "in_list_view": 1,
+   "label": "جمع نهایی (تومان)",
+   "read_only": 1
+  },
+  {
+   "fieldname": "payment_response_json",
+   "fieldtype": "Long Text",
+   "label": "پاسخ پرداخت JSON",
+   "read_only": 1
+  },
+  {
+   "fieldname": "items",
+   "fieldtype": "Table",
+   "label": "آیتم‌ها",
+   "options": "Order Item",
+   "reqd": 1
+  }
+ ],
+ "links": [],
+ "modified": "2026-05-28 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Coffeeyar",
+ "name": "Order",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Website Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "creation",
+ "sort_order": "DESC",
+ "translated_doctype": 1
+}
