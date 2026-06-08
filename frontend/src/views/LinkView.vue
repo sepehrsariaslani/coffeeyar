@@ -1,9 +1,21 @@
 <script setup>
-import { ref, onMounted } from "vue";
+import { ref, computed, onMounted } from "vue";
 import { useSiteSettingsStore } from "@/stores/siteSettings.js";
+import QrCode from "@/components/QrCode.vue";
 
 const settingsStore = useSiteSettingsStore();
 const copied = ref(false);
+const showQr = ref(false);
+
+/** The absolute URL of this link page — what the QR code points to. */
+const pageUrl = computed(() =>
+  typeof window !== "undefined" ? window.location.href : "/link"
+);
+
+/** Shop name, tolerant of both snake_case (API) and camelCase shapes. */
+const shopName = computed(() =>
+  settingsStore.settings.shop_name || settingsStore.settings.shopName || "فروشگاه"
+);
 
 function copyPhone() {
   const phone = settingsStore.settings.phone || "";
@@ -40,7 +52,7 @@ onMounted(() => {
       </div>
 
       <!-- Shop Name -->
-      <h1 class="link-page__title">{{ settingsStore.settings.shopName || "فروشگاه" }}</h1>
+      <h1 class="link-page__title">{{ shopName }}</h1>
       <p v-if="settingsStore.settings.description" class="link-page__desc">{{ settingsStore.settings.description }}</p>
 
       <!-- Phone -->
@@ -76,8 +88,29 @@ onMounted(() => {
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
       </a>
 
+      <!-- QR code toggle -->
+      <button type="button" class="link-page__qr-toggle" @click="showQr = true">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><line x1="14" y1="14" x2="14" y2="14"/><line x1="21" y1="14" x2="21" y2="14"/><line x1="14" y1="21" x2="14" y2="21"/><line x1="21" y1="21" x2="21" y2="21"/><line x1="17" y1="17" x2="18" y2="17"/></svg>
+        <span>نمایش بارکد QR</span>
+      </button>
+
       <!-- Footer -->
       <p class="link-page__footer">طراحی و توسعه توسط نوار</p>
+    </div>
+
+    <!-- QR Modal -->
+    <div v-if="showQr" class="qr-modal" @click.self="showQr = false">
+      <div class="qr-modal__card">
+        <button type="button" class="qr-modal__close" @click="showQr = false" aria-label="بستن">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+        <h2 class="qr-modal__title">{{ shopName }}</h2>
+        <p class="qr-modal__sub">برای ورود به این صفحه، بارکد را اسکن کنید</p>
+        <div class="qr-modal__code">
+          <QrCode :value="pageUrl" :size="220" color="#1a1a1a" />
+        </div>
+        <p class="qr-modal__hint">این بارکد را روی محصولات خود چاپ کنید</p>
+      </div>
     </div>
   </div>
 </template>
@@ -236,4 +269,71 @@ onMounted(() => {
   color: var(--muted-foreground, #aaa);
   margin-top: 0.5rem;
 }
+
+/* ── QR toggle button ── */
+.link-page__qr-toggle {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.8rem 1rem;
+  margin-top: 0.5rem;
+  border: 1px solid var(--maroon, #7A2232);
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--maroon, #7A2232) 6%, transparent);
+  color: var(--maroon, #7A2232);
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.15s;
+  font-family: inherit;
+}
+.link-page__qr-toggle:hover {
+  background: var(--maroon, #7A2232);
+  color: #fff;
+}
+
+/* ── QR modal ── */
+.qr-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
+  animation: qrFade 0.2s ease;
+}
+@keyframes qrFade { from { opacity: 0; } to { opacity: 1; } }
+.qr-modal__card {
+  position: relative;
+  width: 100%;
+  max-width: 320px;
+  background: #fff;
+  border-radius: 16px;
+  padding: 2rem 1.5rem 1.75rem;
+  text-align: center;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.35);
+  animation: qrPop 0.22s ease;
+}
+@keyframes qrPop { from { transform: scale(0.94); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+.qr-modal__close {
+  position: absolute; top: 0.85rem; left: 0.85rem;
+  background: none; border: none; cursor: pointer; color: #b0a99f; padding: 4px; display: flex;
+}
+.qr-modal__close:hover { color: #1a1a1a; }
+.qr-modal__title { font-size: 1.15rem; font-weight: 600; color: #1a1a1a; margin: 0; }
+.qr-modal__sub { font-size: 0.78rem; color: #8a8480; margin: 0.4rem 0 1.5rem; }
+.qr-modal__code {
+  display: flex; justify-content: center;
+  padding: 1rem;
+  background: #fff;
+  border: 1px solid #eee;
+  border-radius: 12px;
+  margin: 0 auto;
+  width: fit-content;
+}
+.qr-modal__hint { font-size: 0.72rem; color: #b0a99f; margin: 1.25rem 0 0; }
 </style>

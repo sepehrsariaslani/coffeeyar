@@ -23,8 +23,7 @@ async function submitLogin(e) {
   e.preventDefault();
   error.value = "";
   loading.value = true;
-  await new Promise((r) => setTimeout(r, 600));
-  const result = authStore.login(loginForm.value);
+  const result = await authStore.login(loginForm.value);
   loading.value = false;
   if (result.ok) {
     const redirect = route.query.redirect || "/account";
@@ -44,8 +43,7 @@ async function submitRegister(e) {
     return;
   }
   loading.value = true;
-  await new Promise((r) => setTimeout(r, 600));
-  const result = authStore.register(registerForm.value);
+  const result = await authStore.register(registerForm.value);
   loading.value = false;
   if (result.ok) {
     const redirect = route.query.redirect || "/account";

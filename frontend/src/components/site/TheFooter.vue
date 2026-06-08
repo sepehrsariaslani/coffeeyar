@@ -6,9 +6,30 @@ import { useSiteSettingsStore } from "@/stores/siteSettings.js";
 import { useLayoutStore } from "@/stores/layout.js";
 
 const siteSettings = useSiteSettingsStore();
-const s = siteSettings.settings;
 const layoutStore = useLayoutStore();
 const variant = computed(() => layoutStore.footerVariant);
+
+/**
+ * Normalized settings — the API returns snake_case fields
+ * (shop_name, enamad_code, …) while the template uses camelCase.
+ * This computed bridges both shapes so the footer always shows real data.
+ */
+const s = computed(() => {
+  const x = siteSettings.settings || {};
+  return {
+    ...x,
+    shopName: x.shop_name || x.shopName || "نوار",
+    description: x.description || "",
+    phone: x.phone || "",
+    email: x.email || "",
+    address: x.address || "",
+    instagram: x.instagram || "",
+    telegram: x.telegram || "",
+    enamadCode: x.enamad_code || x.enamadCode || "",
+    zarinpalEnabled: x.payment_online ?? x.zarinpalEnabled ?? false,
+    zarinpalMerchantId: x.zarinpal_merchant_id || x.zarinpalMerchantId || "",
+  };
+});
 </script>
 
 <template>

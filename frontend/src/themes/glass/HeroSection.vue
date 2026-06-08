@@ -4,6 +4,8 @@ defineProps({
   image:    { type: String, default: null },
   title:    { type: String, default: '' },
   subtitle: { type: String, default: '' },
+  eyebrow:  { type: String, default: 'مجموعه ۱۴۰۳' },
+  ctaLabel: { type: String, default: 'مشاهده محصولات' },
 });
 </script>
 
@@ -17,11 +19,11 @@ defineProps({
 
     <div class="gl-hero__content">
       <div class="gl-hero__panel">
-        <p class="gl-hero__eyebrow">مجموعه ۱۴۰۳</p>
+        <p class="gl-hero__eyebrow">{{ eyebrow }}</p>
         <h1 class="gl-hero__title">{{ title }}</h1>
         <p v-if="subtitle" class="gl-hero__subtitle">{{ subtitle }}</p>
         <RouterLink to="/products" class="gl-hero__cta">
-          مشاهده محصولات
+          {{ ctaLabel }}
           <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M12 8H4M8 4L4 8L8 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
         </RouterLink>
       </div>

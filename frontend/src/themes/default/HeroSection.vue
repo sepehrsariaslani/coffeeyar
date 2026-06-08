@@ -7,6 +7,8 @@ defineProps({
   image:    { type: String, default: null },
   title:    { type: String, default: '' },
   subtitle: { type: String, default: '' },
+  eyebrow:  { type: String, default: 'مجموعه ۱۴۰۳' },
+  ctaLabel: { type: String, default: 'مشاهده محصولات' },
 });
 
 const layoutStore = useLayoutStore();
@@ -21,11 +23,11 @@ const variant = computed(() => layoutStore.heroVariant);
       <div class="hero__overlay" />
     </div>
     <div class="hero__content" :class="{ 'hero__content--over-image': !!image }">
-      <p class="hero__eyebrow">مجموعه ۱۴۰۳</p>
+      <p class="hero__eyebrow">{{ eyebrow }}</p>
       <h1 class="hero__title">{{ title }}</h1>
       <p v-if="subtitle" class="hero__subtitle">{{ subtitle }}</p>
       <RouterLink to="/products" class="hero__cta">
-        <span>مشاهده محصولات</span>
+        <span>{{ ctaLabel }}</span>
         <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M12 8H4M8 4L4 8L8 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
       </RouterLink>
     </div>
@@ -34,11 +36,11 @@ const variant = computed(() => layoutStore.heroVariant);
   <!-- ── Variant 2: Split ───────────────────────────── -->
   <section v-else-if="variant === 2" class="hero-split" dir="rtl">
     <div class="hero-split__text">
-      <p class="hero-split__eyebrow">مجموعه ۱۴۰۳</p>
+      <p class="hero-split__eyebrow">{{ eyebrow }}</p>
       <h1 class="hero-split__title">{{ title }}</h1>
       <p v-if="subtitle" class="hero-split__sub">{{ subtitle }}</p>
       <RouterLink to="/products" class="hero-split__cta">
-        <span>مشاهده محصولات</span>
+        <span>{{ ctaLabel }}</span>
         <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M12 8H4M8 4L4 8L8 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
       </RouterLink>
     </div>
@@ -55,11 +57,11 @@ const variant = computed(() => layoutStore.heroVariant);
     </div>
     <div class="hero-diag__shade" />
     <div class="hero-diag__content">
-      <p class="hero-diag__eyebrow">مجموعه ۱۴۰۳</p>
+      <p class="hero-diag__eyebrow">{{ eyebrow }}</p>
       <h1 class="hero-diag__title">{{ title }}</h1>
       <p v-if="subtitle" class="hero-diag__sub">{{ subtitle }}</p>
       <RouterLink to="/products" class="hero-diag__cta">
-        مشاهده محصولات
+        {{ ctaLabel }}
         <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M12 8H4M8 4L4 8L8 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
       </RouterLink>
     </div>

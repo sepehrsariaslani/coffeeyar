@@ -13,6 +13,7 @@ const router = createRouter({
     { path: "/payment", component: () => import("@/views/PaymentView.vue") },
     { path: "/order-success", component: () => import("@/views/OrderSuccessView.vue") },
     { path: "/auth", component: () => import("@/views/AuthView.vue") },
+    { path: "/admin/login", component: () => import("@/views/admin/AdminLogin.vue") },
     { path: "/link", component: () => import("@/views/LinkView.vue") },
     { path: "/wishlist", component: () => import("@/views/WishlistView.vue") },
     { path: "/about", component: () => import("@/views/AboutView.vue") },
@@ -57,15 +58,17 @@ const router = createRouter({
   },
 });
 
-// Admin auth guard
+// Admin auth guard — admin areas redirect to the dedicated admin login,
+// while regular protected pages use the customer auth page.
 router.beforeEach(async (to) => {
   if (to.meta?.requiresAuth || to.meta?.requiresAdmin) {
     const authStore = useAuthStore();
+    const loginPath = to.meta?.requiresAdmin ? "/admin/login" : "/auth";
     if (!authStore.isLoggedIn) {
-      return { path: "/auth", query: { redirect: to.fullPath } };
+      return { path: loginPath, query: { redirect: to.fullPath } };
     }
     if (to.meta?.requiresAdmin && !authStore.isAdmin) {
-      return { path: "/auth", query: { redirect: to.fullPath } };
+      return { path: "/admin/login", query: { redirect: to.fullPath } };
     }
   }
 });

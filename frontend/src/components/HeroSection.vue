@@ -6,6 +6,8 @@ defineProps({
   image:    { type: String, default: null },
   title:    { type: String, default: '' },
   subtitle: { type: String, default: '' },
+  eyebrow:  { type: String, default: 'مجموعه ۱۴۰۳' },
+  ctaLabel: { type: String, default: 'مشاهده محصولات' },
 })
 
 const store = useThemeStore()

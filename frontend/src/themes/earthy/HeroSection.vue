@@ -1,6 +1,6 @@
 <script setup>
 import { RouterLink } from 'vue-router';
-defineProps({ image: { type: String, default: null }, title: { type: String, default: '' }, subtitle: { type: String, default: '' } });
+defineProps({ image: { type: String, default: null }, title: { type: String, default: '' }, subtitle: { type: String, default: '' }, eyebrow: { type: String, default: 'مجموعه ۱۴۰۳' }, ctaLabel: { type: String, default: 'مشاهده محصولات' } });
 </script>
 
 <template>
@@ -11,11 +11,11 @@ defineProps({ image: { type: String, default: null }, title: { type: String, def
     </div>
     <div v-else class="ea-hero__media ea-hero__media--empty" />
     <div class="ea-hero__content">
-      <p class="ea-hero__eyebrow">مجموعه ۱۴۰۳</p>
+      <p class="ea-hero__eyebrow">{{ eyebrow }}</p>
       <h1 class="ea-hero__title">{{ title }}</h1>
       <p v-if="subtitle" class="ea-hero__sub">{{ subtitle }}</p>
       <RouterLink to="/products" class="ea-hero__cta">
-        مشاهده محصولات
+        {{ ctaLabel }}
         <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M12 8H4M8 4L4 8L8 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
       </RouterLink>
     </div>

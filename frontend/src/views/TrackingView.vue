@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed } from "vue";
+import { ref, computed, onMounted } from "vue";
 import { Search, Package, Truck, CheckCircle2, Clock, MapPin, Phone } from "lucide-vue-next";
 import TheLayout from "@/components/site/TheLayout.vue";
 import { useAccountStore } from "@/stores/account.js";
@@ -7,6 +7,11 @@ import { toFa } from "@/lib/utils.js";
 function formatPrice(n) { return n ? Number(n).toLocaleString("fa-IR") : "۰"; }
 
 const accountStore = useAccountStore();
+
+onMounted(() => {
+  // Ensure the user's orders are loaded so tracking lookup works.
+  accountStore.init();
+});
 const query = ref("");
 const result = ref(null);
 const searched = ref(false);

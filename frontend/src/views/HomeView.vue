@@ -59,6 +59,8 @@ onMounted(async () => {
       :image="heroImg"
       :title="contentStore.content.home.heroTitle"
       :subtitle="contentStore.content.home.heroSubtitle"
+      :eyebrow="contentStore.content.home.heroTag"
+      :cta-label="contentStore.content.home.heroCtaPrimary"
     />
 
     <!-- Brands Marquee -->
@@ -95,7 +97,11 @@ onMounted(async () => {
 
     <!-- Featured grid -->
     <div v-if="featuredProducts.length" class="border-b border-border">
-      <SectionHeader title="محصولات ویژه" tag="منتخب" to="/products" />
+      <SectionHeader
+        :title="contentStore.content.home.featuredTitle || 'محصولات ویژه'"
+        :tag="contentStore.content.home.featuredTag || 'منتخب'"
+        to="/products"
+      />
       <FeaturedGrid :items="featuredProducts" />
     </div>
 

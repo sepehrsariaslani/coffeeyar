@@ -1,14 +1,18 @@
 <script setup>
-import { ref, computed } from "vue";
+import { ref, computed, onMounted } from "vue";
 import TheLayout from "@/components/site/TheLayout.vue";
 import { useSeo } from "@/composables/useSeo.js";
 import { useContentStore } from "@/stores/content.js";
+import { useSiteSettingsStore } from "@/stores/siteSettings.js";
 import { Mail, Phone, MapPin, Clock, Instagram, Send, MessageCircle, CheckCircle } from "lucide-vue-next";
 
 useSeo({ title: "تماس با ما — نوار", description: "سؤال، همکاری یا فقط یک سلام." });
 
 const contentStore = useContentStore();
+const settingsStore = useSiteSettingsStore();
 const ct = computed(() => contentStore.content.contact);
+
+onMounted(() => settingsStore.fetchSettings());
 
 const sent  = ref(false);
 const form  = ref({ name: "", email: "", subject: "", message: "" });
@@ -27,11 +31,14 @@ const contacts = computed(() => [
   { icon: Clock,   label: "ساعت کار", value: ct.value.workingHours || "شنبه–پنجشنبه، ۹–۱۸",  href: null },
 ]);
 
-const socials = [
-  { icon: Instagram, label: "اینستاگرام", href: "#" },
-  { icon: Send,      label: "تلگرام",     href: "#" },
-  { icon: MessageCircle, label: "واتساپ", href: "#" },
-];
+const socials = computed(() => {
+  const st = settingsStore.settings || {};
+  return [
+    { icon: Instagram, label: "اینستاگرام", href: st.instagram || "#" },
+    { icon: Send,      label: "تلگرام",     href: st.telegram || "#" },
+    { icon: MessageCircle, label: "واتساپ", href: st.whatsapp || (st.phone ? `https://wa.me/${st.phone.replace(/[^0-9]/g, '')}` : "#") },
+  ].filter((x) => x.href && x.href !== "#");
+});
 
 const subjects = ["سفارش", "همکاری", "نمایندگی", "بازخورد", "سایر"];
 </script>
@@ -45,7 +52,7 @@ const subjects = ["سفارش", "همکاری", "نمایندگی", "بازخو�
         <span class="text-xs uppercase tracking-[0.3em] text-maroon">{{ ct.heroTag || "ارتباط" }}</span>
         <h1 class="mt-4 text-4xl font-light md:text-6xl">{{ ct.heroTitle || "تماس با ما" }}</h1>
         <p class="mt-4 max-w-lg text-muted-foreground leading-7">
-          خوشحال می‌شویم از شما بشنویم. سؤال، همکاری، نمایندگی یا فقط یک سلام.
+          {{ ct.heroSubtitle || "خوشحال می‌شویم از شما بشنویم. سؤال، همکاری، نمایندگی یا فقط یک سلام." }}
         </p>
       </div>
     </section>
@@ -91,11 +98,11 @@ const subjects = ["سفارش", "همکاری", "نمایندگی", "بازخو�
           </div>
 
           <!-- Map placeholder -->
-          <div class="mt-10 border border-border bg-muted/30 overflow-hidden">
+          <div v-if="ct.address" class="mt-10 border border-border bg-muted/30 overflow-hidden">
             <div class="h-36 bg-gradient-to-br from-muted to-muted/50 flex items-center justify-center">
-              <div class="text-center">
+              <div class="text-center px-4">
                 <MapPin class="h-6 w-6 text-maroon mx-auto mb-2" />
-                <p class="text-xs text-muted-foreground">تهران، ولیعصر</p>
+                <p class="text-xs text-muted-foreground">{{ ct.address }}</p>
               </div>
             </div>
           </div>

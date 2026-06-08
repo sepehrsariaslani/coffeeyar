@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed } from "vue";
+import { ref, computed, onMounted } from "vue";
 import { RouterLink } from "vue-router";
 import {
   User, Package, MapPin, ChevronLeft, ChevronDown,
@@ -23,7 +23,17 @@ const wishlistStore = useWishlistStore();
 const walletStore = useWalletStore();
 const notifStore = useNotificationsStore();
 const returnsStore = useReturnsStore();
+const productsStore = useProductsStore();
 const tab = ref("orders");
+
+onMounted(async () => {
+  await Promise.all([
+    accountStore.init(),
+    productsStore.fetchProducts({ page_size: 100 }),
+  ]);
+  // Keep the profile form in sync once the real profile arrives
+  profileForm.value = { ...accountStore.profile };
+});
 
 // ── Wallet
 const chargeAmount = ref("");
@@ -75,7 +85,7 @@ const NOTIF_ICON = {
 };
 
 const wishlistedProducts = computed(() =>
-  products.filter((p) => wishlistStore.ids.includes(p.id))
+  productsStore.products.filter((p) => wishlistStore.ids.includes(p.id))
 );
 
 const displayName = computed(() => accountStore.profile.name || "مشتری گرامی");

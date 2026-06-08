@@ -4,6 +4,8 @@ defineProps({
   image:    { type: String, default: null },
   title:    { type: String, default: '' },
   subtitle: { type: String, default: '' },
+  eyebrow:  { type: String, default: 'مجموعه ۱۴۰۳' },
+  ctaLabel: { type: String, default: 'مشاهده محصولات' },
 });
 </script>
 
@@ -15,11 +17,11 @@ defineProps({
     <div class="dk-hero__shade" />
     <div class="dk-hero__glow" />
     <div class="dk-hero__content">
-      <p class="dk-hero__eyebrow">مجموعه ۱۴۰۳</p>
+      <p class="dk-hero__eyebrow">{{ eyebrow }}</p>
       <h1 class="dk-hero__title">{{ title }}</h1>
       <p v-if="subtitle" class="dk-hero__sub">{{ subtitle }}</p>
       <RouterLink to="/products" class="dk-hero__cta">
-        مشاهده محصولات
+        {{ ctaLabel }}
         <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M12 8H4M8 4L4 8L8 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
       </RouterLink>
     </div>
