@@ -1,6 +1,6 @@
 <script setup>
 import { ref } from "vue";
-import { useRouter } from "vue-router";
+import { useRouter, useRoute } from "vue-router";
 import { useAuthStore } from "@/stores/auth.js";
 import { Eye, EyeOff, Loader2, Coffee, ShieldCheck, Truck } from "lucide-vue-next";
 import TheLayout from "@/components/site/TheLayout.vue";
@@ -9,6 +9,7 @@ import { useSeo } from "@/composables/useSeo.js";
 useSeo({ title: "ورود / ثبت‌نام", description: "وارد حساب کاربری خود شوید یا ثبت‌نام کنید" });
 
 const router = useRouter();
+const route = useRoute();
 const authStore = useAuthStore();
 const tab = ref("login");
 const showPass = ref(false);
@@ -25,8 +26,10 @@ async function submitLogin(e) {
   await new Promise((r) => setTimeout(r, 600));
   const result = authStore.login(loginForm.value);
   loading.value = false;
-  if (result.ok) router.push("/account");
-  else error.value = result.error;
+  if (result.ok) {
+    const redirect = route.query.redirect || "/account";
+    router.push(redirect);
+  } else error.value = result.error;
 }
 
 async function submitRegister(e) {
@@ -44,8 +47,10 @@ async function submitRegister(e) {
   await new Promise((r) => setTimeout(r, 600));
   const result = authStore.register(registerForm.value);
   loading.value = false;
-  if (result.ok) router.push("/account");
-  else error.value = result.error;
+  if (result.ok) {
+    const redirect = route.query.redirect || "/account";
+    router.push(redirect);
+  } else error.value = result.error;
 }
 
 const perks = [

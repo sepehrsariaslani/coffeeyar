@@ -6,8 +6,24 @@
  "engine": "InnoDB",
  "field_order": [
   "store_name",
+  "description",
   "home_page",
-  "shipping_fee_toman",
+  "contact_section",
+  "phone",
+  "email",
+  "address",
+  "social_section",
+  "instagram",
+  "telegram",
+  "enamad_code",
+  "payment_section",
+  "payment_online",
+  "payment_cod",
+  "shipping_section",
+  "shipping_standard_price",
+  "shipping_standard_free_threshold",
+  "shipping_express_price",
+  "zarinpal_section",
   "use_sandbox",
   "zarinpal_merchant_id",
   "zarinpal_request_url",
@@ -22,16 +38,100 @@
    "label": "نام فروشگاه"
   },
   {
+   "fieldname": "description",
+   "fieldtype": "Small Text",
+   "label": "توضیحات فروشگاه"
+  },
+  {
    "default": "home",
    "fieldname": "home_page",
    "fieldtype": "Data",
    "label": "اسلاگ صفحه اصلی"
   },
   {
-   "default": "120000",
-   "fieldname": "shipping_fee_toman",
+   "fieldname": "contact_section",
+   "fieldtype": "Section Break",
+   "label": "اطلاعات تماس"
+  },
+  {
+   "fieldname": "phone",
+   "fieldtype": "Data",
+   "label": "تلفن تماس"
+  },
+  {
+   "fieldname": "email",
+   "fieldtype": "Data",
+   "label": "ایمیل"
+  },
+  {
+   "fieldname": "address",
+   "fieldtype": "Small Text",
+   "label": "آدرس فروشگاه"
+  },
+  {
+   "fieldname": "social_section",
+   "fieldtype": "Section Break",
+   "label": "شبکه‌های اجتماعی"
+  },
+  {
+   "fieldname": "instagram",
+   "fieldtype": "Data",
+   "label": "اینستاگرام"
+  },
+  {
+   "fieldname": "telegram",
+   "fieldtype": "Data",
+   "label": "تلگرام"
+  },
+  {
+   "fieldname": "enamad_code",
+   "fieldtype": "Data",
+   "label": "کد اینماد"
+  },
+  {
+   "fieldname": "payment_section",
+   "fieldtype": "Section Break",
+   "label": "روش‌های پرداخت"
+  },
+  {
+   "default": "1",
+   "fieldname": "payment_online",
+   "fieldtype": "Check",
+   "label": "پرداخت آنلاین"
+  },
+  {
+   "default": "1",
+   "fieldname": "payment_cod",
+   "fieldtype": "Check",
+   "label": "پرداخت در محل"
+  },
+  {
+   "fieldname": "shipping_section",
+   "fieldtype": "Section Break",
+   "label": "هزینه‌های ارسال"
+  },
+  {
+   "default": "45000",
+   "fieldname": "shipping_standard_price",
    "fieldtype": "Int",
-   "label": "هزینه ارسال (تومان)"
+   "label": "هزینه ارسال عادی (تومان)"
+  },
+  {
+   "default": "500000",
+   "fieldname": "shipping_standard_free_threshold",
+   "fieldtype": "Int",
+   "label": "آستانه رایگان ارسال عادی (تومان)"
+  },
+  {
+   "default": "90000",
+   "fieldname": "shipping_express_price",
+   "fieldtype": "Int",
+   "label": "هزینه ارسال اکسپرس (تومان)"
+  },
+  {
+   "fieldname": "zarinpal_section",
+   "fieldtype": "Section Break",
+   "label": "تنظیمات زرین‌پال"
   },
   {
    "default": "1",
@@ -65,7 +165,7 @@
  ],
  "issingle": 1,
  "links": [],
- "modified": "2026-05-28 00:00:00.000000",
+ "modified": "2026-06-08 00:00:00.000000",
  "modified_by": "Administrator",
  "module": "Coffeeyar",
  "name": "Store Settings",

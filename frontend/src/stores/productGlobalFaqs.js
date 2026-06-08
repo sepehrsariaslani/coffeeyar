@@ -1,5 +1,6 @@
 import { defineStore } from "pinia";
 import { ref } from "vue";
+import { api } from "@/lib/api";
 
 const DEFAULT_FAQS = [
   {
@@ -46,6 +47,22 @@ const DEFAULT_FAQS = [
 
 export const useProductGlobalFaqsStore = defineStore("productGlobalFaqs", () => {
   const faqs = ref([]);
+  const loaded = ref(false);
+
+  async function fetchFaqs() {
+    try {
+      const data = await api.productGlobalFaqs.get();
+      if (Array.isArray(data) && data.length > 0) {
+        faqs.value = data;
+        localStorage.setItem("productGlobalFaqs", JSON.stringify(data));
+      } else {
+        throw new Error("empty");
+      }
+    } catch {
+      load();
+    }
+    loaded.value = true;
+  }
 
   function load() {
     try {
@@ -57,8 +74,17 @@ export const useProductGlobalFaqsStore = defineStore("productGlobalFaqs", () => 
     }
   }
 
+  async function saveToServer() {
+    try {
+      await api.admin.productFaqs.update(faqs.value);
+    } catch {
+      // silent
+    }
+  }
+
   function save() {
     localStorage.setItem("productGlobalFaqs", JSON.stringify(faqs.value));
+    saveToServer();
   }
 
   function add() {
@@ -96,7 +122,7 @@ export const useProductGlobalFaqsStore = defineStore("productGlobalFaqs", () => 
       .sort((a, b) => a.order - b.order);
   }
 
-  load();
+  fetchFaqs();
 
-  return { faqs, save, add, remove, moveUp, moveDown, getFaqsForType };
+  return { faqs, loaded, save, add, remove, moveUp, moveDown, getFaqsForType };
 });

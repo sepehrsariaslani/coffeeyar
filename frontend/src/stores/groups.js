@@ -1,5 +1,6 @@
 import { defineStore } from "pinia";
 import { ref } from "vue";
+import { api } from "@/lib/api";
 
 const STORAGE_KEY = "navar_groups_v1";
 
@@ -71,19 +72,46 @@ const defaultGroups = [
   },
 ];
 
-function load() {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (raw) return JSON.parse(raw);
-  } catch {}
-  return defaultGroups;
-}
-
 export const useGroupsStore = defineStore("groups", () => {
-  const groups = ref(load());
+  const groups = ref([]);
+  const loading = ref(false);
+
+  async function fetchGroups() {
+    loading.value = true;
+    try {
+      const data = await api.admin.groups.get();
+      if (Array.isArray(data) && data.length > 0) {
+        groups.value = data;
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+      } else {
+        throw new Error("empty");
+      }
+    } catch {
+      const cached = loadGroups();
+      groups.value = cached;
+    }
+    loading.value = false;
+  }
+
+  function loadGroups() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (raw) return JSON.parse(raw);
+    } catch {}
+    return defaultGroups;
+  }
+
+  async function saveToServer() {
+    try {
+      await api.admin.groups.update(groups.value);
+    } catch {
+      // silent
+    }
+  }
 
   function save() {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(groups.value));
+    saveToServer();
   }
 
   function create(data) {
@@ -106,5 +134,7 @@ export const useGroupsStore = defineStore("groups", () => {
     }
   }
 
-  return { groups, create, update, remove };
+  fetchGroups();
+
+  return { groups, loading, create, update, remove };
 });

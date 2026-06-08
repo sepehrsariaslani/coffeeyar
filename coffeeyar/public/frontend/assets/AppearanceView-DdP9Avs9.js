@@ -1,0 +1,1 @@
+import{I as r,i as s,o as a,e as n,f as o}from"./index-DY0q-1or.js";const c={class:"min-h-screen flex items-center justify-center",dir:"rtl"},m={__name:"AppearanceView",setup(p){const t=r();return s(()=>{t.replace("/admin/appearance")}),(i,e)=>(a(),n("div",c,[...e[0]||(e[0]=[o("p",{class:"text-muted-foreground text-sm"},"در حال انتقال...",-1)])]))}};export{m as default};

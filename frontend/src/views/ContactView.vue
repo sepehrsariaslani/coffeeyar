@@ -1,10 +1,14 @@
 <script setup>
-import { ref } from "vue";
+import { ref, computed } from "vue";
 import TheLayout from "@/components/site/TheLayout.vue";
 import { useSeo } from "@/composables/useSeo.js";
+import { useContentStore } from "@/stores/content.js";
 import { Mail, Phone, MapPin, Clock, Instagram, Send, MessageCircle, CheckCircle } from "lucide-vue-next";
 
 useSeo({ title: "تماس با ما — نوار", description: "سؤال، همکاری یا فقط یک سلام." });
+
+const contentStore = useContentStore();
+const ct = computed(() => contentStore.content.contact);
 
 const sent  = ref(false);
 const form  = ref({ name: "", email: "", subject: "", message: "" });
@@ -16,12 +20,12 @@ function submit(e) {
   setTimeout(() => { loading.value = false; sent.value = true; }, 900);
 }
 
-const contacts = [
-  { icon: Mail,    label: "ایمیل",    value: "hello@navar.coffee", href: "mailto:hello@navar.coffee" },
-  { icon: Phone,   label: "تلفن",    value: "۰۲۱ ۸۸۸۸ ۸۸۸۸",      href: "tel:+982188888888" },
-  { icon: MapPin,  label: "نشانی",   value: "تهران، خیابان ولیعصر، پلاک ۱۰۰", href: "#" },
-  { icon: Clock,   label: "ساعت کار", value: "شنبه–پنجشنبه، ۹–۱۸",  href: null },
-];
+const contacts = computed(() => [
+  { icon: Mail,    label: "ایمیل",    value: ct.value.email || "hello@navar.coffee", href: `mailto:${ct.value.email || "hello@navar.coffee"}` },
+  { icon: Phone,   label: "تلفن",    value: ct.value.phone || "۰۲۱ ۸۸۸۸ ۸۸۸۸",      href: `tel:${(ct.value.phone || "").replace(/[^0-9]/g, "")}` },
+  { icon: MapPin,  label: "نشانی",   value: ct.value.address || "تهران", href: "#" },
+  { icon: Clock,   label: "ساعت کار", value: ct.value.workingHours || "شنبه–پنجشنبه، ۹–۱۸",  href: null },
+]);
 
 const socials = [
   { icon: Instagram, label: "اینستاگرام", href: "#" },
@@ -38,8 +42,8 @@ const subjects = ["سفارش", "همکاری", "نمایندگی", "بازخو�
     <!-- ── Hero ─────────────────────────────────────── -->
     <section class="border-b border-border bg-muted/20">
       <div class="mx-auto max-w-7xl px-6 py-20 md:py-28">
-        <span class="text-xs uppercase tracking-[0.3em] text-maroon">ارتباط</span>
-        <h1 class="mt-4 text-4xl font-light md:text-6xl">تماس با ما</h1>
+        <span class="text-xs uppercase tracking-[0.3em] text-maroon">{{ ct.heroTag || "ارتباط" }}</span>
+        <h1 class="mt-4 text-4xl font-light md:text-6xl">{{ ct.heroTitle || "تماس با ما" }}</h1>
         <p class="mt-4 max-w-lg text-muted-foreground leading-7">
           خوشحال می‌شویم از شما بشنویم. سؤال، همکاری، نمایندگی یا فقط یک سلام.
         </p>

@@ -17,6 +17,7 @@ def after_install():
     _ensure_default_pages()
     _ensure_default_navigation()
     _ensure_default_attributes()
+    _ensure_default_faqs()
 
 
 def _ensure_settings():
@@ -35,6 +36,16 @@ def _ensure_settings():
         settings.zarinpal_startpay_url = "https://sandbox.zarinpal.com/pg/StartPay/"
     if settings.use_sandbox is None:
         settings.use_sandbox = 1
+    if not settings.get("shipping_standard_price"):
+        settings.shipping_standard_price = 45000
+    if not settings.get("shipping_standard_free_threshold"):
+        settings.shipping_standard_free_threshold = 500000
+    if not settings.get("shipping_express_price"):
+        settings.shipping_express_price = 90000
+    if settings.get("payment_online") is None:
+        settings.payment_online = 1
+    if settings.get("payment_cod") is None:
+        settings.payment_cod = 1
     settings.save(ignore_permissions=True)
 
 
@@ -174,3 +185,18 @@ def _ensure_default_attributes():
             ).insert(ignore_permissions=True)
         if changed:
             attr_doc.save(ignore_permissions=True)
+
+
+def _ensure_default_faqs():
+    faqs = [
+        {"question": "چگونه می‌توانم سفارش خود را پیگیری کنم؟", "answer": "پس از ثبت سفارش، کد رهگیری برای شما ارسال می‌شود و می‌توانید از طریق صفحه پیگیری سفارش، وضعیت آن را مشاهده کنید.", "display_order": 10},
+        {"question": "روش‌های پرداخت چیست؟", "answer": "پرداخت آنلاین از طریق درگاه زرین‌پال و پرداخت در محل برای برخی مناطق قابل انجام است.", "display_order": 20},
+        {"question": "چقدر زمان می‌برد تا سفارش به دستم برسد؟", "answer": "ارسال عادی ۲ تا ۴ روز کاری و ارسال اکسپرس ۲۴ ساعته می‌باشد.", "display_order": 30},
+        {"question": "آیا می‌توانم سفارش خود را مرجوع کنم؟", "answer": "بله، تا ۷ روز پس از دریافت سفارش می‌توانید درخواست مرجوعی ثبت کنید.", "display_order": 40},
+    ]
+    for faq in faqs:
+        if frappe.db.exists("FAQ", {"question": faq["question"]}):
+            continue
+        faq["doctype"] = "FAQ"
+        faq["is_active"] = 1
+        frappe.get_doc(faq).insert(ignore_permissions=True)

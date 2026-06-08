@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
+import { api } from '@/lib/api'
 
 const PROFILES_KEY = 'navar_product_profiles'
 const ASSIGNMENTS_KEY = 'navar_product_assignments'
@@ -37,16 +38,44 @@ const DEFAULT_ASSIGNMENTS = {
 }
 
 export const useProductProfilesStore = defineStore('productProfiles', () => {
-  const profiles = ref(
-    JSON.parse(localStorage.getItem(PROFILES_KEY) ?? 'null') ?? DEFAULT_PROFILES
-  )
-  const assignments = ref(
-    JSON.parse(localStorage.getItem(ASSIGNMENTS_KEY) ?? 'null') ?? DEFAULT_ASSIGNMENTS
-  )
+  const profiles = ref([])
+  const assignments = ref({})
+  const loading = ref(false)
+
+  async function fetchProfiles() {
+    loading.value = true
+    try {
+      const data = await api.admin.profiles.get()
+      if (data && data.profiles && data.profiles.length > 0) {
+        profiles.value = data.profiles
+        assignments.value = data.assignments || {}
+        localStorage.setItem(PROFILES_KEY, JSON.stringify(data.profiles))
+        localStorage.setItem(ASSIGNMENTS_KEY, JSON.stringify(data.assignments || {}))
+      } else {
+        throw new Error('empty')
+      }
+    } catch {
+      profiles.value = JSON.parse(localStorage.getItem(PROFILES_KEY) ?? 'null') ?? DEFAULT_PROFILES
+      assignments.value = JSON.parse(localStorage.getItem(ASSIGNMENTS_KEY) ?? 'null') ?? DEFAULT_ASSIGNMENTS
+    }
+    loading.value = false
+  }
+
+  async function saveToServer() {
+    try {
+      await api.admin.profiles.update({
+        profiles: profiles.value,
+        assignments: assignments.value,
+      })
+    } catch {
+      // silent
+    }
+  }
 
   function _save() {
     localStorage.setItem(PROFILES_KEY, JSON.stringify(profiles.value))
     localStorage.setItem(ASSIGNMENTS_KEY, JSON.stringify(assignments.value))
+    saveToServer()
   }
 
   function getProfile(id) {
@@ -94,9 +123,12 @@ export const useProductProfilesStore = defineStore('productProfiles', () => {
     _save()
   }
 
+  fetchProfiles()
+
   return {
     profiles,
     assignments,
+    loading,
     getProfile,
     createProfile,
     updateProfile,

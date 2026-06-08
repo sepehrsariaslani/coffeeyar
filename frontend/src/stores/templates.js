@@ -1,5 +1,6 @@
 import { defineStore } from "pinia";
 import { ref } from "vue";
+import { api } from "@/lib/api";
 
 const STORAGE_KEY = "navar_templates";
 
@@ -82,19 +83,46 @@ export const defaultTemplates = [
   },
 ];
 
-function loadTemplates() {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (raw) return JSON.parse(raw);
-  } catch {}
-  return defaultTemplates;
-}
-
 export const useTemplatesStore = defineStore("templates", () => {
-  const templates = ref(loadTemplates());
+  const templates = ref([]);
+  const loading = ref(false);
+
+  async function fetchTemplates() {
+    loading.value = true;
+    try {
+      const data = await api.admin.templates.get();
+      if (Array.isArray(data) && data.length > 0) {
+        templates.value = data;
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+      } else {
+        throw new Error("empty");
+      }
+    } catch {
+      const cached = loadTemplates();
+      templates.value = cached;
+    }
+    loading.value = false;
+  }
+
+  function loadTemplates() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (raw) return JSON.parse(raw);
+    } catch {}
+    return defaultTemplates;
+  }
+
+  async function saveToServer() {
+    try {
+      await api.admin.templates.update(templates.value);
+    } catch {
+      // silent
+    }
+  }
 
   function save() {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(templates.value));
+    saveToServer();
   }
 
   function add(tpl) {
@@ -119,5 +147,7 @@ export const useTemplatesStore = defineStore("templates", () => {
     save();
   }
 
-  return { templates, add, update, remove };
+  fetchTemplates();
+
+  return { templates, loading, add, update, remove };
 });

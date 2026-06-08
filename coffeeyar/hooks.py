@@ -8,16 +8,9 @@ app_license = "mit"
 home_page = "coffee"
 
 website_route_rules = [
+    {"from_route": "/api/<path:app_path>", "to_route": "api_handler"},
+    {"from_route": "/<path:app_path>", "to_route": "coffee"},
     {"from_route": "/", "to_route": "coffee"},
-    {"from_route": "/all-products", "to_route": "coffee"},
-    {"from_route": "/category/<path:app_path>", "to_route": "coffee"},
-    {"from_route": "/about-us", "to_route": "coffee"},
-    {"from_route": "/showroom", "to_route": "coffee"},
-    {"from_route": "/blog", "to_route": "coffee"},
-    {"from_route": "/blog/<path:app_path>", "to_route": "coffee"},
-    {"from_route": "/checkout", "to_route": "coffee"},
-    {"from_route": "/payment/callback", "to_route": "coffee"},
-    {"from_route": "/product/<path:app_path>", "to_route": "coffee"},
 ]
 
 after_install = "coffeeyar.install.after_install"

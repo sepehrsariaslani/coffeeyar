@@ -118,6 +118,17 @@ export const api = {
     get: (slug) => get(`/blog/${slug}`),
   },
 
+  // Content / Policies
+  content: {
+    get: () => get("/content"),
+  },
+  policies: {
+    get: () => get("/policies"),
+  },
+  productGlobalFaqs: {
+    get: () => get("/product-global-faqs"),
+  },
+
   // Site
   site: {
     settings: () => get("/site-settings"),
@@ -186,6 +197,41 @@ export const api = {
     returns: {
       list: () => get("/admin/returns"),
       updateStatus: (id, data) => put(`/admin/returns/${id}/status`, data),
+    },
+
+    content: {
+      get: () => get("/admin/content"),
+      update: (data) => put("/admin/content", data),
+    },
+
+    policies: {
+      get: () => get("/admin/policies"),
+      update: (data) => put("/admin/policies", data),
+    },
+
+    groups: {
+      get: () => get("/admin/groups"),
+      update: (data) => put("/admin/groups", data),
+    },
+
+    templates: {
+      get: () => get("/admin/templates"),
+      update: (data) => put("/admin/templates", data),
+    },
+
+    profiles: {
+      get: () => get("/admin/profiles"),
+      update: (data) => put("/admin/profiles", data),
+    },
+
+    productFaqs: {
+      get: () => get("/admin/product-faqs"),
+      update: (data) => put("/admin/product-faqs", data),
+    },
+
+    theme: {
+      get: () => get("/admin/theme"),
+      update: (data) => put("/admin/theme", data),
     },
   },
 };

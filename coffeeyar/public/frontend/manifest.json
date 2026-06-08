@@ -1,0 +1,24 @@
+{
+  "name": "نوار — قهوه تخصصی",
+  "short_name": "نوار",
+  "description": "فروشگاه قهوه‌ی تخصصی نوار. دانه‌های تازه برشته شده از بهترین مزارع.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#7a1c1c",
+  "orientation": "portrait-primary",
+  "lang": "fa",
+  "dir": "rtl",
+  "categories": ["shopping", "food"],
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "screenshots": [],
+  "related_applications": [],
+  "prefer_related_applications": false
+}

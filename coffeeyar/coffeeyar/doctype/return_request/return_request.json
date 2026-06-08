@@ -1,0 +1,116 @@
+{
+ "actions": [],
+ "allow_rename": 0,
+ "autoname": "RET-.YYYY.-.#####",
+ "creation": "2026-06-08 00:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "order",
+  "order_ref",
+  "customer_name",
+  "mobile",
+  "reason",
+  "description",
+  "status",
+  "admin_note",
+  "total_amount_toman",
+  "items"
+ ],
+ "fields": [
+  {
+   "fieldname": "order",
+   "fieldtype": "Link",
+   "label": "سفارش",
+   "options": "Order"
+  },
+  {
+   "fieldname": "order_ref",
+   "fieldtype": "Data",
+   "label": "کد سفارش"
+  },
+  {
+   "fieldname": "customer_name",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "نام مشتری",
+   "reqd": 1
+  },
+  {
+   "fieldname": "mobile",
+   "fieldtype": "Data",
+   "label": "موبایل",
+   "reqd": 1
+  },
+  {
+   "fieldname": "reason",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "دلیل مرجوعی",
+   "options": "\nمعیوب بودن کالا\nاشتباه در سفارش\nتغییر نظر\nسایر موارد"
+  },
+  {
+   "fieldname": "description",
+   "fieldtype": "Small Text",
+   "label": "توضیحات"
+  },
+  {
+   "default": "در انتظار بررسی",
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "وضعیت",
+   "options": "در انتظار بررسی\nتایید شده\nرد شده\nانجام شده"
+  },
+  {
+   "fieldname": "admin_note",
+   "fieldtype": "Small Text",
+   "label": "یادداشت مدیریت"
+  },
+  {
+   "default": "0",
+   "fieldname": "total_amount_toman",
+   "fieldtype": "Int",
+   "label": "مبلغ کل (تومان)"
+  },
+  {
+   "fieldname": "items",
+   "fieldtype": "Table",
+   "label": "آیتم‌ها",
+   "options": "Return Request Item"
+  }
+ ],
+ "links": [],
+ "modified": "2026-06-08 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Coffeeyar",
+ "name": "Return Request",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Website Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "creation",
+ "sort_order": "DESC",
+ "translated_doctype": 1
+}

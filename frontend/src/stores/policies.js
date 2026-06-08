@@ -1,5 +1,6 @@
 import { defineStore } from "pinia";
 import { ref } from "vue";
+import { api } from "@/lib/api";
 
 const KEY = "navar-policies-v1";
 
@@ -90,23 +91,53 @@ const defaults = {
 
 export const usePoliciesStore = defineStore("policies", () => {
   const policies = ref(JSON.parse(JSON.stringify(defaults)));
+  const loaded = ref(false);
 
-  function load() {
+  async function fetchPolicies() {
     try {
-      const saved = localStorage.getItem(KEY);
+      const data = await api.policies.get();
+      if (data && typeof data === "object") {
+        Object.keys(data).forEach((k) => {
+          if (policies.value[k]) {
+            policies.value[k] = { ...policies.value[k], ...data[k] };
+          }
+        });
+        localStorage.setItem(KEY, JSON.stringify(policies.value));
+      }
+    } catch {
+      const saved = loadFromStorage();
       if (saved) {
-        const parsed = JSON.parse(saved);
-        Object.keys(parsed).forEach((k) => {
-          if (policies.value[k]) policies.value[k] = { ...policies.value[k], ...parsed[k] };
+        Object.keys(saved).forEach((k) => {
+          if (policies.value[k]) policies.value[k] = { ...policies.value[k], ...saved[k] };
         });
       }
-    } catch {}
+    }
+    loaded.value = true;
+  }
+
+  function loadFromStorage() {
+    try {
+      const saved = localStorage.getItem(KEY);
+      return saved ? JSON.parse(saved) : null;
+    } catch {
+      return null;
+    }
+  }
+
+  async function saveToServer() {
+    try {
+      await api.admin.policies.update(policies.value);
+    } catch {
+      // silent
+    }
   }
 
   function save() {
     localStorage.setItem(KEY, JSON.stringify(policies.value));
+    saveToServer();
   }
 
-  load();
-  return { policies, save };
+  fetchPolicies();
+
+  return { policies, loaded, save };
 });

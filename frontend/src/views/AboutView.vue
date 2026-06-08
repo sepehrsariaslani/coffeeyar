@@ -11,12 +11,16 @@ useSeo({ title: "درباره ما — نوار", description: "داستان ن�
 const contentStore = useContentStore();
 const ab = computed(() => contentStore.content.about);
 
-const pillars = [
-  { icon: Leaf,  n: "۰۱", title: "منشأ شفاف",   desc: "هر دانه تا مزرعه‌ی تولید قابل ردیابی است. ما مستقیماً با کشاورزان شریک می‌شویم." },
-  { icon: Flame, n: "۰۲", title: "برشته‌ی تازه", desc: "حداکثر ۴۸ ساعت قبل از ارسال برشته می‌شود تا طعم در اوج باشد." },
-  { icon: Truck, n: "۰۳", title: "ارسال سریع",   desc: "ارسال به سراسر ایران در کمتر از ۴۸ ساعت با بسته‌بندی حفاظت‌شده." },
-  { icon: Award, n: "۰۴", title: "کیفیت ضمانت",  desc: "اگر از خرید راضی نبودید، کامل بازپرداخت می‌کنیم. بدون سؤال." },
-];
+const pillars = computed(() =>
+  contentStore.content.about.values.length
+    ? contentStore.content.about.values.map((v, i) => ({
+        icon: [Leaf, Flame, Truck, Award][i % 4],
+        n: String(i + 1).padStart(2, "۰"),
+        title: v.title,
+        desc: v.description,
+      }))
+    : []
+);
 </script>
 
 <template>

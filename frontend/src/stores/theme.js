@@ -1,5 +1,6 @@
 import { defineStore } from "pinia";
 import { ref, watch } from "vue";
+import { api } from "@/lib/api";
 
 const STORAGE_KEY = "navar_theme_v1";
 
@@ -26,11 +27,9 @@ function loadTheme() {
 export function applyTheme(t) {
   const root = document.documentElement;
 
-  /* ── Manage theme class on <html> ── */
   root.classList.remove(...ALL_THEME_CLASSES);
   if (t.themeClass) root.classList.add(t.themeClass);
 
-  /* ── When a named theme is active, CSS handles colours — skip JS overrides ── */
   if (t.themeClass === "theme-glass" || t.themeClass === "theme-modern" || t.themeClass === "theme-earthy" || t.themeClass === "dark") {
     root.style.removeProperty("--maroon");
     root.style.removeProperty("--background");
@@ -47,7 +46,6 @@ export function applyTheme(t) {
     return;
   }
 
-  /* ── Custom colour sliders ── */
   const maroon = `oklch(${t.accentLightness} ${t.accentChroma} ${t.accentHue})`;
   const bg     = `oklch(${t.bgLightness} ${t.bgChroma} ${t.bgHue})`;
   const sidebar  = `oklch(${Math.min(t.bgLightness + 0.01, 1)} ${t.bgChroma} ${t.bgHue})`;
@@ -69,7 +67,6 @@ export function applyTheme(t) {
   root.style.setProperty("--input",          border);
 }
 
-/* ── Listen for live-preview postMessage from admin parent ── */
 if (typeof window !== "undefined") {
   window.addEventListener("message", (e) => {
     if (e.data && e.data.type === "navar-theme-preview") {
@@ -83,11 +80,33 @@ export const useThemeStore = defineStore("theme", () => {
 
   applyTheme(theme.value);
 
+  async function fetchTheme() {
+    try {
+      const data = await api.admin.theme.get();
+      if (data && data.theme) {
+        const merged = { ...defaults, ...data.theme };
+        theme.value = merged;
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(merged));
+      }
+    } catch {
+      // use cached
+    }
+  }
+
+  async function saveToServer() {
+    try {
+      await api.admin.theme.update({ theme: theme.value });
+    } catch {
+      // silent
+    }
+  }
+
   watch(
     theme,
     (val) => {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(val));
       applyTheme(val);
+      saveToServer();
     },
     { deep: true }
   );
@@ -99,6 +118,8 @@ export const useThemeStore = defineStore("theme", () => {
   function setThemeClass(cls) {
     theme.value.themeClass = cls;
   }
+
+  fetchTheme();
 
   return { theme, reset, defaults, setThemeClass };
 });

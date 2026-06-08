@@ -8,6 +8,7 @@
  "field_order": [
   "user",
   "full_name",
+  "email",
   "mobile",
   "default_address"
  ],
@@ -29,6 +30,12 @@
    "reqd": 1
   },
   {
+   "fieldname": "email",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "ایمیل"
+  },
+  {
    "fieldname": "mobile",
    "fieldtype": "Data",
    "in_list_view": 1,
@@ -42,7 +49,7 @@
   }
  ],
  "links": [],
- "modified": "2026-05-28 00:00:00.000000",
+ "modified": "2026-06-08 00:00:00.000000",
  "modified_by": "Administrator",
  "module": "Coffeeyar",
  "name": "Customer Profile",

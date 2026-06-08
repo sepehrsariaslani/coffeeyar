@@ -15,6 +15,7 @@
   "notes",
   "order_status",
   "payment_status",
+  "tracking_code",
   "public_token",
   "payment_authority",
   "payment_ref_id",
@@ -86,6 +87,11 @@
    "options": "Pending\nPaid\nFailed"
   },
   {
+   "fieldname": "tracking_code",
+   "fieldtype": "Data",
+   "label": "کد رهگیری پستی"
+  },
+  {
    "fieldname": "public_token",
    "fieldtype": "Data",
    "hidden": 1,
@@ -138,7 +144,7 @@
   }
  ],
  "links": [],
- "modified": "2026-05-28 00:00:00.000000",
+ "modified": "2026-06-08 00:00:00.000000",
  "modified_by": "Administrator",
  "module": "Coffeeyar",
  "name": "Order",

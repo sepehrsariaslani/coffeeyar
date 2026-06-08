@@ -11,6 +11,7 @@ import BlogCard from "@/components/BlogCard.vue";
 import { useProductsStore } from "@/stores/products.js";
 import { usePostsStore } from "@/stores/posts.js";
 import { useCategoriesStore } from "@/stores/categories.js";
+import { useContentStore } from "@/stores/content.js";
 import { useSeo } from "@/composables/useSeo.js";
 import heroImg from "@/assets/hero-coffee.jpg";
 
@@ -22,6 +23,7 @@ useSeo({
 const productsStore = useProductsStore();
 const postsStore = usePostsStore();
 const categoriesStore = useCategoriesStore();
+const contentStore = useContentStore();
 
 const activeCategory = ref("all");
 
@@ -55,8 +57,8 @@ onMounted(async () => {
     <!-- Hero -->
     <HeroSection
       :image="heroImg"
-      title="قهوه‌ای که می‌خواستی."
-      subtitle="ما دانه‌های تک‌خاستگاه را از مزارع شناخته‌شده تهیه می‌کنیم و در کارگاه کوچک خود تازه برشته می‌کنیم."
+      :title="contentStore.content.home.heroTitle"
+      :subtitle="contentStore.content.home.heroSubtitle"
     />
 
     <!-- Brands Marquee -->
@@ -142,30 +144,26 @@ onMounted(async () => {
     </section>
 
     <!-- Manifesto -->
-    <section class="border-b border-border bg-foreground text-background">
+    <section v-if="contentStore.content.about.mission" class="border-b border-border bg-foreground text-background">
       <div class="mx-auto max-w-4xl px-6 py-32 text-center">
         <p class="text-2xl font-light leading-relaxed md:text-4xl">
-          "قهوه‌ی خوب از <span class="text-maroon">صبر</span> ساخته می‌شود، نه از سرعت."
+          {{ contentStore.content.about.mission }}
         </p>
-        <div class="mt-8 text-xs uppercase tracking-[0.3em] opacity-60">فلسفه‌ی ما</div>
+        <div class="mt-8 text-xs uppercase tracking-[0.3em] opacity-60">{{ contentStore.content.about.vision }}</div>
       </div>
     </section>
 
-    <!-- Three pillars -->
-    <section>
+    <!-- Three pillars / Values -->
+    <section v-if="contentStore.content.about.values.length">
       <div class="mx-auto grid max-w-7xl gap-px bg-border md:grid-cols-3">
         <div
-          v-for="x in [
-            { n: '۰۱', t: 'منشأ شفاف', d: 'هر دانه تا مزرعه‌ی تولید قابل ردیابی است.' },
-            { n: '۰۲', t: 'برشته‌ی تازه', d: 'حداکثر ۴۸ ساعت قبل از ارسال برشته می‌شود.' },
-            { n: '۰۳', t: 'ارسال سریع', d: 'ارسال به سراسر ایران در کمتر از ۴۸ ساعت.' },
-          ]"
-          :key="x.n"
+          v-for="(x, xi) in contentStore.content.about.values"
+          :key="xi"
           class="bg-background p-12"
         >
-          <div class="text-xs text-maroon">{{ x.n }}</div>
-          <h3 class="mt-4 text-xl font-medium">{{ x.t }}</h3>
-          <p class="mt-3 text-sm leading-7 text-muted-foreground">{{ x.d }}</p>
+          <div class="text-xs text-maroon">{{ String(xi + 1).padStart(2, '۰') }}</div>
+          <h3 class="mt-4 text-xl font-medium">{{ x.title }}</h3>
+          <p class="mt-3 text-sm leading-7 text-muted-foreground">{{ x.description }}</p>
         </div>
       </div>
     </section>

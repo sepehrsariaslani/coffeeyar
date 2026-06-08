@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory } from "vue-router";
 import { useLayoutStore, applyDesignTheme } from "@/stores/layout.js";
+import { useAuthStore } from "@/stores/auth.js";
 
 const router = createRouter({
   history: createWebHistory(),
@@ -12,6 +13,7 @@ const router = createRouter({
     { path: "/payment", component: () => import("@/views/PaymentView.vue") },
     { path: "/order-success", component: () => import("@/views/OrderSuccessView.vue") },
     { path: "/auth", component: () => import("@/views/AuthView.vue") },
+    { path: "/link", component: () => import("@/views/LinkView.vue") },
     { path: "/wishlist", component: () => import("@/views/WishlistView.vue") },
     { path: "/about", component: () => import("@/views/AboutView.vue") },
     { path: "/contact", component: () => import("@/views/ContactView.vue") },
@@ -25,6 +27,7 @@ const router = createRouter({
     {
       path: "/admin",
       component: () => import("@/views/admin/AdminLayout.vue"),
+      meta: { requiresAuth: true, requiresAdmin: true },
       children: [
         { path: "", component: () => import("@/views/admin/AdminDashboard.vue") },
         { path: "products", component: () => import("@/views/admin/AdminProducts.vue") },
@@ -52,6 +55,19 @@ const router = createRouter({
   scrollBehavior() {
     return { top: 0 };
   },
+});
+
+// Admin auth guard
+router.beforeEach(async (to) => {
+  if (to.meta?.requiresAuth || to.meta?.requiresAdmin) {
+    const authStore = useAuthStore();
+    if (!authStore.isLoggedIn) {
+      return { path: "/auth", query: { redirect: to.fullPath } };
+    }
+    if (to.meta?.requiresAdmin && !authStore.isAdmin) {
+      return { path: "/auth", query: { redirect: to.fullPath } };
+    }
+  }
 });
 
 // Apply per-page design theme on navigation

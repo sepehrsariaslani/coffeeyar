@@ -1,5 +1,6 @@
 import { defineStore } from "pinia";
 import { ref, watch } from "vue";
+import { api } from "@/lib/api";
 
 const STORAGE_KEY = "navar_content_v1";
 
@@ -97,44 +98,73 @@ function defaultContent() {
   };
 }
 
-export const useContentStore = defineStore("content", () => {
-  const saved = (() => {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      return raw ? JSON.parse(raw) : null;
-    } catch {
-      return null;
+function deepMerge(target, source) {
+  const out = { ...target };
+  for (const key of Object.keys(source)) {
+    if (
+      source[key] &&
+      typeof source[key] === "object" &&
+      !Array.isArray(source[key]) &&
+      target[key] &&
+      typeof target[key] === "object" &&
+      !Array.isArray(target[key])
+    ) {
+      out[key] = deepMerge(target[key], source[key]);
+    } else {
+      out[key] = source[key];
     }
-  })();
-
-  function deepMerge(target, source) {
-    const out = { ...target };
-    for (const key of Object.keys(source)) {
-      if (
-        source[key] &&
-        typeof source[key] === "object" &&
-        !Array.isArray(source[key]) &&
-        target[key] &&
-        typeof target[key] === "object" &&
-        !Array.isArray(target[key])
-      ) {
-        out[key] = deepMerge(target[key], source[key]);
-      } else {
-        out[key] = source[key];
-      }
-    }
-    return out;
   }
+  return out;
+}
 
+function loadFromStorage() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
+}
+
+export const useContentStore = defineStore("content", () => {
   const defaults = defaultContent();
+  const saved = loadFromStorage();
   const initial = saved ? deepMerge(defaults, saved) : defaults;
 
   const content = ref(initial);
+  const loading = ref(false);
+
+  async function fetchContent() {
+    loading.value = true;
+    try {
+      const data = await api.content.get();
+      const merged = deepMerge(defaultContent(), data);
+      content.value = merged;
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(merged));
+    } catch {
+      const cached = loadFromStorage();
+      if (cached) content.value = deepMerge(defaults, cached);
+    }
+    loading.value = false;
+  }
+
+  async function saveToServer() {
+    try {
+      await api.admin.content.update({
+        home: content.value.home,
+        about: content.value.about,
+        contact: content.value.contact,
+      });
+    } catch {
+      // silent
+    }
+  }
 
   watch(
     content,
     (val) => {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(val));
+      saveToServer();
     },
     { deep: true }
   );
@@ -154,7 +184,10 @@ export const useContentStore = defineStore("content", () => {
 
   function save() {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(content.value));
+    saveToServer();
   }
 
-  return { content, update, save, reset };
+  fetchContent();
+
+  return { content, loading, update, save, reset };
 });

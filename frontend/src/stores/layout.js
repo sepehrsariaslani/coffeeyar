@@ -1,5 +1,6 @@
 import { defineStore } from "pinia";
 import { ref, watch } from "vue";
+import { api } from "@/lib/api";
 
 export const DESIGN_THEMES = {
   minimal: {
@@ -52,7 +53,6 @@ export const DESIGN_THEMES = {
   },
 };
 
-// Backward-compat alias
 export const THEMES = DESIGN_THEMES;
 
 export const HEADER_VARIANTS = [
@@ -159,13 +159,57 @@ export const useLayoutStore = defineStore("layout", () => {
   applyButtonStyle(buttonStyle.value);
   applyAccentColor(accentColor.value);
 
-  function save() {
+  async function fetchLayout() {
+    try {
+      const data = await api.admin.theme.get();
+      if (data && data.layout) {
+        const l = data.layout;
+        if (l.themeName) themeName.value = l.themeName;
+        if (l.headerVariant) headerVariant.value = l.headerVariant;
+        if (l.footerVariant) footerVariant.value = l.footerVariant;
+        if (l.heroVariant) heroVariant.value = l.heroVariant;
+        if (l.cardVariant) cardVariant.value = l.cardVariant;
+        if (l.buttonStyle) buttonStyle.value = l.buttonStyle;
+        if (l.accentColor) accentColor.value = l.accentColor;
+        if (l.pageDesigns) pageDesigns.value = l.pageDesigns;
+        saveToStorage();
+      }
+    } catch {
+      // use cached
+    }
+  }
+
+  function saveToStorage() {
     localStorage.setItem("navar_layout_v3", JSON.stringify({
       themeName: themeName.value, headerVariant: headerVariant.value,
       footerVariant: footerVariant.value, heroVariant: heroVariant.value,
       cardVariant: cardVariant.value, buttonStyle: buttonStyle.value,
       accentColor: accentColor.value, pageDesigns: pageDesigns.value,
     }));
+  }
+
+  async function saveToServer() {
+    try {
+      await api.admin.theme.update({
+        layout: {
+          themeName: themeName.value,
+          headerVariant: headerVariant.value,
+          footerVariant: footerVariant.value,
+          heroVariant: heroVariant.value,
+          cardVariant: cardVariant.value,
+          buttonStyle: buttonStyle.value,
+          accentColor: accentColor.value,
+          pageDesigns: pageDesigns.value,
+        },
+      });
+    } catch {
+      // silent
+    }
+  }
+
+  function save() {
+    saveToStorage();
+    saveToServer();
   }
 
   function setPageDesign(path, theme) {
@@ -181,6 +225,8 @@ export const useLayoutStore = defineStore("layout", () => {
   watch(buttonStyle, (n) => { applyButtonStyle(n);  save(); });
   watch(accentColor, (n) => { applyAccentColor(n);  save(); });
   watch([headerVariant, footerVariant, heroVariant, cardVariant], save);
+
+  fetchLayout();
 
   return {
     themeName, headerVariant, footerVariant, heroVariant,
