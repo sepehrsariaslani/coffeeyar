@@ -16,11 +16,8 @@
           <path d="M8 32L16 24L22 30L30 22L40 32" stroke="#C8C2BA" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
         </svg>
       </div>
-
       <div v-if="image && !loaded" class="gallery__shimmer" />
     </div>
-
-    <!-- badge -->
     <div v-if="badge" class="gallery__badge">{{ badge }}</div>
   </div>
 </template>

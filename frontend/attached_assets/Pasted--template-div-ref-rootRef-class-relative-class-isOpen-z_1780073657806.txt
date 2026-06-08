@@ -1,0 +1,478 @@
+<template>
+  <div ref="rootRef" class="relative" :class="isOpen ? 'z-[1200]' : ''">
+    <button
+      type="button"
+      class="w-full text-right flex items-center justify-between gap-2"
+      :class="[triggerClass, disabled ? 'opacity-60 cursor-not-allowed' : 'hover:border-gray-300 dark:hover:border-gray-600']"
+      :disabled="disabled"
+      @click="toggleOpen"
+    >
+      <span class="truncate flex-1" :class="selectedLabel ? 'text-gray-800 dark:text-gray-100' : 'text-gray-400 dark:text-gray-500'">
+        {{ selectedLabel || placeholder }}
+      </span>
+      <div class="flex items-center gap-1">
+        <button
+          v-if="showClearButton"
+          type="button"
+          class="w-5 h-5 rounded text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-700"
+          @click.stop="clearSelection"
+        >
+          ×
+        </button>
+        <span class="text-gray-400 text-xs">{{ isOpen ? "▲" : "▼" }}</span>
+      </div>
+    </button>
+
+    <Teleport to="body">
+      <div
+        v-if="isOpen"
+        ref="panelRef"
+        class="fixed z-[2000] rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-lg overflow-hidden"
+        :style="panelStyle"
+      >
+        <div class="p-2 border-b border-gray-100 dark:border-gray-700">
+          <div class="relative">
+            <input
+              ref="searchInputRef"
+              v-model="searchQuery"
+              type="text"
+              class="w-full rounded-md border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white px-3 py-2 pl-9 text-sm"
+              :placeholder="__('جستجو...')"
+              @keydown.esc.prevent="close"
+              @input="onInputChange"
+            />
+            <button
+              v-if="searchQuery"
+              type="button"
+              class="absolute left-1 top-1/2 -translate-y-1/2 w-7 h-7 rounded text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-700"
+              :title="__('پاک کردن جستجو')"
+              @click="clearSearch"
+            >
+              ×
+            </button>
+          </div>
+        </div>
+
+        <div class="max-h-56 overflow-auto py-1">
+          <div v-if="loading" class="px-3 py-2 text-xs text-gray-500 dark:text-gray-400 flex items-center gap-2">
+            <span class="w-3.5 h-3.5 border-2 border-amber-500 border-t-transparent rounded-full animate-spin"></span>
+            {{ __('در حال بارگذاری...') }}
+          </div>
+          <button
+            v-for="(option, idx) in displayOptions"
+            :key="getOptionKey(option, idx)"
+            type="button"
+            class="w-full text-right px-3 py-2 text-sm text-gray-800 dark:text-gray-100 hover:bg-amber-50 dark:hover:bg-amber-900/20 flex items-center justify-between"
+            @click="selectOption(option)"
+          >
+            <slot name="option" :option="option">
+              <span class="truncate text-gray-800 dark:text-gray-100">{{ getOptionLabel(option) }}</span>
+            </slot>
+            <span v-if="isSelected(getOptionValue(option))" class="text-amber-600 flex-shrink-0 mr-2">✓</span>
+          </button>
+          <div v-if="!loading && !displayOptions.length" class="px-3 py-2 text-xs text-gray-500 dark:text-gray-400">
+            {{ __("نتیجه‌ای پیدا نشد") }}
+          </div>
+        </div>
+      </div>
+    </Teleport>
+  </div>
+</template>
+
+<script setup>
+import { computed, inject, nextTick, onBeforeUnmount, onMounted, ref, watch } from "vue"
+
+const props = defineProps({
+  modelValue: {
+    type: [String, Number, Object],
+    default: "",
+  },
+  options: {
+    type: Array,
+    default: () => [],
+  },
+  searchFn: {
+    type: Function,
+    default: null,
+  },
+  placeholder: {
+    type: String,
+    default: "",
+  },
+  labelKey: {
+    type: String,
+    default: "label",
+  },
+  valueKey: {
+    type: String,
+    default: "value",
+  },
+  labelField: {
+    type: String,
+    default: "label",
+  },
+  valueField: {
+    type: String,
+    default: "value",
+  },
+  subtitleField: {
+    type: String,
+    default: "subtitle",
+  },
+  inputClass: {
+    type: String,
+    default: "",
+  },
+  minChars: {
+    type: Number,
+    default: 0,
+  },
+  debounce: {
+    type: Number,
+    default: 250,
+  },
+  clearable: {
+    type: Boolean,
+    default: true,
+  },
+  returnObject: {
+    type: Boolean,
+    default: false,
+  },
+  disabled: {
+    type: Boolean,
+    default: false,
+  },
+  includeEmptyOption: {
+    type: Boolean,
+    default: false,
+  },
+  emptyLabel: {
+    type: String,
+    default: "",
+  },
+  multiple: {
+    type: Boolean,
+    default: false,
+  },
+})
+
+const emit = defineEmits(["update:modelValue", "select", "search"])
+const __ = inject("$translate", (text) => text)
+
+const rootRef = ref(null)
+const panelRef = ref(null)
+const searchInputRef = ref(null)
+const isOpen = ref(false)
+const searchQuery = ref("")
+const loading = ref(false)
+const asyncOptions = ref([])
+const panelStyle = ref({})
+let debounceTimer = null
+
+const resolvedLabelKey = computed(() => props.labelField || props.labelKey || "label")
+const resolvedValueKey = computed(() => props.valueField || props.valueKey || "value")
+const triggerClass = computed(() => {
+  if (props.inputClass) return props.inputClass
+  return "rounded-md border border-gray-200 px-3 py-2 text-sm bg-white dark:bg-gray-800 dark:border-gray-700 dark:text-white"
+})
+
+const normalizedLocalOptions = computed(() => {
+  const mapped = (props.options || []).map((option) => normalizeOption(option))
+  if (props.includeEmptyOption) {
+    mapped.unshift({ label: props.emptyLabel || "", value: "", raw: { label: props.emptyLabel || "", value: "" } })
+  }
+  return mapped
+})
+
+const normalizedAsyncOptions = computed(() => (asyncOptions.value || []).map((option) => normalizeOption(option)))
+
+const displayOptions = computed(() => {
+  const source = props.searchFn ? normalizedAsyncOptions.value : normalizedLocalOptions.value
+  if (props.searchFn) return source
+
+  const query = searchQuery.value.trim().toLowerCase()
+  if (!query) return source
+  return source.filter((option) =>
+    String(option.label || "").toLowerCase().includes(query) ||
+    String(option.value || "").toLowerCase().includes(query)
+  )
+})
+
+const selectedLabel = computed(() => {
+  const modelValue = props.modelValue
+  if (props.multiple) {
+    const selected = Array.isArray(modelValue) ? modelValue : []
+    if (!selected.length) return ""
+    if (selected.length === 1) {
+      return resolveSelectedLabel(selected[0])
+    }
+    return `${selected.length} مورد انتخاب شده`
+  }
+
+  if (modelValue === null || modelValue === undefined || modelValue === "") return ""
+
+  if (typeof modelValue === "object") {
+    return String(
+      modelValue[resolvedLabelKey.value] ||
+      modelValue.label ||
+      modelValue[resolvedValueKey.value] ||
+      modelValue.value ||
+      ""
+    )
+  }
+
+  const allOptions = props.searchFn
+    ? normalizedAsyncOptions.value
+    : normalizedLocalOptions.value
+  const match = allOptions.find((option) => String(option.value ?? "") === String(modelValue ?? ""))
+  return match ? match.label : String(modelValue)
+})
+
+const hasValue = computed(() => {
+  if (props.multiple) return Array.isArray(props.modelValue) && props.modelValue.length > 0
+  return props.modelValue !== null && props.modelValue !== undefined && props.modelValue !== ""
+})
+
+const showClearButton = computed(() => props.clearable && !props.disabled && hasValue.value)
+
+function normalizeOption(option) {
+  if (option && typeof option === "object") {
+    const label = option[resolvedLabelKey.value] ?? option.label ?? option[resolvedValueKey.value] ?? option.value ?? ""
+    const value = option[resolvedValueKey.value] ?? option.value ?? option[resolvedLabelKey.value] ?? option.label ?? ""
+    return {
+      ...option,
+      label: String(label || value || ""),
+      value,
+      raw: option,
+    }
+  }
+
+  return {
+    label: String(option ?? ""),
+    value: option,
+    raw: option,
+  }
+}
+
+function getOptionLabel(option) {
+  return option?.label || ""
+}
+
+function getOptionValue(option) {
+  return option?.value
+}
+
+function getOptionKey(option, idx) {
+  const value = option?.value
+  const label = option?.label
+  if (value !== undefined && value !== null && value !== "") return `v:${String(value)}`
+  if (label) return `l:${String(label)}`
+  return `i:${idx}`
+}
+
+function isSelected(value) {
+  if (props.multiple) {
+    const selected = Array.isArray(props.modelValue) ? props.modelValue : []
+    if (props.returnObject) {
+      return selected.some((entry) => {
+        const selectedValue = entry?.[resolvedValueKey.value] ?? entry?.value
+        return String(selectedValue ?? "") === String(value ?? "")
+      })
+    }
+    return selected.some((entry) => String(entry ?? "") === String(value ?? ""))
+  }
+
+  if (props.returnObject && props.modelValue && typeof props.modelValue === "object") {
+    const selectedValue = props.modelValue[resolvedValueKey.value] ?? props.modelValue.value
+    return String(selectedValue ?? "") === String(value ?? "")
+  }
+  return String(props.modelValue ?? "") === String(value ?? "")
+}
+
+function clearSelection() {
+  if (props.multiple) {
+    emit("update:modelValue", [])
+    emit("select", [])
+    return
+  }
+  emit("update:modelValue", props.returnObject ? null : "")
+  emit("select", null)
+}
+
+function clearSearch() {
+  searchQuery.value = ""
+  if (props.searchFn) {
+    triggerAsyncSearch(true)
+  }
+}
+
+function selectOption(option) {
+  if (props.multiple) {
+    const selected = Array.isArray(props.modelValue) ? [...props.modelValue] : []
+    const selectedIndex = selected.findIndex((entry) => {
+      if (props.returnObject) {
+        const selectedValue = entry?.[resolvedValueKey.value] ?? entry?.value
+        return String(selectedValue ?? "") === String(option.value ?? "")
+      }
+      return String(entry ?? "") === String(option.value ?? "")
+    })
+
+    if (selectedIndex >= 0) {
+      selected.splice(selectedIndex, 1)
+    } else {
+      selected.push(props.returnObject ? option.raw : option.value)
+    }
+
+    emit("update:modelValue", selected)
+    emit("select", option.raw ?? option)
+    return
+  }
+
+  const output = props.returnObject ? option.raw : option.value
+  emit("update:modelValue", output ?? (props.returnObject ? null : ""))
+  emit("select", option.raw ?? option)
+  close()
+}
+
+function resolveSelectedLabel(selectedValue) {
+  if (selectedValue === null || selectedValue === undefined || selectedValue === "") return ""
+  if (typeof selectedValue === "object") {
+    return String(
+      selectedValue[resolvedLabelKey.value] ||
+      selectedValue.label ||
+      selectedValue[resolvedValueKey.value] ||
+      selectedValue.value ||
+      ""
+    )
+  }
+
+  const allOptions = props.searchFn
+    ? normalizedAsyncOptions.value
+    : normalizedLocalOptions.value
+  const match = allOptions.find((option) => String(option.value ?? "") === String(selectedValue ?? ""))
+  return match ? match.label : String(selectedValue)
+}
+
+async function toggleOpen() {
+  if (props.disabled) return
+  isOpen.value = !isOpen.value
+
+  if (isOpen.value) {
+    await nextTick()
+    searchInputRef.value?.focus()
+    if (props.searchFn) {
+      triggerAsyncSearch(true)
+    }
+  } else {
+    searchQuery.value = ""
+  }
+}
+
+function close() {
+  isOpen.value = false
+  searchQuery.value = ""
+}
+
+function onDocumentClick(event) {
+  if (!isOpen.value) return
+  const clickedInsideRoot = rootRef.value?.contains(event.target)
+  const clickedInsidePanel = panelRef.value?.contains(event.target)
+  if (!clickedInsideRoot && !clickedInsidePanel) {
+    close()
+  }
+}
+
+function updatePanelPosition() {
+  const rootRect = rootRef.value?.getBoundingClientRect()
+  if (!rootRect) return
+
+  const spacing = 6
+  const viewportHeight = window.innerHeight || 0
+  const viewportWidth = window.innerWidth || 0
+  const panelHeight = panelRef.value?.offsetHeight || 280
+  const spaceBelow = viewportHeight - rootRect.bottom
+  const openUpwards = spaceBelow < panelHeight && rootRect.top > spaceBelow
+
+  const rawTop = openUpwards
+    ? rootRect.top - spacing - panelHeight
+    : rootRect.bottom + spacing
+  const top = Math.max(8, Math.min(rawTop, viewportHeight - panelHeight - 8))
+
+  const width = Math.max(180, Math.min(rootRect.width, viewportWidth - 16))
+  const left = Math.max(8, Math.min(rootRect.left, viewportWidth - width - 8))
+
+  panelStyle.value = {
+    left: `${left}px`,
+    top: `${top}px`,
+    width: `${width}px`,
+  }
+}
+
+function onInputChange() {
+  emit("search", searchQuery.value || "")
+  if (props.searchFn) {
+    triggerAsyncSearch(false)
+  }
+}
+
+function triggerAsyncSearch(immediate) {
+  const run = async () => {
+    const query = searchQuery.value || ""
+    if (!immediate && query.length < props.minChars) {
+      asyncOptions.value = []
+      return
+    }
+
+    loading.value = true
+    try {
+      const result = await props.searchFn(query)
+      asyncOptions.value = Array.isArray(result) ? result : []
+    } catch (error) {
+      asyncOptions.value = []
+    } finally {
+      loading.value = false
+    }
+  }
+
+  clearTimeout(debounceTimer)
+  if (immediate) {
+    run()
+  } else {
+    debounceTimer = setTimeout(run, props.debounce)
+  }
+}
+
+watch(
+  () => props.options,
+  () => {
+    if (!props.searchFn) return
+    // keep selected labels stable when parent updates options
+    asyncOptions.value = asyncOptions.value
+  },
+  { deep: true }
+)
+
+onMounted(() => {
+  document.addEventListener("mousedown", onDocumentClick)
+})
+
+onBeforeUnmount(() => {
+  clearTimeout(debounceTimer)
+  document.removeEventListener("mousedown", onDocumentClick)
+  window.removeEventListener("resize", updatePanelPosition)
+  window.removeEventListener("scroll", updatePanelPosition, true)
+})
+
+watch(isOpen, async (open) => {
+  if (open) {
+    await nextTick()
+    updatePanelPosition()
+    window.addEventListener("resize", updatePanelPosition)
+    window.addEventListener("scroll", updatePanelPosition, true)
+  } else {
+    window.removeEventListener("resize", updatePanelPosition)
+    window.removeEventListener("scroll", updatePanelPosition, true)
+  }
+})
+</script>

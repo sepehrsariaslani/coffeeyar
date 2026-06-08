@@ -1,88 +1,60 @@
-import { computed, reactive } from 'vue'
+import { defineStore } from "pinia";
+import { ref, computed } from "vue";
 
-const KEY = 'coffeeyar_cart'
+const KEY = "navar-cart-v1";
 
-function load() {
+function loadCart() {
   try {
-    const raw = localStorage.getItem(KEY)
-    if (!raw) return []
-    const parsed = JSON.parse(raw)
-    return Array.isArray(parsed) ? parsed : []
+    return JSON.parse(localStorage.getItem(KEY) || "[]");
   } catch {
-    return []
+    return [];
   }
 }
 
-const state = reactive({
-  items: typeof window !== 'undefined' ? load() : [],
-})
-
-function save() {
-  if (typeof window === 'undefined') return
-  localStorage.setItem(KEY, JSON.stringify(state.items))
+function saveCart(items) {
+  localStorage.setItem(KEY, JSON.stringify(items));
 }
 
-function getItemKey(product, variant) {
-  return variant?.name ? `${product.slug}:${variant.name}` : product.slug
-}
+export const useCartStore = defineStore("cart", () => {
+  const items = ref(loadCart());
 
-function variantTitle(variant) {
-  if (!variant) return ''
-  if (variant.title) return variant.title
-  return (variant.attributes || [])
-    .map((row) => `${row.attribute_title || row.attribute}: ${row.attribute_value || row.option_title}`)
-    .join('، ')
-}
+  const count = computed(() => items.value.reduce((s, i) => s + i.qty, 0));
+  const total = computed(() =>
+    items.value.reduce((s, i) => s + i.unitPrice * i.qty, 0)
+  );
 
-function add(product, qty = 1, variant = null) {
-  const key = getItemKey(product, variant)
-  const existing = state.items.find((item) => item.key === key)
-  if (existing) {
-    existing.qty += qty
-  } else {
-    state.items.push({
-      key,
-      slug: product.slug,
-      title: product.title,
-      variant_id: variant?.name || '',
-      variant_title: variantTitle(variant),
-      variant_attributes: variant?.attributes || [],
-      qty,
-      price_toman: variant?.effective_price_toman || product.effective_price_toman,
-      image: variant?.image || product.image,
-    })
+  function add(item) {
+    const id = `${item.productId}-${item.weight}-${item.grind}`;
+    const existing = items.value.find((i) => i.id === id);
+    if (existing) {
+      existing.qty += item.qty;
+    } else {
+      items.value.push({ ...item, id });
+    }
+    saveCart(items.value);
   }
-  save()
-}
 
-function remove(key) {
-  state.items = state.items.filter((item) => item.key !== key)
-  save()
-}
-
-function clear() {
-  state.items = []
-  save()
-}
-
-function setQty(key, qty) {
-  const target = state.items.find((item) => item.key === key)
-  if (!target) return
-  target.qty = Math.max(1, Number(qty) || 1)
-  save()
-}
-
-const subtotal = computed(() => state.items.reduce((sum, item) => sum + item.price_toman * item.qty, 0))
-const count = computed(() => state.items.reduce((sum, item) => sum + item.qty, 0))
-
-export function useCart() {
-  return {
-    state,
-    add,
-    remove,
-    clear,
-    setQty,
-    subtotal,
-    count,
+  function remove(id) {
+    items.value = items.value.filter((i) => i.id !== id);
+    saveCart(items.value);
   }
-}
+
+  function setQty(id, qty) {
+    if (qty <= 0) {
+      remove(id);
+      return;
+    }
+    const item = items.value.find((i) => i.id === id);
+    if (item) {
+      item.qty = qty;
+      saveCart(items.value);
+    }
+  }
+
+  function clear() {
+    items.value = [];
+    saveCart(items.value);
+  }
+
+  return { items, count, total, add, remove, setQty, clear };
+});

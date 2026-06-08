@@ -1,0 +1,1 @@
+- [Generic 2-level category system](categories-refactor.md) — categories store drives all product categorization; no hardcoded coffee/accessory model anywhere
