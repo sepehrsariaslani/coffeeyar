@@ -19,6 +19,27 @@ from coffeeyar.api import (
 )
 
 
+def before_request_api():
+    """Registered as a Frappe ``before_request`` hook.
+
+    Frappe calls this at the very start of every request. We only act on
+    ``/api/*`` paths — for everything else we return immediately so normal
+    website/route handling continues. Defining this function also resolves the
+    ``AttributeError: ... has no attribute 'before_request_api'`` raised when
+    the hook is configured but the symbol is missing.
+    """
+    try:
+        path = getattr(frappe.local, "request", None)
+        if path is None:
+            return
+        if not frappe.local.request.path.startswith("/api/"):
+            return
+    except Exception:
+        return
+    # API requests are handled by the api_handler website route
+    # (see website_route_rules in hooks.py); nothing to do here.
+    return
+
 def handle_request():
     path = frappe.local.request.path
     method = frappe.request.method
@@ -126,6 +147,34 @@ def handle_request():
                 return _handle_create_address(payload)
             if method == "DELETE" and segment_count >= 2:
                 return _handle_delete_address(segments[1])
+
+        # ── Wallet ──
+        if resource == "wallet":
+            if method == "GET":
+                return _handle_wallet_get()
+            if method == "POST" and segment_count >= 2 and segments[1] == "charge":
+                return _handle_wallet_charge(payload)
+            if method == "POST" and segment_count >= 2 and segments[1] == "spend":
+                return _handle_wallet_spend(payload)
+
+        # ── Notifications ──
+        if resource == "notifications":
+            if method == "GET":
+                return _handle_list_notifications()
+            if method == "POST" and segment_count >= 3 and segments[2] == "read":
+                return _handle_notification_read(segments[1])
+            if method == "POST" and segment_count >= 2 and segments[1] == "read-all":
+                return _handle_notifications_read_all()
+            if method == "DELETE" and segment_count >= 2:
+                return _handle_notification_delete(segments[1])
+
+        # ── Contact ──
+        if resource == "contact" and method == "POST":
+            return _handle_contact_create(payload)
+
+        # ── File upload (admin only) ──
+        if resource == "upload" and method == "POST":
+            return _handle_upload()
 
         # ── Admin ──
         if resource == "admin" and segment_count >= 2:
@@ -594,8 +643,164 @@ def _handle_get_order(ref: str):
     })
 
 
-# ── Returns ──
+# ── Wallet ──
 
+def _get_or_create_wallet(user_email: str):
+    name = frappe.db.get_value("Customer Wallet", {"user": user_email}, "name")
+    if name:
+        return frappe.get_doc("Customer Wallet", name)
+    doc = frappe.get_doc({"doctype": "Customer Wallet", "user": user_email, "balance_toman": 0})
+    doc.insert(ignore_permissions=True)
+    return doc
+
+def _handle_wallet_get():
+    user_email = _resolve_user_from_token()
+    if not user_email:
+        _require_auth()
+        user_email = frappe.session.user
+    wallet = _get_or_create_wallet(user_email)
+    txns = []
+    for t in reversed(wallet.transactions or []):
+        txns.append({
+            "id": t.name,
+            "type": t.txn_type,
+            "amount": _to_int(t.amount_toman),
+            "description": t.description or "",
+            "datetime": str(t.txn_datetime or t.creation),
+        })
+    return _json({"balance": _to_int(wallet.balance_toman), "transactions": txns})
+
+def _handle_wallet_charge(payload: dict):
+    user_email = _resolve_user_from_token()
+    if not user_email:
+        _require_auth()
+        user_email = frappe.session.user
+    amount = _to_int(payload.get("amount"), 0)
+    if amount <= 0:
+        frappe.throw(_("Invalid amount"))
+    description = payload.get("description") or "شارژ کیف پول"
+    wallet = _get_or_create_wallet(user_email)
+    wallet.balance_toman = _to_int(wallet.balance_toman) + amount
+    wallet.append("transactions", {
+        "txn_type": "charge",
+        "amount_toman": amount,
+        "description": description,
+        "txn_datetime": frappe.utils.now_datetime(),
+    })
+    wallet.save(ignore_permissions=True)
+    return _json({"ok": True, "balance": _to_int(wallet.balance_toman)}, 201)
+
+def _handle_wallet_spend(payload: dict):
+    user_email = _resolve_user_from_token()
+    if not user_email:
+        _require_auth()
+        user_email = frappe.session.user
+    amount = _to_int(payload.get("amount"), 0)
+    if amount <= 0:
+        frappe.throw(_("Invalid amount"))
+    description = payload.get("description") or "پرداخت سفارش"
+    wallet = _get_or_create_wallet(user_email)
+    if _to_int(wallet.balance_toman) < amount:
+        frappe.throw(_("Insufficient wallet balance"))
+    wallet.balance_toman = _to_int(wallet.balance_toman) - amount
+    wallet.append("transactions", {
+        "txn_type": "spend",
+        "amount_toman": amount,
+        "description": description,
+        "txn_datetime": frappe.utils.now_datetime(),
+    })
+    wallet.save(ignore_permissions=True)
+    return _json({"ok": True, "balance": _to_int(wallet.balance_toman)}, 201)
+
+# ── Notifications ──
+
+def _handle_list_notifications():
+    user_email = _resolve_user_from_token()
+    if not user_email:
+        return _json([])
+    rows = frappe.get_all(
+        "User Notification",
+        filters={"user": user_email},
+        fields=["name", "title", "body", "notif_type", "is_read", "creation"],
+        order_by="creation desc",
+        limit=50,
+    )
+    result = []
+    for r in rows:
+        result.append({
+            "id": r.name,
+            "title": r.title,
+            "body": r.body or "",
+            "type": r.notif_type or "info",
+            "read": bool(r.is_read),
+            "datetime": str(r.creation),
+        })
+    return _json(result)
+
+def _handle_notification_read(notif_id: str):
+    frappe.db.set_value("User Notification", notif_id, "is_read", 1)
+    return _json({"ok": True})
+
+def _handle_notifications_read_all():
+    user_email = _resolve_user_from_token()
+    if not user_email:
+        return _json({"ok": True})
+    names = frappe.get_all("User Notification", filters={"user": user_email, "is_read": 0}, pluck="name")
+    for n in names:
+        frappe.db.set_value("User Notification", n, "is_read", 1)
+    return _json({"ok": True})
+
+def _handle_notification_delete(notif_id: str):
+    frappe.delete_doc("User Notification", notif_id, ignore_permissions=True)
+    return _json({"ok": True})
+
+# ── File Upload ──
+
+def _handle_upload():
+    """Save an uploaded image file and return its public URL.
+
+    Accepts a multipart/form-data POST with a ``file`` field. Only admins
+    may upload. Returns ``{"url": "/files/..."}`` which can be stored on a
+    product/category/post instead of inlining base64 data.
+    """
+    _require_admin()
+    files = getattr(frappe.request, "files", None)
+    if not files or "file" not in files:
+        frappe.throw(_("No file provided"))
+    upload = files["file"]
+    content = upload.stream.read()
+    filename = upload.filename or "upload.bin"
+
+    allowed_ext = (".png", ".jpg", ".jpeg", ".webp", ".gif", ".svg")
+    if not filename.lower().endswith(allowed_ext):
+        frappe.throw(_("Only image files are allowed"))
+    if len(content) > 5 * 1024 * 1024:
+        frappe.throw(_("File too large (max 5MB)"))
+
+    file_doc = frappe.get_doc({
+        "doctype": "File",
+        "file_name": filename,
+        "content": content,
+        "is_private": 0,
+    })
+    file_doc.save(ignore_permissions=True)
+    return _json({"url": file_doc.file_url, "name": file_doc.name}, 201)
+
+# ── Contact ──
+
+def _handle_contact_create(payload: dict):
+    doc = frappe.get_doc({
+        "doctype": "Contact Message",
+        "full_name": (payload.get("name") or payload.get("full_name") or "").strip(),
+        "email": (payload.get("email") or "").strip(),
+        "subject": (payload.get("subject") or "").strip(),
+        "message": (payload.get("message") or "").strip(),
+        "status": "جدید",
+    })
+    doc.insert(ignore_permissions=True)
+    return _json({"id": doc.name, "ok": True}, 201)
+
+# ── Returns ──
 
 def _handle_create_return(payload: dict):
     doc = frappe.get_doc(
@@ -812,6 +1017,8 @@ def _handle_admin(segments: list[str], method: str, payload: dict, args: dict):
         return _admin_site_settings(payload)
     if resource == "returns":
         return _admin_returns(segments[1:], method, payload)
+    if resource == "messages":
+        return _admin_messages(segments[1:], method, payload)
     if resource == "dashboard" and method == "GET":
         return _handle_admin_dashboard()
     if resource == "content":
@@ -1289,4 +1496,25 @@ def _admin_returns(segments: list[str], method: str, payload: dict):
             doc.admin_note = payload["admin_note"]
         doc.save(ignore_permissions=True)
         return _json({"ok": True, "status": doc.status})
+    return _json({"error": "Not found"}, 404)
+
+def _admin_messages(segments: list[str], method: str, payload: dict):
+    if method == "GET":
+        rows = frappe.get_all(
+            "Contact Message",
+            fields=["name", "full_name", "email", "subject", "message", "status", "creation"],
+            order_by="creation desc",
+        )
+        for r in rows:
+            r["id"] = r.name
+        return _json(rows)
+    if len(segments) >= 2 and segments[1] == "status" and method == "PUT":
+        doc = frappe.get_doc("Contact Message", segments[0])
+        if payload.get("status"):
+            doc.status = payload["status"]
+        doc.save(ignore_permissions=True)
+        return _json({"ok": True, "status": doc.status})
+    if method == "DELETE" and segments:
+        frappe.delete_doc("Contact Message", segments[0], ignore_permissions=True)
+        return _json({"ok": True})
     return _json({"error": "Not found"}, 404)

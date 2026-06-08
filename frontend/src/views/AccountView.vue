@@ -30,6 +30,9 @@ onMounted(async () => {
   await Promise.all([
     accountStore.init(),
     productsStore.fetchProducts({ page_size: 100 }),
+    walletStore.fetchWallet(),
+    notifStore.refresh(),
+    returnsStore.fetchReturns(),
   ]);
   // Keep the profile form in sync once the real profile arrives
   profileForm.value = { ...accountStore.profile };
@@ -38,10 +41,11 @@ onMounted(async () => {
 // ── Wallet
 const chargeAmount = ref("");
 const chargeSuccess = ref(false);
-function doCharge() {
+async function doCharge() {
   const amt = Number(String(chargeAmount.value).replace(/,/g, ""));
   if (!amt || amt < 10000) return;
-  walletStore.charge(amt, "شارژ دستی کیف پول");
+  const ok = await walletStore.charge(amt, "شارژ دستی کیف پول");
+  if (!ok) return;
   chargeAmount.value = "";
   chargeSuccess.value = true;
   setTimeout(() => (chargeSuccess.value = false), 3000);

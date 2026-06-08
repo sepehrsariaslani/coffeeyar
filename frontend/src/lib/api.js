@@ -107,6 +107,42 @@ export const api = {
     list: () => get("/returns"),
   },
 
+  // Wallet
+  wallet: {
+    get: () => get("/wallet"),
+    charge: (amount, description) => post("/wallet/charge", { amount, description }),
+    spend: (amount, description) => post("/wallet/spend", { amount, description }),
+  },
+
+  // Notifications
+  notifications: {
+    list: () => get("/notifications"),
+    markRead: (id) => post(`/notifications/${id}/read`),
+    markAllRead: () => post("/notifications/read-all"),
+    remove: (id) => del(`/notifications/${id}`),
+  },
+
+  // Contact
+  contact: {
+    send: (data) => post("/contact", data),
+  },
+
+  // File upload (admin) — returns { url }
+  uploadImage: async (file) => {
+    const form = new FormData();
+    form.append("file", file);
+    const token = getToken();
+    const headers = {};
+    if (token) headers["Authorization"] = `Bearer ${token}`;
+    const res = await fetch(`${BASE}/upload`, { method: "POST", headers, body: form });
+    if (!res.ok) {
+      let msg = `خطا: ${res.status}`;
+      try { const err = await res.json(); msg = err.detail || err.message || err.error || msg; } catch {}
+      throw new Error(msg);
+    }
+    return res.json();
+  },
+
   // FAQ
   faq: {
     list: () => get("/faq"),
@@ -197,6 +233,12 @@ export const api = {
     returns: {
       list: () => get("/admin/returns"),
       updateStatus: (id, data) => put(`/admin/returns/${id}/status`, data),
+    },
+
+    messages: {
+      list: () => get("/admin/messages"),
+      updateStatus: (id, data) => put(`/admin/messages/${id}/status`, data),
+      remove: (id) => del(`/admin/messages/${id}`),
     },
 
     content: {

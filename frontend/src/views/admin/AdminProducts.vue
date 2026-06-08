@@ -7,6 +7,7 @@ import { useTemplatesStore } from "@/stores/templates.js";
 import { useCategoriesStore } from "@/stores/categories.js";
 import { Plus, Pencil, Trash2, Search, X, Eye, EyeOff, Layers, Check, Download, Upload, FolderOpen, ChevronDown, BarChart2 } from "lucide-vue-next";
 import ViewSwitcher from "@/components/admin/ViewSwitcher.vue";
+import ImageUploader from "@/components/ImageUploader.vue";
 
 const route = useRoute();
 
@@ -973,19 +974,18 @@ const reportStats = computed(() => {
 
             <!-- ── Media tab ── -->
             <template v-if="drawerTab === 'media'">
-              <label class="block">
-                <span class="field-label">تصویر اصلی (URL)</span>
-                <input v-model="form.image" dir="ltr" class="field-input" />
-              </label>
+              <ImageUploader v-model="form.image" label="تصویر اصلی" />
               <div>
                 <div class="mb-4 flex items-center justify-between">
                   <span class="text-xs uppercase tracking-widest text-maroon">گالری تصاویر ({{ form.gallery.length }})</span>
                   <button type="button" @click="addGalleryImg" class="text-xs text-maroon hover:underline">+ افزودن</button>
                 </div>
-                <div class="space-y-2">
-                  <div v-for="(img, i) in form.gallery" :key="i" class="flex items-center gap-2">
-                    <input :value="img" @input="setGalleryImg(i, $event.target.value)" dir="ltr" placeholder="URL تصویر" class="field-input flex-1" />
-                    <button type="button" @click="removeGalleryImg(i)" class="text-muted-foreground hover:text-maroon"><X class="h-4 w-4" /></button>
+                <div class="space-y-3">
+                  <div v-for="(img, i) in form.gallery" :key="i" class="flex items-start gap-2">
+                    <div class="flex-1">
+                      <ImageUploader :model-value="img" label="" @update:model-value="setGalleryImg(i, $event)" />
+                    </div>
+                    <button type="button" @click="removeGalleryImg(i)" class="text-muted-foreground hover:text-maroon mt-1"><X class="h-4 w-4" /></button>
                   </div>
                 </div>
               </div>

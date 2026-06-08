@@ -4,26 +4,40 @@ import { api } from "@/lib/api.js";
 import { useAuthStore } from "./auth.js";
 import { useNotificationsStore } from "./notifications.js";
 
-const LOCAL_KEY = "navar_returns_v1";
-function loadLocal() {
-  try { const r = localStorage.getItem(LOCAL_KEY); return r ? JSON.parse(r) : []; } catch { return []; }
-}
-function saveLocal(v) { localStorage.setItem(LOCAL_KEY, JSON.stringify(v)); }
-
+/**
+ * Returns store — backed by the Frappe `Return Request` doctype.
+ * Customers create requests; admins list and update their status.
+ */
 export const useReturnsStore = defineStore("returns", () => {
-  const requests = ref(loadLocal());
+  const requests = ref([]);
 
   const pending = computed(() => requests.value.filter((r) => r.status === "در انتظار بررسی"));
   const approved = computed(() => requests.value.filter((r) => r.status === "تایید شده"));
 
+  /**
+   * Fetch the current user's return requests from the server.
+   * @returns {Promise<void>}
+   */
   async function fetchReturns() {
     const auth = useAuthStore();
     if (!auth.isLoggedIn) return;
     try {
-      const res = await api.returns.list();
-      requests.value = res;
-      saveLocal(requests.value);
-    } catch {}
+      requests.value = (await api.returns.list()) || [];
+    } catch (e) {
+      console.error("خطا در دریافت مرجوعی‌ها:", e.message);
+    }
+  }
+
+  /**
+   * Fetch ALL return requests (admin view) from the server.
+   * @returns {Promise<void>}
+   */
+  async function fetchAdminReturns() {
+    try {
+      requests.value = (await api.admin.returns.list()) || [];
+    } catch (e) {
+      console.error("خطا در دریافت مرجوعی‌ها:", e.message);
+    }
   }
 
   async function submit({ orderId, orderRef, reason, description, items, totalAmount }) {
@@ -50,7 +64,6 @@ export const useReturnsStore = defineStore("returns", () => {
         };
       }
       requests.value.unshift(req);
-      saveLocal(requests.value);
       try {
         const notif = useNotificationsStore();
         notif.add("درخواست مرجوعی ثبت شد", `درخواست مرجوعی برای سفارش ${orderRef} ثبت شد.`, "return");
@@ -62,18 +75,26 @@ export const useReturnsStore = defineStore("returns", () => {
     }
   }
 
-  function updateStatus(id, status, adminNote = "") {
+  /**
+   * Update a return request's status (admin). Persists to the server.
+   * @param {string} id Return request id.
+   * @param {string} status New status.
+   * @param {string} [adminNote] Optional admin note.
+   * @returns {Promise<void>}
+   */
+  async function updateStatus(id, status, adminNote = "") {
     const req = requests.value.find((r) => r.id === id);
-    if (!req) return;
-    req.status = status;
-    req.adminNote = adminNote;
-    saveLocal(requests.value);
+    if (req) { req.status = status; req.adminNote = adminNote; }
+    try {
+      await api.admin.returns.updateStatus(id, { status, admin_note: adminNote });
+    } catch (e) {
+      console.error("خطا در به‌روزرسانی مرجوعی:", e.message);
+    }
   }
 
   function remove(id) {
     requests.value = requests.value.filter((r) => r.id !== id);
-    saveLocal(requests.value);
   }
 
-  return { requests, pending, approved, submit, updateStatus, remove, fetchReturns };
+  return { requests, pending, approved, submit, updateStatus, remove, fetchReturns, fetchAdminReturns };
 });

@@ -4,6 +4,7 @@ import TheLayout from "@/components/site/TheLayout.vue";
 import { useSeo } from "@/composables/useSeo.js";
 import { useContentStore } from "@/stores/content.js";
 import { useSiteSettingsStore } from "@/stores/siteSettings.js";
+import { api } from "@/lib/api.js";
 import { Mail, Phone, MapPin, Clock, Instagram, Send, MessageCircle, CheckCircle } from "lucide-vue-next";
 
 useSeo({ title: "تماس با ما — نوار", description: "سؤال، همکاری یا فقط یک سلام." });
@@ -17,11 +18,25 @@ onMounted(() => settingsStore.fetchSettings());
 const sent  = ref(false);
 const form  = ref({ name: "", email: "", subject: "", message: "" });
 const loading = ref(false);
+const submitError = ref("");
 
-function submit(e) {
+/**
+ * Submit the contact form to the backend, persisting a Contact Message.
+ * @param {Event} e Submit event.
+ * @returns {Promise<void>}
+ */
+async function submit(e) {
   e.preventDefault();
   loading.value = true;
-  setTimeout(() => { loading.value = false; sent.value = true; }, 900);
+  submitError.value = "";
+  try {
+    await api.contact.send({ ...form.value });
+    sent.value = true;
+  } catch (err) {
+    submitError.value = err.message || "خطا در ارسال پیام";
+  } finally {
+    loading.value = false;
+  }
 }
 
 const contacts = computed(() => [

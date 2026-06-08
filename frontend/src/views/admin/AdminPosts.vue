@@ -1,6 +1,7 @@
 <script setup>
 import { ref, computed } from "vue";
 import { usePostsStore } from "@/stores/posts.js";
+import { api } from "@/lib/api.js";
 import { Plus, Pencil, Trash2, X, Eye, EyeOff, Image, Bold, Italic, List } from "lucide-vue-next";
 
 const store = usePostsStore();
@@ -69,30 +70,44 @@ function remove(slug) {
   if (confirm("این مقاله حذف شود؟")) store.remove(slug);
 }
 
-function handleImageUpload(e) {
-  const file = e.target.files[0];
-  if (!file) return;
-  const reader = new FileReader();
-  reader.onload = (ev) => { form.value.coverImage = ev.target.result; };
-  reader.readAsDataURL(file);
+/**
+ * Upload a file to the server, returning its public URL. Falls back to a
+ * base64 data URL if the server upload fails so the admin is never blocked.
+ * @param {File} file
+ * @returns {Promise<string>} Public URL or data URL.
+ */
+async function uploadOrFallback(file) {
+  try {
+    const res = await api.uploadImage(file);
+    return res.url;
+  } catch (err) {
+    console.error("آپلود سرور ناموفق بود، ذخیره محلی:", err.message);
+    return await new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onload = (ev) => resolve(ev.target.result);
+      reader.readAsDataURL(file);
+    });
+  }
 }
 
-function insertBodyImage(e) {
+async function handleImageUpload(e) {
   const file = e.target.files[0];
   if (!file) return;
-  const reader = new FileReader();
-  reader.onload = (ev) => {
-    const url = ev.target.result;
-    const tag = `\n![${file.name}](${url})\n`;
-    const el = bodyRef.value;
-    if (el) {
-      const start = el.selectionStart;
-      form.value.body = form.value.body.slice(0, start) + tag + form.value.body.slice(start);
-    } else {
-      form.value.body += tag;
-    }
-  };
-  reader.readAsDataURL(file);
+  form.value.coverImage = await uploadOrFallback(file);
+}
+
+async function insertBodyImage(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const url = await uploadOrFallback(file);
+  const tag = `\n![${file.name}](${url})\n`;
+  const el = bodyRef.value;
+  if (el) {
+    const start = el.selectionStart;
+    form.value.body = form.value.body.slice(0, start) + tag + form.value.body.slice(start);
+  } else {
+    form.value.body += tag;
+  }
 }
 
 function wrapText(before, after = before) {
