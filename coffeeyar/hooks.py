@@ -8,7 +8,7 @@ app_license = "mit"
 home_page = "coffee"
 
 website_route_rules = [
-    {"from_route": "/api/<path:app_path>", "to_route": "api_handler"},
+    {"from_route": "/shop/<path:app_path>", "to_route": "api_handler"},
     {"from_route": "/<path:app_path>", "to_route": "coffee"},
     {"from_route": "/", "to_route": "coffee"},
 ]

@@ -1,11 +1,18 @@
 import frappe
 from frappe.utils import get_system_timezone
 
-
 no_cache = 1
 
-
 def get_context(context):
+    # Don't serve the SPA shell for static asset paths — let Frappe's
+    # built-in static file server handle them. Without this guard the
+    # catch-all route rule in hooks.py would intercept every
+    # /assets/coffeeyar/frontend/assets/*.js request and return HTML,
+    # causing MIME-type errors in the browser.
+    path = getattr(frappe.local.request, "path", "")
+    if path.startswith(("/assets/", "/_", "/files/", "/private/")):
+        frappe.throw(frappe._("Not Found"), frappe.DoesNotExistError)
+
     csrf_token = frappe.sessions.get_csrf_token()
     frappe.db.commit()
 
