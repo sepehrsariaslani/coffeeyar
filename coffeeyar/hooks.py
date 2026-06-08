@@ -13,6 +13,4 @@ website_route_rules = [
     {"from_route": "/", "to_route": "coffee"},
 ]
 
-before_request = ["coffeeyar.api_router.before_request_api"]
-
 after_install = "coffeeyar.install.after_install"
