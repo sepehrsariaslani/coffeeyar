@@ -82,22 +82,25 @@ export const useThemeStore = defineStore("theme", () => {
 
   async function fetchTheme() {
     try {
-      const data = await api.admin.theme.get();
-      if (data && data.theme) {
+      // Public endpoint — no auth needed, works for all visitors
+      const data = await api.theme.get();
+      if (data && data.theme && Object.keys(data.theme).length) {
         const merged = { ...defaults, ...data.theme };
         theme.value = merged;
         localStorage.setItem(STORAGE_KEY, JSON.stringify(merged));
+        applyTheme(merged);
       }
     } catch {
-      // use cached
+      // use cached localStorage value (already applied on load)
     }
   }
 
   async function saveToServer() {
     try {
+      // Admin-only write endpoint
       await api.admin.theme.update({ theme: theme.value });
     } catch {
-      // silent
+      // silent — non-admins can't save but local changes still apply
     }
   }
 

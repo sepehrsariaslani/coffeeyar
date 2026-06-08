@@ -132,6 +132,8 @@ def handle_request():
             return _handle_public_policies()
         if resource == "product-global-faqs" and method == "GET":
             return _handle_public_product_global_faqs()
+        if resource == "theme" and method == "GET":
+            return _handle_public_theme()
 
         # ── Site ──
         if resource == "site-settings" and method == "GET":
@@ -186,6 +188,10 @@ def handle_request():
         return _json({"error": str(e) or "Not found"}, 404)
     except frappe.ValidationError as e:
         return _json({"error": str(e)}, 422)
+    except frappe.AuthenticationError as e:
+        return _json({"error": str(e) or "Not authenticated"}, 401)
+    except frappe.PermissionError as e:
+        return _json({"error": str(e) or "Not authorized"}, 403)
     except Exception as e:
         frappe.log_error(f"API Router Error: {e}")
         return _json({"error": "Internal server error"}, 500)
@@ -1462,16 +1468,24 @@ def _admin_product_faqs(method: str, payload: dict):
     return _json({"error": "Not found"}, 404)
 
 
-# ── Admin: Theme ──
+# ── Public: Theme ──
 
+def _handle_public_theme():
+    """Return the active theme config for all visitors — no auth required."""
+    try:
+        doc = _get_single_doctype("Theme Config")
+        return _json({
+            "theme": _parse_json_field(doc.theme_json if hasattr(doc, 'theme_json') else ""),
+            "layout": _parse_json_field(doc.layout_json if hasattr(doc, 'layout_json') else ""),
+        })
+    except Exception:
+        return _json({"theme": {}, "layout": {}})
+
+# ── Admin: Theme ──
 
 def _admin_theme(method: str, payload: dict):
     if method == "GET":
-        doc = _get_single_doctype("Theme Config")
-        return _json({
-            "theme": _parse_json_field(doc.theme_json),
-            "layout": _parse_json_field(doc.layout_json),
-        })
+        return _handle_public_theme()
     if method == "PUT":
         doc = _get_single_doctype("Theme Config", create=True)
         if "theme" in payload:

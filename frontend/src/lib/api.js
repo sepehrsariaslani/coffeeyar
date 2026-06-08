@@ -171,6 +171,11 @@ export const api = {
     navigation: () => get("/navigation"),
   },
 
+  // Public theme (no auth required)
+  theme: {
+    get: () => get("/theme"),
+  },
+
   // Admin
   admin: {
     dashboard: () => get("/admin/dashboard"),
