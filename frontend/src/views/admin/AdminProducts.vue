@@ -1,7 +1,8 @@
 <script setup>
 import { ref, computed, watch, onMounted, nextTick } from "vue";
 import { useRoute } from "vue-router";
-import { products as initialProducts, formatPrice } from "@/lib/data.js";
+import { useProductsStore } from "@/stores/products.js";
+function formatPrice(n) { return n ? Number(n).toLocaleString("fa-IR") : "۰"; }
 import { useTemplatesStore } from "@/stores/templates.js";
 import { useCategoriesStore } from "@/stores/categories.js";
 import { Plus, Pencil, Trash2, Search, X, Eye, EyeOff, Layers, Check, Download, Upload, FolderOpen, ChevronDown, BarChart2 } from "lucide-vue-next";
@@ -12,7 +13,8 @@ const route = useRoute();
 const templatesStore = useTemplatesStore();
 const categoriesStore = useCategoriesStore();
 
-const list = ref([...initialProducts]);
+const productsStore = useProductsStore();
+const list = ref([]);
 const query = ref("");
 const categoryFilter = ref("all");
 const subCategoryFilter = ref("all");

@@ -1,36 +1,40 @@
 <script setup>
-import { ref, computed } from "vue";
+import { ref, computed, onMounted } from "vue";
 import { RouterLink } from "vue-router";
-import { Coffee, Rss, Clock, ArrowLeft } from "lucide-vue-next";
+import { Rss, Clock } from "lucide-vue-next";
 import TheLayout from "@/components/site/TheLayout.vue";
 import BlogCard from "@/components/BlogCard.vue";
-import { posts } from "@/lib/data.js";
+import { usePostsStore } from "@/stores/posts.js";
 import { useSeo } from "@/composables/useSeo.js";
 
 useSeo({ title: "بلاگ — نوار", description: "از هنر دم‌آوری تا داستان مزارع — همه چیز درباره‌ی قهوه." });
 
-const tabs = ["همه", "عمومی", "روش دم‌آوری"];
+const postsStore = usePostsStore();
 const activeTab = ref("همه");
+const tabs = ["همه", "دم‌آوری", "آموزش", "عمومی"];
+
+const allPosts = computed(() => postsStore.getPublished());
 
 const filtered = computed(() =>
-  activeTab.value === "همه" ? posts : posts.filter((p) => p.category === activeTab.value)
+  activeTab.value === "همه" ? allPosts.value : allPosts.value.filter((p) => p.category === activeTab.value)
 );
+
 const featuredPost = computed(() => filtered.value[0]);
-const restPosts    = computed(() => filtered.value.slice(1));
+const restPosts = computed(() => filtered.value.slice(1));
 
 const brewingMethods = [
-  { slug: "brew-french-press", icon: "🇫🇷", label: "فرنچ پرس",  desc: "پُربدنه و غنی",    time: "۴ دقیقه" },
-  { slug: "brew-v60",          icon: "☕",   label: "V60",         desc: "شفاف و ظریف",      time: "۳ دقیقه" },
-  { slug: "brew-moka-pot",     icon: "🇮🇹", label: "موکاپات",   desc: "قوی و ایتالیایی",   time: "۵ دقیقه" },
-  { slug: "brew-cold-brew",    icon: "🧊",   label: "کلد برو",   desc: "سرد و ملایم",       time: "۱۲ ساعت" },
+  { slug: "french-press-guide", icon: "🇫🇷", label: "فرنچ پرس", desc: "پُربدنه و غنی", time: "۴ دقیقه" },
+  { slug: "art-of-pour-over", icon: "☕", label: "V60", desc: "شفاف و ظریف", time: "۳ دقیقه" },
+  { slug: "single-origin-vs-blend", icon: "🇮🇹", label: "موکاپات", desc: "قوی و ایتالیایی", time: "۵ دقیقه" },
+  { slug: "french-press-guide", icon: "🧊", label: "کلد برو", desc: "سرد و ملایم", time: "۱۲ ساعت" },
 ];
 
-const brewingPosts = posts.filter((p) => p.category === "روش دم‌آوری");
+onMounted(() => postsStore.fetchPosts());
 </script>
 
 <template>
   <TheLayout>
-    <!-- ── Hero ─────────────────────────────────────── -->
+    <!-- Hero -->
     <section class="border-b border-border bg-muted/20">
       <div class="mx-auto max-w-7xl px-6 py-20 md:py-28">
         <div class="flex items-start justify-between flex-wrap gap-6">
@@ -44,78 +48,67 @@ const brewingPosts = posts.filter((p) => p.category === "روش دم‌آوری"
           </div>
           <div class="flex items-center gap-3 self-end text-sm text-muted-foreground">
             <Clock class="h-4 w-4" />
-            <span>{{ posts.length }} مقاله</span>
+            <span>{{ allPosts.length }} مقاله</span>
           </div>
         </div>
       </div>
     </section>
 
-    <!-- ── Brewing Methods ───────────────────────────── -->
-    <section class="border-b border-border">
-      <div class="mx-auto max-w-7xl px-6 py-12">
-        <div class="flex items-center justify-between mb-8">
-          <div class="flex items-center gap-2">
-            <Coffee class="h-4 w-4 text-maroon" />
-            <span class="text-xs uppercase tracking-[0.3em] text-maroon">راهنمای دم‌آوری</span>
-          </div>
-          <RouterLink to="/blog" @click="activeTab = 'روش دم‌آوری'" class="flex items-center gap-1.5 text-xs text-maroon hover:opacity-70 transition-opacity">
-            همه روش‌ها <ArrowLeft class="h-3.5 w-3.5" />
-          </RouterLink>
-        </div>
-        <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-          <RouterLink
-            v-for="m in brewingMethods" :key="m.slug"
-            :to="brewingPosts.find(p => p.slug === m.slug) ? `/blog/${m.slug}` : '/blog'"
-            class="group border border-border bg-background p-6 transition-all hover:border-maroon hover:bg-maroon/3"
-          >
-            <div class="text-3xl mb-4 transition-transform group-hover:scale-110 duration-200">{{ m.icon }}</div>
-            <div class="font-medium text-sm group-hover:text-maroon transition-colors">{{ m.label }}</div>
-            <div class="mt-1 text-xs text-muted-foreground">{{ m.desc }}</div>
-            <div class="mt-4 flex items-center justify-between">
-              <span class="text-xs text-muted-foreground/60">{{ m.time }}</span>
-              <span class="text-xs text-maroon opacity-0 group-hover:opacity-100 transition-opacity">بخوانید ←</span>
-            </div>
-          </RouterLink>
-        </div>
+    <!-- Tabs -->
+    <div class="border-b border-border px-6">
+      <div class="mx-auto max-w-7xl flex gap-0">
+        <button v-for="tab in tabs" :key="tab" type="button" @click="activeTab = tab"
+          :class="['px-5 py-4 text-sm font-[Vazirmatn] transition-colors', activeTab === tab ? 'border-b-2 border-maroon text-maroon' : 'text-muted-foreground hover:text-foreground']">
+          {{ tab }}
+        </button>
       </div>
-    </section>
+    </div>
 
-    <!-- ── Tab Filter ────────────────────────────────── -->
-    <section>
-      <div class="mx-auto max-w-7xl px-6">
-        <div class="flex items-center justify-between border-b border-border pt-10">
-          <div class="flex gap-0">
-            <button
-              v-for="t in tabs" :key="t" type="button" @click="activeTab = t"
-              :class="['px-5 py-3 text-sm transition-colors', activeTab === t ? 'border-b-2 border-maroon text-maroon font-medium' : 'text-muted-foreground hover:text-foreground']"
-            >{{ t }}</button>
-          </div>
-          <span class="text-xs text-muted-foreground pb-3">{{ filtered.length }} مقاله</span>
-        </div>
-      </div>
-    </section>
+    <!-- Loading -->
+    <div v-if="postsStore.loading" class="py-24 text-center text-muted-foreground">در حال بارگذاری...</div>
 
-    <!-- ── Content ───────────────────────────────────── -->
-    <section class="mx-auto max-w-7xl px-6 py-10 pb-20">
-
+    <!-- Posts -->
+    <div v-else-if="filtered.length" class="mx-auto max-w-7xl px-6 py-16">
       <!-- Featured post -->
-      <div v-if="featuredPost" class="mb-8">
-        <div class="flex items-center gap-2 mb-4">
-          <div class="h-px flex-1 bg-border" />
-          <span class="text-[10px] uppercase tracking-widest text-maroon">پیشنهاد ما</span>
-          <div class="h-px flex-1 bg-border" />
+      <RouterLink v-if="featuredPost" :to="`/blog/${featuredPost.slug}`"
+        class="group mb-12 grid gap-8 border border-border bg-muted/10 p-6 md:grid-cols-2 hover:border-maroon transition-colors">
+        <div v-if="featuredPost.cover_image || featuredPost.coverImage" class="overflow-hidden">
+          <img :src="featuredPost.cover_image || featuredPost.coverImage" :alt="featuredPost.title"
+            class="h-64 w-full object-cover transition-transform duration-500 group-hover:scale-105" />
         </div>
-        <BlogCard :post="featuredPost" :featured="true" />
-      </div>
+        <div class="flex flex-col justify-center">
+          <div class="mb-3 text-xs uppercase tracking-widest text-maroon">{{ featuredPost.category }}</div>
+          <h2 class="text-2xl font-medium group-hover:text-maroon transition-colors">{{ featuredPost.title }}</h2>
+          <p class="mt-3 text-sm leading-relaxed text-muted-foreground">{{ featuredPost.excerpt }}</p>
+          <div class="mt-6 flex items-center gap-4 text-xs text-muted-foreground">
+            <span>{{ featuredPost.author }}</span>
+            <span>{{ featuredPost.read_time || featuredPost.readTime }}</span>
+          </div>
+        </div>
+      </RouterLink>
 
-      <!-- Grid -->
-      <div v-if="restPosts.length" class="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+      <!-- Rest of posts -->
+      <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
         <BlogCard v-for="post in restPosts" :key="post.slug" :post="post" />
       </div>
+    </div>
 
-      <p v-if="!filtered.length" class="py-20 text-center text-muted-foreground">
-        مقاله‌ای در این دسته پیدا نشد.
-      </p>
+    <div v-else class="py-24 text-center text-muted-foreground">مطلبی در این دسته پیدا نشد.</div>
+
+    <!-- Brewing methods -->
+    <section class="border-t border-border bg-muted/20">
+      <div class="mx-auto max-w-7xl px-6 py-16">
+        <h2 class="mb-8 text-xl font-medium">روش‌های دم‌آوری</h2>
+        <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <RouterLink v-for="m in brewingMethods" :key="m.label" :to="`/blog/${m.slug}`"
+            class="group border border-border p-5 hover:border-maroon transition-colors">
+            <div class="text-2xl mb-3">{{ m.icon }}</div>
+            <div class="font-medium text-sm">{{ m.label }}</div>
+            <div class="mt-1 text-xs text-muted-foreground">{{ m.desc }}</div>
+            <div class="mt-3 text-xs text-muted-foreground">⏱ {{ m.time }}</div>
+          </RouterLink>
+        </div>
+      </div>
     </section>
   </TheLayout>
 </template>

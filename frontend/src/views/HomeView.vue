@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed } from "vue";
+import { ref, computed, onMounted } from "vue";
 import { RouterLink } from "vue-router";
 import TheLayout from "@/components/site/TheLayout.vue";
 import HeroSection from "@/components/HeroSection.vue";
@@ -8,8 +8,9 @@ import SectionHeader from "@/components/SectionHeader.vue";
 import ProductCard from "@/components/ProductCard.vue";
 import BrandsMarquee from "@/components/BrandsMarquee.vue";
 import BlogCard from "@/components/BlogCard.vue";
-import { products, posts } from "@/lib/data.js";
-import { useGroupsStore } from "@/stores/groups.js";
+import { useProductsStore } from "@/stores/products.js";
+import { usePostsStore } from "@/stores/posts.js";
+import { useCategoriesStore } from "@/stores/categories.js";
 import { useSeo } from "@/composables/useSeo.js";
 import heroImg from "@/assets/hero-coffee.jpg";
 
@@ -18,25 +19,35 @@ useSeo({
   description: "دانه‌های تک‌خاستگاه از مزارع شناخته‌شده. تازه برشته‌شده در کارگاه کوچک ما. ارسال به سراسر ایران.",
 });
 
-const groupsStore = useGroupsStore();
-const coffeeProducts = products.filter((p) => p.type === "coffee");
-
-const categories = [
-  { label: "همه", value: "all" },
-  { label: "رست روشن", value: "روشن" },
-  { label: "رست متوسط", value: "متوسط" },
-  { label: "رست تیره", value: "تیره" },
-];
+const productsStore = useProductsStore();
+const postsStore = usePostsStore();
+const categoriesStore = useCategoriesStore();
 
 const activeCategory = ref("all");
 
+const coffeeProducts = computed(() => productsStore.products);
+const featuredProducts = computed(() => productsStore.products.filter((p) => p.is_featured));
+
 const filtered = computed(() =>
   activeCategory.value === "all"
-    ? coffeeProducts
-    : coffeeProducts.filter((p) => p.roast === activeCategory.value)
+    ? coffeeProducts.value
+    : coffeeProducts.value.filter((p) => p.category_slug === activeCategory.value)
 );
 
-const typeIcon = { coffee: "☕", accessory: "🫙", equipment: "⚙️", other: "📦" };
+const recentPosts = computed(() => postsStore.getPublished().slice(0, 3));
+
+const categories = computed(() => [
+  { label: "همه", value: "all" },
+  ...categoriesStore.roots.map((c) => ({ label: c.name, value: c.slug })),
+]);
+
+onMounted(async () => {
+  await Promise.all([
+    productsStore.fetchProducts({ page_size: 12 }),
+    postsStore.fetchPosts(),
+    categoriesStore.fetchCategories(),
+  ]);
+});
 </script>
 
 <template>
@@ -51,46 +62,42 @@ const typeIcon = { coffee: "☕", accessory: "🫙", equipment: "⚙️", other:
     <!-- Brands Marquee -->
     <BrandsMarquee />
 
-    <!-- Product Groups / Categories Section -->
+    <!-- Categories Section -->
     <section class="border-b border-border">
       <SectionHeader title="دسته‌بندی‌ها" tag="گروه‌های محصول" />
       <div class="px-[5vw] pb-12">
-        <div v-if="groupsStore.groups.length" class="grid grid-cols-2 gap-3 md:grid-cols-4">
+        <div v-if="categoriesStore.roots.length" class="grid grid-cols-2 gap-3 md:grid-cols-4">
           <RouterLink
-            v-for="g in groupsStore.groups"
-            :key="g.id"
-            to="/products"
+            v-for="cat in categoriesStore.roots"
+            :key="cat.id"
+            :to="`/products?category=${cat.slug}`"
             class="group relative border border-border bg-muted/20 p-5 hover:border-maroon hover:bg-maroon/5 transition-all duration-200"
           >
-            <div class="text-2xl mb-3">{{ typeIcon[g.type] || "📦" }}</div>
-            <div class="font-medium text-sm leading-snug">{{ g.name }}</div>
-            <div class="mt-1.5 text-xs text-muted-foreground line-clamp-2 leading-relaxed">{{ g.description }}</div>
+            <div class="text-2xl mb-3">{{ cat.icon }}</div>
+            <div class="font-medium text-sm leading-snug">{{ cat.name }}</div>
+            <div class="mt-1.5 text-xs text-muted-foreground line-clamp-2 leading-relaxed">{{ cat.description }}</div>
             <div class="mt-4 flex items-center gap-1 text-xs text-muted-foreground group-hover:text-maroon transition-colors">
               <span>مشاهده</span>
               <svg width="12" height="12" viewBox="0 0 16 16" fill="none" class="shrink-0">
                 <path d="M12 8H4M8 4L4 8L8 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
               </svg>
             </div>
-            <div class="mt-3 flex flex-wrap gap-1">
-              <span v-if="g.attributes?.length" class="border border-border px-1.5 py-0.5 text-[10px] text-muted-foreground">{{ g.attributes.length }} ویژگی</span>
-              <span v-if="g.weights?.length" class="border border-border px-1.5 py-0.5 text-[10px] text-muted-foreground">{{ g.weights.length }} وزن</span>
-            </div>
           </RouterLink>
         </div>
+        <div v-else-if="categoriesStore.loading" class="py-12 text-center text-sm text-muted-foreground">در حال بارگذاری...</div>
         <div v-else class="border border-dashed border-border py-12 text-center text-sm text-muted-foreground">
           هنوز دسته‌بندی‌ای تعریف نشده است.
-          <RouterLink to="/admin/groups" class="mr-1 text-maroon hover:underline">ایجاد دسته‌بندی</RouterLink>
         </div>
       </div>
     </section>
 
     <!-- Featured grid -->
-    <div class="border-b border-border">
+    <div v-if="featuredProducts.length" class="border-b border-border">
       <SectionHeader title="محصولات ویژه" tag="منتخب" to="/products" />
-      <FeaturedGrid :items="coffeeProducts" />
+      <FeaturedGrid :items="featuredProducts" />
     </div>
 
-    <!-- Category tabs + product listing -->
+    <!-- Products with category tabs -->
     <section class="border-b border-border">
       <SectionHeader title="همه محصولات" tag="کاتالوگ" to="/products" link-label="مشاهده کامل" />
 
@@ -114,21 +121,22 @@ const typeIcon = { coffee: "☕", accessory: "🫙", equipment: "⚙️", other:
       </div>
 
       <div class="product-listing">
-        <div v-if="filtered.length === 0" class="py-20 text-center text-muted-foreground">
+        <div v-if="productsStore.loading" class="py-20 text-center text-muted-foreground">در حال بارگذاری محصولات...</div>
+        <div v-else-if="filtered.length === 0" class="py-20 text-center text-muted-foreground">
           محصولی در این دسته‌بندی وجود ندارد.
         </div>
         <div v-else class="product-listing__grid">
-          <ProductCard v-for="p in filtered" :key="p.id" :product="p" />
+          <ProductCard v-for="p in filtered.slice(0, 8)" :key="p.id" :product="p" />
         </div>
       </div>
     </section>
 
     <!-- Blog Section -->
-    <section class="border-b border-border">
+    <section v-if="recentPosts.length" class="border-b border-border">
       <SectionHeader title="آخرین مقالات" tag="بلاگ" to="/blog" link-label="همه مقالات" />
       <div class="px-[5vw] pb-14">
         <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
-          <BlogCard v-for="post in posts.slice(0, 3)" :key="post.slug" :post="post" />
+          <BlogCard v-for="post in recentPosts" :key="post.slug" :post="post" />
         </div>
       </div>
     </section>

@@ -4,8 +4,8 @@ import { RouterLink } from "vue-router";
 import { Minus, Plus, Trash2, ShoppingBag, ArrowLeft } from "lucide-vue-next";
 import TheLayout from "@/components/site/TheLayout.vue";
 import { useCartStore } from "@/stores/cart.js";
-import { formatPrice } from "@/lib/data.js";
 import { toFa } from "@/lib/utils.js";
+function formatPrice(n) { return n ? Number(n).toLocaleString("fa-IR") : "۰"; }
 
 const cartStore = useCartStore();
 

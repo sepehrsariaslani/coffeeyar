@@ -4,7 +4,7 @@ import { Search, Package, Truck, CheckCircle2, Clock, MapPin, Phone } from "luci
 import TheLayout from "@/components/site/TheLayout.vue";
 import { useAccountStore } from "@/stores/account.js";
 import { toFa } from "@/lib/utils.js";
-import { formatPrice } from "@/lib/data.js";
+function formatPrice(n) { return n ? Number(n).toLocaleString("fa-IR") : "۰"; }
 
 const accountStore = useAccountStore();
 const query = ref("");

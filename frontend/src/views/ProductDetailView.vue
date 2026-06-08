@@ -10,7 +10,7 @@ import AppSelect from "@/components/AppSelect.vue";
 import ProductGallery from "@/components/ProductGallery.vue";
 import ProductCard from "@/components/ProductCard.vue";
 import SectionHeader from "@/components/SectionHeader.vue";
-import { products, formatPrice } from "@/lib/data.js";
+import { useProductsStore } from "@/stores/products.js";
 import { useCartStore } from "@/stores/cart.js";
 import { useReviewsStore } from "@/stores/reviews.js";
 import { useWishlistStore } from "@/stores/wishlist.js";
@@ -19,11 +19,17 @@ import { useSeo } from "@/composables/useSeo.js";
 import { useJsonLd } from "@/composables/useJsonLd.js";
 import { useProductGlobalFaqsStore } from "@/stores/productGlobalFaqs.js";
 
+function formatPrice(n) {
+  if (!n) return "۰";
+  return n.toLocaleString("fa-IR");
+}
+
 const route = useRoute();
 const cartStore = useCartStore();
 const reviewsStore = useReviewsStore();
 const wishlistStore = useWishlistStore();
 const profilesStore = useProductProfilesStore();
+const productsStore = useProductsStore();
 
 const productAssignment = computed(() =>
   product.value ? profilesStore.getAssignment(product.value.id) : null
@@ -32,9 +38,7 @@ const productProfile = computed(() =>
   productAssignment.value ? profilesStore.getProfile(productAssignment.value.profileId) : null
 );
 
-const product = computed(() =>
-  products.find((p) => p.id === route.params.id)
-);
+const product = computed(() => productsStore.currentProduct);
 
 useSeo({
   title: computed(() => product.value?.name),
@@ -97,16 +101,27 @@ function submitReview() {
   setTimeout(() => (reviewSubmitted.value = false), 3000);
 }
 
-const isAccessory = computed(() => product.value?.type === "accessory");
+const isAccessory = computed(() => {
+  const p = product.value;
+  if (!p) return false;
+  const slug = p.category_slug || "";
+  const name = p.category_name || "";
+  return !slug.includes("coffee") && !name.includes("قهوه") && (slug.includes("accessor") || slug.includes("equipment") || slug.includes("brewing") || p.type === "accessory");
+});
 
 const globalFaqsStore = useProductGlobalFaqsStore();
 const globalFaqs = computed(() =>
   globalFaqsStore.getFaqsForType(isAccessory.value ? "accessory" : "coffee")
 );
 
+onMounted(async () => {
+  await productsStore.fetchProduct(route.params.id);
+  await reviewsStore.fetchReviews(route.params.id);
+});
+
 const related = computed(() =>
-  products
-    .filter((p) => p.id !== route.params.id && p.type === product.value?.type)
+  productsStore.products
+    .filter((p) => p.id !== productsStore.currentProduct?.id && p.category_name === product.value?.category_name)
     .slice(0, 4)
 );
 
@@ -159,37 +174,48 @@ function removeInlineAssignment() {
   inlineRatings.value = {};
 }
 
+const variants = computed(() => product.value?.variants || []);
+const grinds = computed(() => {
+  const p = product.value;
+  if (!p) return [];
+  if (p.grinds?.length) return p.grinds;
+  if (p.category_slug === "coffee") return ["دانه کامل", "اسپرسو", "موکاپات", "فرنچ پرس", "V60"];
+  return [];
+});
+const gallery = computed(() => {
+  const p = product.value;
+  if (!p) return [];
+  if (p.gallery?.length) return p.gallery;
+  if (p.image) return [p.image];
+  return [];
+});
+const stockStatus = computed(() => {
+  const qty = product.value?.stock_qty ?? 0;
+  if (qty <= 0) return "out_of_stock";
+  if (qty <= 5) return "low_stock";
+  return "in_stock";
+});
+
 const price = computed(() => {
   if (!product.value) return 0;
-  if (isAccessory.value) return product.value.price;
-  return Math.round(
-    product.value.price * product.value.weights[selectedWeight.value].multiplier
-  );
+  if (variants.value.length && variants.value[selectedWeight.value]) {
+    return variants.value[selectedWeight.value].price_toman || product.value.effective_price_toman || product.value.price_toman || 0;
+  }
+  return product.value.effective_price_toman || product.value.price_toman || 0;
 });
 
 function addToCart() {
   if (!product.value) return;
-  if (isAccessory.value) {
-    cartStore.add({
-      productId: product.value.id,
-      name: product.value.name,
-      image: product.value.image,
-      weight: "۱ عدد",
-      grind: product.value.category || "اکسسوری",
-      unitPrice: product.value.price,
-      qty: qty.value,
-    });
-  } else {
-    cartStore.add({
-      productId: product.value.id,
-      name: product.value.name,
-      image: product.value.image,
-      weight: product.value.weights[selectedWeight.value].label,
-      grind: product.value.grinds[selectedGrind.value],
-      unitPrice: price.value,
-      qty: 1,
-    });
-  }
+  const variant = variants.value[selectedWeight.value];
+  cartStore.add({
+    productId: product.value.id,
+    name: product.value.name,
+    image: product.value.image || product.value.gallery?.[0] || "",
+    weight: variant?.label || "۱ عدد",
+    grind: grinds.value[selectedGrind.value] || product.value.category_name || "",
+    unitPrice: price.value,
+    qty: qty.value,
+  });
   added.value = true;
   setTimeout(() => (added.value = false), 2000);
 }
@@ -197,7 +223,10 @@ function addToCart() {
 
 <template>
   <TheLayout>
-    <div v-if="!product" class="mx-auto max-w-2xl px-6 py-32 text-center">
+    <div v-if="productsStore.loading" class="mx-auto max-w-2xl px-6 py-32 text-center text-muted-foreground">
+      در حال بارگذاری...
+    </div>
+    <div v-else-if="!product" class="mx-auto max-w-2xl px-6 py-32 text-center">
       <h1 class="text-3xl">محصول پیدا نشد</h1>
       <RouterLink to="/products" class="mt-6 inline-block text-maroon">بازگشت به محصولات</RouterLink>
     </div>
@@ -209,13 +238,6 @@ function addToCart() {
         <span class="text-[#C8C2BA]">·</span>
         <RouterLink to="/products" class="text-[#9e9890] hover:text-foreground transition-colors">محصولات</RouterLink>
         <span class="text-[#C8C2BA]">·</span>
-        <RouterLink
-          v-if="isAccessory"
-          to="/products"
-          @click.prevent="$router.push({ path: '/products', query: { tab: 'accessories' } })"
-          class="text-[#9e9890] hover:text-foreground transition-colors"
-        >اکسسوری</RouterLink>
-        <span v-if="isAccessory" class="text-[#C8C2BA]">·</span>
         <span class="text-[#555]">{{ product.name }}</span>
       </nav>
 
@@ -228,14 +250,14 @@ function addToCart() {
             <div class="flex flex-col gap-3 md:flex-row-reverse">
               <div class="flex-1 md:p-6">
                 <ProductGallery
-                  :image="product.gallery[activeImg] || product.image"
+                  :image="gallery[activeImg] || product.image || ''"
                   :alt="product.name"
-                  :badge="isAccessory ? product.category : product.roast"
+                  :badge="product.category_name"
                 />
               </div>
-              <div v-if="product.gallery?.length > 1" class="flex gap-2 md:flex-col md:justify-start md:py-6 md:pr-0 md:pl-6">
+              <div v-if="gallery.length > 1" class="flex gap-2 md:flex-col md:justify-start md:py-6 md:pr-0 md:pl-6">
                 <button
-                  v-for="(img, idx) in product.gallery"
+                  v-for="(img, idx) in gallery"
                   :key="idx"
                   type="button"
                   @click="activeImg = idx"
@@ -250,100 +272,79 @@ function addToCart() {
 
           <!-- Info -->
           <div class="flex flex-col justify-center px-6 py-12 md:px-12 md:py-16">
-            <!-- Accessory header -->
-            <template v-if="isAccessory">
-              <div class="flex items-center gap-3 mb-4">
-                <span class="text-xs uppercase tracking-[0.2em] text-maroon font-[Vazirmatn]">{{ product.category }}</span>
-                <span class="h-px w-6 bg-[#E8E4DE]" />
-                <span class="text-xs text-muted-foreground font-[Vazirmatn]">{{ product.brand }}</span>
-              </div>
-              <h1 class="text-4xl font-light leading-tight mb-4">{{ product.name }}</h1>
-              <p class="leading-7 text-muted-foreground mb-6">{{ product.description }}</p>
+            <div class="flex items-center gap-3 mb-4">
+              <span class="text-xs uppercase tracking-[0.2em] text-maroon font-[Vazirmatn]">{{ product.category_name }}</span>
+            </div>
 
-              <div class="price-row">
-                <span class="price-row__amount">{{ formatPrice(price) }}</span>
-              </div>
+            <h1 class="text-4xl font-light leading-tight mb-4">{{ product.name }}</h1>
+            <p class="leading-7 text-muted-foreground mb-4">{{ product.description || product.short_description }}</p>
 
-              <!-- Qty selector -->
-              <div class="mt-8">
-                <div class="picker-label">تعداد</div>
-                <div class="flex items-center gap-3">
-                  <button type="button" @click="qty = Math.max(1, qty - 1)"
-                    class="flex h-10 w-10 items-center justify-center border border-[#E8E4DE] text-lg hover:border-maroon">−</button>
-                  <span class="min-w-[2rem] text-center font-[Vazirmatn]">{{ qty }}</span>
-                  <button type="button" @click="qty++"
-                    class="flex h-10 w-10 items-center justify-center border border-[#E8E4DE] text-lg hover:border-maroon">+</button>
-                </div>
-              </div>
-            </template>
+            <!-- Notes/tags -->
+            <div v-if="product.notes?.length" class="flex flex-wrap gap-2 mb-6">
+              <span
+                v-for="note in product.notes" :key="note"
+                class="border border-[#E8E4DE] px-3 py-1 text-xs text-muted-foreground font-[Vazirmatn]"
+              >{{ note }}</span>
+            </div>
 
-            <!-- Coffee header -->
-            <template v-else>
-              <div class="flex items-center gap-3 mb-4">
-                <span class="text-xs uppercase tracking-[0.2em] text-maroon font-[Vazirmatn]">{{ product.origin }}</span>
-                <span class="h-px w-6 bg-[#E8E4DE]" />
-                <span class="text-xs text-muted-foreground font-[Vazirmatn]">فرآوری {{ product.process }}</span>
-              </div>
+            <div class="price-row">
+              <span class="price-row__amount">{{ formatPrice(price) }}</span>
+              <span class="price-row__unit">تومان</span>
+            </div>
 
-              <h1 class="text-4xl font-light leading-tight mb-4">{{ product.name }}</h1>
-              <p class="leading-7 text-muted-foreground mb-4">{{ product.description }}</p>
-
-              <div class="flex flex-wrap gap-2 mb-6">
-                <span
-                  v-for="note in product.notes" :key="note"
-                  class="border border-[#E8E4DE] px-3 py-1 text-xs text-muted-foreground font-[Vazirmatn]"
+            <!-- Variant selector (weights) -->
+            <div v-if="variants.length" class="mt-8">
+              <div class="picker-label">وزن / تنوع</div>
+              <div class="flex flex-wrap gap-2">
+                <button
+                  v-for="(v, idx) in variants" :key="v.id"
+                  type="button" @click="selectedWeight = idx"
+                  :class="['picker-chip', selectedWeight === idx ? 'picker-chip--active' : '']"
                 >
-                  {{ note }}
-                </span>
+                  {{ v.label }}
+                </button>
               </div>
+            </div>
 
-              <div class="price-row">
-                <span class="price-row__amount">{{ formatPrice(price) }}</span>
-                <span class="price-row__unit">تومان</span>
+            <!-- Grind selector -->
+            <div v-if="grinds.length" class="mt-5">
+              <div class="picker-label">نوع آسیاب</div>
+              <div class="flex flex-wrap gap-2">
+                <button
+                  v-for="(g, idx) in grinds" :key="g"
+                  type="button" @click="selectedGrind = idx"
+                  :class="['picker-chip', selectedGrind === idx ? 'picker-chip--active' : '']"
+                >
+                  {{ g }}
+                </button>
               </div>
+            </div>
 
-              <!-- Weight selector -->
-              <div class="mt-8">
-                <div class="picker-label">وزن</div>
-                <div class="flex flex-wrap gap-2">
-                  <button
-                    v-for="(w, idx) in product.weights" :key="w.label"
-                    type="button" @click="selectedWeight = idx"
-                    :class="['picker-chip', selectedWeight === idx ? 'picker-chip--active' : '']"
-                  >
-                    {{ w.label }}
-                  </button>
-                </div>
+            <!-- Qty selector -->
+            <div class="mt-5">
+              <div class="picker-label">تعداد</div>
+              <div class="flex items-center gap-3">
+                <button type="button" @click="qty = Math.max(1, qty - 1)"
+                  class="flex h-10 w-10 items-center justify-center border border-[#E8E4DE] text-lg hover:border-maroon">−</button>
+                <span class="min-w-[2rem] text-center font-[Vazirmatn]">{{ qty }}</span>
+                <button type="button" @click="qty++"
+                  class="flex h-10 w-10 items-center justify-center border border-[#E8E4DE] text-lg hover:border-maroon">+</button>
               </div>
-
-              <!-- Grind selector -->
-              <div class="mt-5">
-                <div class="picker-label">نوع آسیاب</div>
-                <div class="flex flex-wrap gap-2">
-                  <button
-                    v-for="(g, idx) in product.grinds" :key="g"
-                    type="button" @click="selectedGrind = idx"
-                    :class="['picker-chip', selectedGrind === idx ? 'picker-chip--active' : '']"
-                  >
-                    {{ g }}
-                  </button>
-                </div>
-              </div>
-            </template>
+            </div>
 
             <!-- Stock indicator -->
             <div class="mt-6 flex items-center gap-2 font-[Vazirmatn]">
-              <template v-if="product.stock === 'in_stock'">
+              <template v-if="stockStatus === 'in_stock'">
                 <span class="h-2 w-2 rounded-full bg-green-500 shrink-0"></span>
                 <span class="text-xs text-green-700">موجود در انبار</span>
-                <span v-if="product.stockCount" class="text-xs text-muted-foreground">({{ product.stockCount.toLocaleString('fa-IR') }} عدد)</span>
+                <span v-if="product.stock_qty" class="text-xs text-muted-foreground">({{ product.stock_qty.toLocaleString('fa-IR') }} عدد)</span>
               </template>
-              <template v-else-if="product.stock === 'low_stock'">
+              <template v-else-if="stockStatus === 'low_stock'">
                 <span class="h-2 w-2 rounded-full bg-amber-500 shrink-0 animate-pulse"></span>
                 <span class="text-xs text-amber-700 font-medium">موجودی محدود</span>
-                <span v-if="product.stockCount" class="text-xs text-muted-foreground">(فقط {{ product.stockCount.toLocaleString('fa-IR') }} عدد باقی مانده)</span>
+                <span class="text-xs text-muted-foreground">(فقط {{ product.stock_qty?.toLocaleString('fa-IR') }} عدد باقی مانده)</span>
               </template>
-              <template v-else-if="product.stock === 'out_of_stock'">
+              <template v-else>
                 <span class="h-2 w-2 rounded-full bg-red-400 shrink-0"></span>
                 <span class="text-xs text-red-600">ناموجود — به‌زودی موجود می‌شود</span>
               </template>
@@ -352,10 +353,10 @@ function addToCart() {
             <div class="mt-8 flex gap-3">
               <button
                 type="button" @click="addToCart"
-                :disabled="product.stock === 'out_of_stock'"
-                :class="['add-btn flex-1', added ? 'add-btn--done' : '', product.stock === 'out_of_stock' ? 'opacity-50 cursor-not-allowed' : '']"
+                :disabled="stockStatus === 'out_of_stock'"
+                :class="['add-btn flex-1', added ? 'add-btn--done' : '', stockStatus === 'out_of_stock' ? 'opacity-50 cursor-not-allowed' : '']"
               >
-                {{ product.stock === 'out_of_stock' ? 'ناموجود' : added ? '✓ به سبد اضافه شد' : 'افزودن به سبد خرید' }}
+                {{ stockStatus === 'out_of_stock' ? 'ناموجود' : added ? '✓ به سبد اضافه شد' : 'افزودن به سبد خرید' }}
               </button>
               <button
                 type="button"
@@ -442,55 +443,33 @@ function addToCart() {
         </section>
       </template>
 
-      <!-- Coffee-specific sections -->
-      <template v-else>
-        <!-- Profile Chart (from store) or fallback FlavorTriangle -->
-        <section v-if="productProfile && productAssignment" class="border-b border-border bg-[#FAFAF8]">
-          <div class="mx-auto grid max-w-7xl items-center gap-12 px-6 py-16 md:grid-cols-2">
-            <div>
-              <span class="text-xs uppercase tracking-[0.3em] text-maroon font-[Vazirmatn]">نمودار ویژگی‌ها</span>
-              <h2 class="mt-3 text-3xl font-light md:text-4xl">{{ productProfile.name }}</h2>
-              <p class="mt-4 max-w-md leading-8 text-muted-foreground">
-                این نمودار ویژگی‌های کلیدی این محصول را نشان می‌دهد.
-              </p>
-              <dl class="mt-8 grid gap-4" :style="`grid-template-columns: repeat(${Math.min(productProfile.traits.length, 3)}, 1fr)`">
-                <div
-                  v-for="t in productProfile.traits"
-                  :key="t.id"
-                  class="border-t-2 border-maroon pt-3"
-                >
-                  <dt class="text-xs text-muted-foreground font-[Vazirmatn]">{{ t.name }}</dt>
-                  <dd class="mt-1 text-2xl font-light text-maroon">
-                    {{ toFa(productAssignment.ratings[t.id] ?? 0) }}<span class="text-sm text-muted-foreground">/۱۰</span>
-                  </dd>
-                </div>
-              </dl>
-            </div>
-            <div class="flex justify-center">
-              <ProfileChart :traits="productProfile.traits" :ratings="productAssignment.ratings" />
+      <!-- Specs / flavor section -->
+      <template v-if="product.specs?.length">
+        <section class="border-b border-border">
+          <div class="mx-auto max-w-7xl px-6 py-16">
+            <span class="text-xs uppercase tracking-[0.3em] text-maroon">مشخصات فنی</span>
+            <div class="mt-8 grid gap-px bg-[#E8E4DE] sm:grid-cols-2 lg:grid-cols-3">
+              <div v-for="spec in product.specs" :key="spec.label" class="bg-background p-6 text-center">
+                <div class="text-xs uppercase tracking-widest text-maroon font-[Vazirmatn]">{{ spec.label }}</div>
+                <div class="mt-3 text-lg font-light">{{ spec.value }}</div>
+              </div>
             </div>
           </div>
         </section>
+      </template>
 
-        <!-- Fallback: hardcoded FlavorTriangle if no profile assigned but product has flavor data -->
-        <section v-else-if="product.flavor" class="border-b border-border bg-[#FAFAF8]">
+      <template v-else-if="product.flavor && Object.keys(product.flavor).length">
+        <section class="border-b border-border bg-[#FAFAF8]">
           <div class="mx-auto grid max-w-7xl items-center gap-12 px-6 py-16 md:grid-cols-2">
             <div>
               <span class="text-xs uppercase tracking-[0.3em] text-maroon font-[Vazirmatn]">مثلث طعم</span>
               <h2 class="mt-3 text-3xl font-light md:text-4xl">پروفایل چشایی</h2>
-              <p class="mt-4 max-w-md leading-8 text-muted-foreground">
-                این نمودار نسبت سه ویژگی کلیدی فنجان شما را نشان می‌دهد.
-              </p>
               <dl class="mt-8 grid grid-cols-3 gap-4">
-                <div
-                  v-for="m in [
-                    { l: 'تلخی', v: product.flavor.bitterness },
-                    { l: 'اسیدیته', v: product.flavor.acidity },
-                    { l: 'عطر', v: product.flavor.aroma },
-                  ]"
-                  :key="m.l"
-                  class="border-t-2 border-maroon pt-3"
-                >
+                <div v-for="m in [
+                    { l: 'تلخی', v: product.flavor.bitterness || 0 },
+                    { l: 'اسیدیته', v: product.flavor.acidity || 0 },
+                    { l: 'عطر', v: product.flavor.aroma || 0 },
+                  ]" :key="m.l" class="border-t-2 border-maroon pt-3">
                   <dt class="text-xs text-muted-foreground font-[Vazirmatn]">{{ m.l }}</dt>
                   <dd class="mt-1 text-2xl font-light text-maroon">
                     {{ toFa(m.v) }}<span class="text-sm text-muted-foreground">/۱۰</span>
@@ -503,85 +482,21 @@ function addToCart() {
             </div>
           </div>
         </section>
-
-        <!-- Specs grid — dynamic if product has specs array, otherwise fallback -->
-        <section class="border-b border-border">
-          <template v-if="product.specs?.length">
-            <div class="mx-auto max-w-7xl px-6 py-16">
-              <span class="text-xs uppercase tracking-[0.3em] text-maroon">مشخصات فنی</span>
-              <div class="mt-8 grid gap-px bg-[#E8E4DE] sm:grid-cols-2 lg:grid-cols-3">
-                <div
-                  v-for="spec in product.specs"
-                  :key="spec.label"
-                  class="bg-background p-6 text-center"
-                >
-                  <div class="text-xs uppercase tracking-widest text-maroon font-[Vazirmatn]">{{ spec.label }}</div>
-                  <div class="mt-3 text-lg font-light">{{ spec.value }}</div>
-                </div>
-              </div>
-            </div>
-          </template>
-          <template v-else>
-            <div class="mx-auto grid max-w-7xl gap-px bg-[#E8E4DE] md:grid-cols-3">
-              <div
-                v-for="s in [
-                  { l: 'خاستگاه', v: product.origin },
-                  { l: 'فرآوری', v: product.process },
-                  { l: 'اسیدیته', v: `${toFa(product.flavor.acidity)} / ۱۰` },
-                  ...Object.entries(product.customAttributes ?? {}).map(([l, v]) => ({ l, v })),
-                ].slice(0, 6)"
-                :key="s.l"
-                class="bg-background p-8 text-center"
-              >
-                <div class="text-xs uppercase tracking-widest text-maroon font-[Vazirmatn]">{{ s.l }}</div>
-                <div class="mt-3 text-xl font-light">{{ s.v }}</div>
-              </div>
-            </div>
-          </template>
-        </section>
-
-        <!-- Coffee FAQs — product-specific + global -->
-        <section v-if="product.productFaqs?.length || globalFaqs.length" class="border-b border-border">
-          <div class="mx-auto max-w-4xl px-6 py-12">
-            <!-- product-specific FAQs -->
-            <template v-if="product.productFaqs?.length">
-              <div class="mb-1 text-[10px] uppercase tracking-widest text-maroon pb-2">سوالات تخصصی</div>
-              <div
-                v-for="(faq, i) in product.productFaqs"
-                :key="'pf-' + i"
-                class="border-b border-[#E8E4DE]"
-              >
-                <button
-                  type="button"
-                  @click="openAcc = openAcc === 'pf-' + i ? null : 'pf-' + i"
-                  class="flex w-full cursor-pointer items-center justify-between py-5 text-right"
-                >
-                  <ChevronDown :class="['h-4 w-4 transition-transform text-muted-foreground', openAcc === 'pf-' + i ? 'rotate-180' : '']" />
-                  <span class="text-base font-[Vazirmatn]">{{ faq.q }}</span>
-                </button>
-                <div v-if="openAcc === 'pf-' + i" class="pb-5 pr-8 text-sm leading-7 text-muted-foreground font-[Vazirmatn] whitespace-pre-line">{{ faq.a }}</div>
-              </div>
-              <div v-if="globalFaqs.length" class="pt-2" />
-            </template>
-            <!-- global FAQs -->
-            <div
-              v-for="faq in globalFaqs"
-              :key="faq.id"
-              class="border-b border-[#E8E4DE]"
-            >
-              <button
-                type="button"
-                @click="openAcc = openAcc === faq.id ? null : faq.id"
-                class="flex w-full cursor-pointer items-center justify-between py-5 text-right"
-              >
-                <ChevronDown :class="['h-4 w-4 transition-transform text-muted-foreground', openAcc === faq.id ? 'rotate-180' : '']" />
-                <span class="text-base font-[Vazirmatn]">{{ faq.title }}</span>
-              </button>
-              <div v-if="openAcc === faq.id" class="pb-5 pr-8 text-sm leading-7 text-muted-foreground font-[Vazirmatn] whitespace-pre-line">{{ faq.content }}</div>
-            </div>
-          </div>
-        </section>
       </template>
+
+      <!-- Global FAQs -->
+      <section v-if="globalFaqs.length" class="border-b border-border">
+        <div class="mx-auto max-w-4xl px-6 py-12">
+          <div v-for="faq in globalFaqs" :key="faq.id" class="border-b border-[#E8E4DE]">
+            <button type="button" @click="openAcc = openAcc === faq.id ? null : faq.id"
+              class="flex w-full cursor-pointer items-center justify-between py-5 text-right">
+              <ChevronDown :class="['h-4 w-4 transition-transform text-muted-foreground', openAcc === faq.id ? 'rotate-180' : '']" />
+              <span class="text-base font-[Vazirmatn]">{{ faq.title }}</span>
+            </button>
+            <div v-if="openAcc === faq.id" class="pb-5 pr-8 text-sm leading-7 text-muted-foreground font-[Vazirmatn] whitespace-pre-line">{{ faq.content }}</div>
+          </div>
+        </div>
+      </section>
 
       <!-- Reviews section -->
       <section class="border-t border-border">
@@ -623,8 +538,8 @@ function addToCart() {
                         {{ r.name.slice(0, 1) }}
                       </div>
                       <div>
-                        <div class="text-sm font-medium">{{ r.name }}</div>
-                        <div class="text-xs text-muted-foreground">{{ r.date }}</div>
+                        <div class="text-sm font-medium">{{ r.user_name || r.name }}</div>
+                        <div class="text-xs text-muted-foreground">{{ r.created_at?.slice(0, 10) || r.date }}</div>
                       </div>
                     </div>
                     <div class="flex gap-0.5 shrink-0">

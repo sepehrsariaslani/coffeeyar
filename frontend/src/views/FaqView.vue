@@ -1,66 +1,56 @@
 <script setup>
-import { ref, computed } from "vue";
-import { useContentStore } from "@/stores/content.js";
+import { ref, onMounted } from "vue";
 import TheLayout from "@/components/site/TheLayout.vue";
+import { useFaqStore } from "@/stores/faq.js";
+import { useSeo } from "@/composables/useSeo.js";
 
-const store = useContentStore();
+useSeo({ title: "سوالات متداول — نوار", description: "پاسخ سوال‌های رایج درباره محصولات، ارسال و خدمات نوار" });
 
-const faq = computed(() => store.content.faq || {
-  title: "سوالات متداول",
-  subtitle: "پاسخ سوال‌های رایج درباره محصولات، ارسال و خدمات نوار",
-  items: [],
-});
-
+const faqStore = useFaqStore();
 const expanded = ref(null);
 
 function toggle(id) {
   expanded.value = expanded.value === id ? null : id;
 }
+
+onMounted(() => faqStore.fetchFaqs());
 </script>
 
 <template>
   <TheLayout>
-    <!-- Hero -->
     <section class="border-b border-border py-20 text-center">
       <div class="mb-3 text-xs uppercase tracking-widest text-maroon">پشتیبانی</div>
-      <h1 class="text-4xl font-light md:text-5xl">{{ faq.title }}</h1>
-      <p class="mx-auto mt-4 max-w-xl text-sm text-muted-foreground">{{ faq.subtitle }}</p>
+      <h1 class="text-4xl font-light md:text-5xl">سوالات متداول</h1>
+      <p class="mx-auto mt-4 max-w-xl text-sm text-muted-foreground">پاسخ سوال‌های رایج درباره محصولات، ارسال و خدمات نوار</p>
     </section>
 
-    <!-- FAQ list -->
     <section class="mx-auto max-w-3xl px-6 py-16">
-      <div v-if="faq.items && faq.items.length" class="divide-y divide-border border-y border-border">
-        <div v-for="(item, idx) in faq.items" :key="item.id || idx">
+      <div v-if="faqStore.loading" class="py-12 text-center text-muted-foreground">در حال بارگذاری...</div>
+      <div v-else-if="faqStore.faqs.length" class="divide-y divide-border border-y border-border">
+        <div v-for="item in faqStore.faqs" :key="item.id">
           <button
             type="button"
             class="flex w-full items-center justify-between py-5 text-right transition-colors hover:text-maroon"
-            @click="toggle(item.id || idx)"
+            @click="toggle(item.id)"
           >
-            <span class="text-base font-medium">{{ item.q }}</span>
-            <span class="mr-4 shrink-0 text-xl font-light text-muted-foreground transition-transform" :class="{ 'rotate-45': expanded === (item.id || idx) }">+</span>
+            <span class="text-base font-medium">{{ item.question }}</span>
+            <span class="mr-4 shrink-0 text-xl font-light text-muted-foreground transition-transform" :class="{ 'rotate-45': expanded === item.id }">+</span>
           </button>
-          <div
-            v-show="expanded === (item.id || idx)"
-            class="pb-5 text-sm leading-relaxed text-muted-foreground"
-          >
-            {{ item.a }}
+          <div v-show="expanded === item.id" class="pb-5 text-sm leading-relaxed text-muted-foreground">
+            {{ item.answer }}
           </div>
         </div>
       </div>
+      <div v-else class="py-12 text-center text-muted-foreground">سوالی ثبت نشده است.</div>
+    </section>
 
-      <div v-else class="py-20 text-center text-muted-foreground">
-        هنوز سوالی اضافه نشده است.
-      </div>
-
-      <!-- CTA -->
-      <div class="mt-16 border border-border p-8 text-center">
-        <div class="text-xs uppercase tracking-widest text-maroon mb-3">هنوز سوال داری؟</div>
-        <h2 class="text-2xl font-light mb-2">با ما تماس بگیر</h2>
-        <p class="text-sm text-muted-foreground mb-5">تیم پشتیبانی نوار در ساعات کاری پاسخگوی تمام سوال‌های شماست.</p>
-        <RouterLink to="/contact" class="inline-flex items-center gap-2 bg-foreground px-6 py-3 text-sm text-background hover:opacity-80">
-          صفحه تماس ←
-        </RouterLink>
-      </div>
+    <!-- CTA -->
+    <section class="border-t border-border bg-muted/20 py-16 text-center">
+      <h2 class="text-xl font-medium">سوالی داری که اینجا نیست؟</h2>
+      <p class="mt-2 text-sm text-muted-foreground">با ما تماس بگیر، خوشحال می‌شیم کمک کنیم.</p>
+      <a href="/contact" class="mt-6 inline-block border border-maroon px-8 py-3 text-sm text-maroon hover:bg-maroon hover:text-white transition-colors">
+        تماس با ما
+      </a>
     </section>
   </TheLayout>
 </template>

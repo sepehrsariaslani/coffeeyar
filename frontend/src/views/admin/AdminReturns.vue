@@ -2,7 +2,7 @@
 import { ref, computed } from "vue";
 import { RotateCcw, Check, X, ChevronDown, ChevronUp, AlertCircle } from "lucide-vue-next";
 import { useReturnsStore } from "@/stores/returns.js";
-import { formatPrice } from "@/lib/data.js";
+function formatPrice(n) { return n ? Number(n).toLocaleString("fa-IR") : "۰"; }
 import { toFa } from "@/lib/utils.js";
 
 const store = useReturnsStore();

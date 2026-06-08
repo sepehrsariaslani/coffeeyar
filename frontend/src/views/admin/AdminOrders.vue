@@ -1,8 +1,10 @@
 <script setup>
 import { ref, computed, watch } from "vue";
-import { formatPrice } from "@/lib/data.js";
 import { Check, Pencil, X, Printer, BarChart2 } from "lucide-vue-next";
+
 import ViewSwitcher from "@/components/admin/ViewSwitcher.vue";
+
+function formatPrice(n) { return n ? Number(n).toLocaleString("fa-IR") : "۰"; }
 
 const orders = ref([
   {

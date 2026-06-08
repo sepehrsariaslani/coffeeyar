@@ -1,30 +1,27 @@
 <script setup>
-import { ref, computed, watch } from "vue";
+import { ref, computed, watch, onMounted } from "vue";
+import { useRoute } from "vue-router";
 import { SlidersHorizontal, X, ChevronDown } from "lucide-vue-next";
 import TheLayout from "@/components/site/TheLayout.vue";
 import SectionHeader from "@/components/SectionHeader.vue";
 import ProductCard from "@/components/ProductCard.vue";
-import { products } from "@/lib/data.js";
+import { useProductsStore } from "@/stores/products.js";
 import { useCategoriesStore } from "@/stores/categories.js";
 
+const route = useRoute();
+const productsStore = useProductsStore();
 const categoriesStore = useCategoriesStore();
 
-const allPrices = products.map((p) => p.price);
-const maxPossible = Math.max(...allPrices, 1);
-const minPossible = Math.min(...allPrices, 0);
-
-const activeTab = ref(categoriesStore.roots[0]?.id || "");
+const activeTab = ref("");
 const open = ref(false);
 const sortBy = ref("default");
-const priceMin = ref(minPossible);
-const priceMax = ref(maxPossible);
-const selectedAttrs = ref({});
+const selectedSubCat = ref("");
 
 const sortOptions = [
   { value: "default", label: "پیش‌فرض" },
   { value: "price_asc", label: "ارزان‌ترین" },
   { value: "price_desc", label: "گران‌ترین" },
-  { value: "name_asc", label: "نام (الف تا ی)" },
+  { value: "newest", label: "جدیدترین" },
 ];
 
 const currentRootCat = computed(() =>
@@ -35,62 +32,35 @@ const currentSubCats = computed(() =>
   activeTab.value ? categoriesStore.children(activeTab.value) : []
 );
 
-const selectedSubCat = ref("");
-
 watch(activeTab, () => {
   selectedSubCat.value = "";
-  selectedAttrs.value = {};
   open.value = false;
-  priceMin.value = minPossible;
-  priceMax.value = maxPossible;
+  loadProducts();
 });
 
-function toggle(obj, key, val) {
-  if (!obj[key]) obj[key] = [];
-  const arr = obj[key];
-  const idx = arr.indexOf(val);
-  if (idx !== -1) arr.splice(idx, 1); else arr.push(val);
-}
+watch(sortBy, loadProducts);
+watch(selectedSubCat, loadProducts);
 
-function sortList(list) {
-  const copy = [...list];
-  if (sortBy.value === "price_asc") return copy.sort((a, b) => a.price - b.price);
-  if (sortBy.value === "price_desc") return copy.sort((a, b) => b.price - a.price);
-  if (sortBy.value === "name_asc") return copy.sort((a, b) => a.name.localeCompare(b.name, "fa"));
-  return copy;
-}
-
-const tabProducts = computed(() =>
-  products.filter((p) => p.categoryId === activeTab.value)
-);
-
-const filtered = computed(() => {
-  const base = tabProducts.value.filter((p) => {
-    const subOk = !selectedSubCat.value || p.subCategoryId === selectedSubCat.value;
-    const priceOk = p.price >= priceMin.value && p.price <= priceMax.value;
-    const attrsOk = Object.entries(selectedAttrs.value).every(([key, vals]) => {
-      if (!vals || vals.length === 0) return true;
-      const pVal = p.attrs?.[key];
-      return pVal && vals.includes(pVal);
-    });
-    return subOk && priceOk && attrsOk;
+async function loadProducts() {
+  const cat = selectedSubCat.value
+    ? categoriesStore.getById(selectedSubCat.value)
+    : currentRootCat.value;
+  await productsStore.fetchProducts({
+    category_slug: cat?.slug || "",
+    sort: sortBy.value,
+    page_size: 48,
   });
-  return sortList(base);
-});
+}
 
 const activeCount = computed(() => {
   let n = selectedSubCat.value ? 1 : 0;
-  if (priceMin.value > minPossible || priceMax.value < maxPossible) n++;
-  Object.values(selectedAttrs.value).forEach((arr) => { n += (arr || []).length; });
   return n;
 });
 
 function clearAll() {
   selectedSubCat.value = "";
-  selectedAttrs.value = {};
-  priceMin.value = minPossible;
-  priceMax.value = maxPossible;
   sortBy.value = "default";
+  loadProducts();
 }
 
 function switchTab(id) {
@@ -98,15 +68,17 @@ function switchTab(id) {
   clearAll();
 }
 
-function formatPriceShort(n) {
-  if (n >= 1000000) return (n / 1000000).toFixed(1).replace(".0", "") + "م";
-  if (n >= 1000) return Math.round(n / 1000) + "ه";
-  return String(n);
-}
-
-function getAttrValues(key) {
-  return [...new Set(tabProducts.value.map((p) => p.attrs?.[key]).filter(Boolean))];
-}
+onMounted(async () => {
+  await categoriesStore.fetchCategories();
+  const catSlug = route.query.category || "";
+  if (catSlug) {
+    const cat = categoriesStore.getBySlug(catSlug);
+    if (cat) activeTab.value = cat.parent_id ? cat.parent_id : cat.id;
+  } else if (categoriesStore.roots.length) {
+    activeTab.value = categoriesStore.roots[0]?.id || "";
+  }
+  await loadProducts();
+});
 </script>
 
 <template>
@@ -135,6 +107,7 @@ function getAttrValues(key) {
         <!-- Filter + Sort Bar -->
         <div class="flex flex-wrap items-center gap-3 border-b border-[#E8E4DE] pb-6">
           <button
+            v-if="currentSubCats.length"
             type="button"
             @click="open = !open"
             :class="['flex items-center gap-2 border px-5 py-2.5 text-sm transition-colors font-[Vazirmatn]',
@@ -162,19 +135,6 @@ function getAttrValues(key) {
             زیردسته: {{ categoriesStore.getById(selectedSubCat)?.name }}
             <X class="h-3 w-3" />
           </button>
-          <template v-for="(vals, key) in selectedAttrs" :key="key">
-            <button v-for="val in (vals || [])" :key="val" type="button" @click="toggle(selectedAttrs, key, val)"
-              class="flex items-center gap-1.5 border border-maroon/50 bg-maroon/5 px-3 py-1.5 text-xs text-maroon font-[Vazirmatn]">
-              {{ currentRootCat?.attributes?.find(a => a.key === key)?.label || key }}: {{ val }}
-              <X class="h-3 w-3" />
-            </button>
-          </template>
-          <button v-if="priceMin > minPossible || priceMax < maxPossible" type="button"
-            @click="priceMin = minPossible; priceMax = maxPossible"
-            class="flex items-center gap-1.5 border border-maroon/50 bg-maroon/5 px-3 py-1.5 text-xs text-maroon font-[Vazirmatn]">
-            قیمت: {{ formatPriceShort(priceMin) }} – {{ formatPriceShort(priceMax) }}
-            <X class="h-3 w-3" />
-          </button>
 
           <button v-if="activeCount > 0 || sortBy !== 'default'" type="button" @click="clearAll"
             class="text-xs text-muted-foreground hover:text-maroon font-[Vazirmatn]">
@@ -182,14 +142,13 @@ function getAttrValues(key) {
           </button>
 
           <div class="mr-auto text-sm text-muted-foreground font-[Vazirmatn]">
-            {{ filtered.length }} محصول
+            {{ productsStore.total }} محصول
           </div>
         </div>
 
         <!-- Filter Panel -->
-        <div v-if="open" class="border-b border-[#E8E4DE] bg-[#FAFAF8] py-8">
+        <div v-if="open && currentSubCats.length" class="border-b border-[#E8E4DE] bg-[#FAFAF8] py-8">
           <div class="grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
-            <!-- Sub-category -->
             <div v-if="currentSubCats.length > 0">
               <div class="mb-4 text-xs uppercase tracking-widest text-maroon font-[Vazirmatn]">زیردسته</div>
               <div class="flex flex-col gap-2.5">
@@ -200,50 +159,21 @@ function getAttrValues(key) {
                 </label>
               </div>
             </div>
-
-            <!-- Dynamic attribute filters from category schema -->
-            <div v-for="attr in (currentRootCat?.attributes || [])" :key="attr.key">
-              <div class="mb-4 text-xs uppercase tracking-widest text-maroon font-[Vazirmatn]">{{ attr.label }}</div>
-              <div class="flex flex-col gap-2.5">
-                <label v-for="val in getAttrValues(attr.key)" :key="val" class="flex cursor-pointer items-center gap-3 text-sm font-[Vazirmatn]">
-                  <button type="button" @click="toggle(selectedAttrs, attr.key, val)"
-                    :class="['h-4 w-4 border transition-colors shrink-0', (selectedAttrs[attr.key] || []).includes(val) ? 'border-maroon bg-maroon' : 'border-[#E8E4DE] hover:border-maroon']" />
-                  {{ val }}
-                </label>
-                <span v-if="getAttrValues(attr.key).length === 0" class="text-xs text-muted-foreground">ارزشی ثبت نشده</span>
-              </div>
-            </div>
-
-            <!-- Price Range -->
-            <div>
-              <div class="mb-4 text-xs uppercase tracking-widest text-maroon font-[Vazirmatn]">بازه قیمت (تومان)</div>
-              <div class="space-y-3">
-                <div>
-                  <label class="text-xs text-muted-foreground font-[Vazirmatn]">از</label>
-                  <input type="range" v-model.number="priceMin"
-                    :min="minPossible" :max="priceMax - 10000" step="10000"
-                    class="mt-1 w-full accent-maroon" />
-                  <div class="mt-1 text-xs text-maroon font-[Vazirmatn]">{{ priceMin.toLocaleString("fa-IR") }}</div>
-                </div>
-                <div>
-                  <label class="text-xs text-muted-foreground font-[Vazirmatn]">تا</label>
-                  <input type="range" v-model.number="priceMax"
-                    :min="priceMin + 10000" :max="maxPossible" step="10000"
-                    class="mt-1 w-full accent-maroon" />
-                  <div class="mt-1 text-xs text-maroon font-[Vazirmatn]">{{ priceMax.toLocaleString("fa-IR") }}</div>
-                </div>
-              </div>
-            </div>
           </div>
         </div>
 
-        <!-- Products Grid -->
-        <div v-if="filtered.length === 0" class="py-24 text-center text-muted-foreground font-[Vazirmatn]">
+        <!-- Loading -->
+        <div v-if="productsStore.loading" class="py-24 text-center text-muted-foreground font-[Vazirmatn]">
+          در حال بارگذاری محصولات...
+        </div>
+        <!-- Empty -->
+        <div v-else-if="productsStore.products.length === 0" class="py-24 text-center text-muted-foreground font-[Vazirmatn]">
           <p class="text-lg">محصولی با این فیلترها پیدا نشد.</p>
           <button type="button" @click="clearAll" class="mt-4 text-sm text-maroon hover:underline">پاک کردن فیلترها</button>
         </div>
+        <!-- Products Grid -->
         <div v-else class="products-grid">
-          <ProductCard v-for="p in filtered" :key="p.id" :product="p" />
+          <ProductCard v-for="p in productsStore.products" :key="p.id" :product="p" />
         </div>
       </div>
     </section>

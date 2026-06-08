@@ -1,13 +1,9 @@
 import { defineStore } from "pinia";
 import { ref, computed } from "vue";
+import { api } from "@/lib/api.js";
 
-const USERS_KEY = "navar_users_v1";
 const SESSION_KEY = "navar_session_v1";
 
-function loadUsers() {
-  try { return JSON.parse(localStorage.getItem(USERS_KEY)) || []; } catch { return []; }
-}
-function saveUsers(u) { localStorage.setItem(USERS_KEY, JSON.stringify(u)); }
 function loadSession() {
   try { return JSON.parse(localStorage.getItem(SESSION_KEY)) || null; } catch { return null; }
 }
@@ -16,52 +12,75 @@ function saveSession(s) {
   else localStorage.removeItem(SESSION_KEY);
 }
 
-function hashSimple(str) {
-  let h = 0;
-  for (let i = 0; i < str.length; i++) h = Math.imul(31, h) + str.charCodeAt(i) | 0;
-  return h.toString(16);
-}
-
 export const useAuthStore = defineStore("auth", () => {
-  const users = ref(loadUsers());
   const session = ref(loadSession());
+  const loading = ref(false);
+  const error = ref("");
 
   const isLoggedIn = computed(() => !!session.value);
   const user = computed(() => session.value);
+  const isAdmin = computed(() => !!session.value?.is_admin);
 
-  function register({ name, email, phone, password }) {
-    if (users.value.find((u) => u.email === email))
-      return { ok: false, error: "این ایمیل قبلاً ثبت شده است" };
-    const newUser = { id: Date.now().toString(), name, email, phone, passwordHash: hashSimple(password), createdAt: new Date().toLocaleDateString("fa-IR") };
-    users.value.push(newUser);
-    saveUsers(users.value);
-    const { passwordHash: _, ...safeUser } = newUser;
-    session.value = safeUser;
-    saveSession(safeUser);
-    return { ok: true };
+  async function register({ name, email, phone, password }) {
+    loading.value = true;
+    error.value = "";
+    try {
+      const res = await api.auth.register({ name, email, phone, password });
+      session.value = res.user;
+      saveSession(res.user);
+      return { ok: true };
+    } catch (e) {
+      error.value = e.message;
+      return { ok: false, error: e.message };
+    } finally {
+      loading.value = false;
+    }
   }
 
-  function login({ email, password }) {
-    const found = users.value.find((u) => u.email === email && u.passwordHash === hashSimple(password));
-    if (!found) return { ok: false, error: "ایمیل یا رمز عبور اشتباه است" };
-    const { passwordHash: _, ...safeUser } = found;
-    session.value = safeUser;
-    saveSession(safeUser);
-    return { ok: true };
+  async function login({ email, password }) {
+    loading.value = true;
+    error.value = "";
+    try {
+      const res = await api.auth.login({ email, password });
+      session.value = res.user;
+      saveSession(res.user);
+      return { ok: true };
+    } catch (e) {
+      error.value = e.message;
+      return { ok: false, error: e.message };
+    } finally {
+      loading.value = false;
+    }
   }
 
   function logout() {
+    api.auth.logout();
     session.value = null;
     saveSession(null);
   }
 
-  function updateUser(patch) {
+  async function updateUser(patch) {
     if (!session.value) return;
-    session.value = { ...session.value, ...patch };
-    saveSession(session.value);
-    users.value = users.value.map((u) => u.id === session.value.id ? { ...u, ...patch } : u);
-    saveUsers(users.value);
+    try {
+      const updated = await api.auth.updateMe(patch);
+      session.value = { ...session.value, ...updated };
+      saveSession(session.value);
+      return { ok: true };
+    } catch (e) {
+      return { ok: false, error: e.message };
+    }
   }
 
-  return { isLoggedIn, user, register, login, logout, updateUser };
+  async function fetchMe() {
+    if (!api.getToken()) return;
+    try {
+      const u = await api.auth.me();
+      session.value = { ...session.value, ...u };
+      saveSession(session.value);
+    } catch {
+      logout();
+    }
+  }
+
+  return { isLoggedIn, user, isAdmin, loading, error, register, login, logout, updateUser, fetchMe };
 });

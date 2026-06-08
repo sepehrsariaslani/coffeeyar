@@ -1,52 +1,61 @@
 import { defineStore } from "pinia";
 import { ref } from "vue";
+import { api } from "@/lib/api.js";
 
 export const useCouponsStore = defineStore("coupons", () => {
-  const coupons = ref(
-    JSON.parse(localStorage.getItem("navar_coupons_v1") || "null") || [
-      { code: "NAVAR10", type: "percent", value: 10, label: "۱۰٪ تخفیف", minOrder: 0, maxUses: 100, used: 3, active: true, expiry: "" },
-      { code: "NAVAR20", type: "percent", value: 20, label: "۲۰٪ تخفیف", minOrder: 500000, maxUses: 50, used: 1, active: true, expiry: "" },
-      { code: "WELCOME", type: "percent", value: 15, label: "۱۵٪ تخفیف خوش‌آمدگویی", minOrder: 0, maxUses: 200, used: 12, active: true, expiry: "" },
-    ]
-  );
+  const coupons = ref([]);
+  const loaded = ref(false);
 
-  function _save() {
-    localStorage.setItem("navar_coupons_v1", JSON.stringify(coupons.value));
+  async function fetchCoupons() {
+    try {
+      coupons.value = await api.admin.coupons.list();
+      loaded.value = true;
+    } catch (e) {
+      console.error(e.message);
+    }
   }
 
-  function add(coupon) {
-    coupons.value.push({ ...coupon, code: coupon.code.toUpperCase(), used: 0 });
-    _save();
+  async function add(coupon) {
+    try {
+      await api.admin.coupons.create({ ...coupon, code: coupon.code.toUpperCase() });
+      await fetchCoupons();
+    } catch (e) {
+      console.error(e.message);
+    }
   }
 
-  function remove(code) {
-    const idx = coupons.value.findIndex((c) => c.code === code);
-    if (idx !== -1) coupons.value.splice(idx, 1);
-    _save();
+  async function remove(id) {
+    try {
+      await api.admin.coupons.remove(id);
+      coupons.value = coupons.value.filter((c) => c.id !== id);
+    } catch (e) {
+      console.error(e.message);
+    }
   }
 
-  function toggle(code) {
-    const c = coupons.value.find((c) => c.code === code);
-    if (c) { c.active = !c.active; _save(); }
+  async function toggle(id) {
+    try {
+      const res = await api.admin.coupons.toggle(id);
+      const c = coupons.value.find((c) => c.id === id);
+      if (c) c.is_active = res.is_active;
+    } catch (e) {
+      console.error(e.message);
+    }
   }
 
-  function validate(code, orderTotal) {
+  async function validate(code, orderTotal) {
+    try {
+      const res = await api.coupons.validate(code, orderTotal);
+      return { ok: true, coupon: res, discount: res.discount };
+    } catch (e) {
+      return { ok: false, error: e.message };
+    }
+  }
+
+  async function use(code) {
     const c = coupons.value.find((c) => c.code === code.trim().toUpperCase());
-    if (!c) return { ok: false, error: "کد تخفیف نامعتبر است" };
-    if (!c.active) return { ok: false, error: "این کد تخفیف غیرفعال است" };
-    if (c.minOrder && orderTotal < c.minOrder)
-      return { ok: false, error: `حداقل خرید برای این کد ${c.minOrder.toLocaleString("fa-IR")} تومان است` };
-    if (c.maxUses && c.used >= c.maxUses)
-      return { ok: false, error: "ظرفیت استفاده از این کد تمام شده است" };
-    if (c.expiry && new Date(c.expiry) < new Date())
-      return { ok: false, error: "این کد تخفیف منقضی شده است" };
-    return { ok: true, coupon: c };
+    if (c) c.used_count = (c.used_count || 0) + 1;
   }
 
-  function use(code) {
-    const c = coupons.value.find((c) => c.code === code.trim().toUpperCase());
-    if (c) { c.used++; _save(); }
-  }
-
-  return { coupons, add, remove, toggle, validate, use };
+  return { coupons, loaded, fetchCoupons, add, remove, toggle, validate, use };
 });

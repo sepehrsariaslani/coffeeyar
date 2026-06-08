@@ -2,7 +2,7 @@
 import { ref, computed, onMounted, onUnmounted } from "vue";
 import { useRouter } from "vue-router";
 import { Search, X, Package, FileText, ArrowLeft } from "lucide-vue-next";
-import { products } from "@/lib/data.js";
+import { useProductsStore } from "@/stores/products.js";
 import { usePostsStore } from "@/stores/posts.js";
 import { useCategoriesStore } from "@/stores/categories.js";
 
@@ -21,14 +21,16 @@ function onKeydown(e) {
 onMounted(() => document.addEventListener("keydown", onKeydown));
 onUnmounted(() => document.removeEventListener("keydown", onKeydown));
 
+const productsStore = useProductsStore();
+
 const productResults = computed(() => {
   if (query.value.length < 2) return [];
   const q = query.value.toLowerCase();
-  return products.filter((p) =>
-    p.name.includes(q) ||
+  return productsStore.products.filter((p) =>
+    (p.name && p.name.includes(q)) ||
     (p.notes && p.notes.some((n) => n.includes(q))) ||
     (p.description && p.description.includes(q)) ||
-    Object.values(p.attrs || {}).some((v) => String(v).includes(q))
+    (p.short_description && p.short_description.includes(q))
   ).slice(0, 5);
 });
 

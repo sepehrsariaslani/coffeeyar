@@ -3,7 +3,7 @@ import { ref, computed, onMounted } from "vue";
 
 import { useRoute, useRouter } from "vue-router";
 import { Lock, CheckCircle2, Loader2, ShieldCheck, CreditCard } from "lucide-vue-next";
-import { formatPrice } from "@/lib/data.js";
+function formatPrice(n) { return n ? Number(n).toLocaleString("fa-IR") : "۰"; }
 
 const route = useRoute();
 const router = useRouter();

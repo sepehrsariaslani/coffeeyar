@@ -1,32 +1,79 @@
 import { defineStore } from "pinia";
 import { ref, computed } from "vue";
+import { api } from "@/lib/api.js";
+import { useAuthStore } from "./auth.js";
 
-const KEY = "navar_wishlist_v1";
+const LOCAL_KEY = "navar_wishlist_v1";
 
-function load() {
-  try { return JSON.parse(localStorage.getItem(KEY)) || []; } catch { return []; }
+function loadLocal() {
+  try { return JSON.parse(localStorage.getItem(LOCAL_KEY)) || []; } catch { return []; }
 }
+function saveLocal(v) { localStorage.setItem(LOCAL_KEY, JSON.stringify(v)); }
 
 export const useWishlistStore = defineStore("wishlist", () => {
-  const ids = ref(load());
-
-  function save() { localStorage.setItem(KEY, JSON.stringify(ids.value)); }
+  const ids = ref(loadLocal());
+  const products = ref([]);
 
   const count = computed(() => ids.value.length);
 
-  function isWishlisted(productId) { return ids.value.includes(productId); }
+  function isWishlisted(productId) {
+    return ids.value.includes(productId) || ids.value.includes(String(productId));
+  }
 
-  function toggle(productId) {
+  async function toggle(productId) {
+    const auth = useAuthStore();
+    if (auth.isLoggedIn) {
+      try {
+        const res = await api.wishlist.toggle(productId);
+        if (res.wishlisted) {
+          if (!ids.value.includes(productId)) ids.value.push(productId);
+        } else {
+          ids.value = ids.value.filter((id) => id !== productId && id !== String(productId));
+        }
+        saveLocal(ids.value);
+        return;
+      } catch (e) {
+        console.error(e.message);
+      }
+    }
     const idx = ids.value.indexOf(productId);
     if (idx !== -1) ids.value.splice(idx, 1);
     else ids.value.push(productId);
-    save();
+    saveLocal(ids.value);
+  }
+
+  async function fetchWishlistIds() {
+    const auth = useAuthStore();
+    if (!auth.isLoggedIn) return;
+    try {
+      const res = await api.wishlist.ids();
+      ids.value = res.ids;
+      saveLocal(ids.value);
+    } catch {}
+  }
+
+  async function fetchWishlistProducts() {
+    const auth = useAuthStore();
+    if (!auth.isLoggedIn) return [];
+    try {
+      products.value = await api.wishlist.list();
+      return products.value;
+    } catch {
+      return [];
+    }
   }
 
   function remove(productId) {
-    ids.value = ids.value.filter((id) => id !== productId);
-    save();
+    ids.value = ids.value.filter((id) => id !== productId && id !== String(productId));
+    saveLocal(ids.value);
   }
 
-  return { ids, count, isWishlisted, toggle, remove };
+  async function fetchWishlist() {
+    await fetchWishlistIds();
+    await fetchWishlistProducts();
+  }
+
+  const items = computed(() => products.value);
+
+  return { ids, products, items, count, isWishlisted, toggle, remove, fetchWishlistIds, fetchWishlistProducts, fetchWishlist };
 });

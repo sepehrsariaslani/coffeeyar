@@ -2,7 +2,7 @@
 import { ref, computed } from "vue";
 import { Plus, Trash2, ToggleLeft, ToggleRight, Tag } from "lucide-vue-next";
 import { useCouponsStore } from "@/stores/coupons.js";
-import { formatPrice } from "@/lib/data.js";
+function formatPrice(n) { return n ? Number(n).toLocaleString("fa-IR") : "۰"; }
 
 const store = useCouponsStore();
 

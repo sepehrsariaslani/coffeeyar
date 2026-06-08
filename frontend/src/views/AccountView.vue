@@ -14,8 +14,9 @@ import { useWishlistStore } from "@/stores/wishlist.js";
 import { useWalletStore } from "@/stores/wallet.js";
 import { useNotificationsStore } from "@/stores/notifications.js";
 import { useReturnsStore } from "@/stores/returns.js";
-import { products, formatPrice } from "@/lib/data.js";
+import { useProductsStore } from "@/stores/products.js";
 import { toFa } from "@/lib/utils.js";
+function formatPrice(n) { return n ? Number(n).toLocaleString("fa-IR") : "۰"; }
 
 const accountStore = useAccountStore();
 const wishlistStore = useWishlistStore();

@@ -1,140 +1,30 @@
 import { defineStore } from "pinia";
 import { ref, computed } from "vue";
-
-const KEY = "navar_categories_v2";
-
-const defaultCategories = [
-  {
-    id: "cat-coffee",
-    name: "قهوه",
-    slug: "coffee",
-    icon: "☕",
-    color: "#6b4226",
-    parentId: null,
-    order: 0,
-    attributes: [
-      { key: "origin", label: "خاستگاه", type: "text", options: [] },
-      { key: "roast", label: "درجه برشته", type: "select", options: ["روشن", "متوسط", "تیره"] },
-      { key: "process", label: "فرآوری", type: "select", options: ["شسته", "نچرال", "هانی", "شسته دوگانه"] },
-    ],
-    hasVariants: true,
-    variantLabel: "وزن",
-    defaultVariants: [
-      { label: "۲۵۰ گرم", multiplier: 1 },
-      { label: "۵۰۰ گرم", multiplier: 1.9 },
-      { label: "۱ کیلوگرم", multiplier: 3.5 },
-    ],
-    hasGrinds: true,
-    defaultGrinds: ["دانه کامل", "اسپرسو", "موکاپات", "فرنچ پرس", "V60"],
-  },
-  {
-    id: "sub-coffee-single",
-    name: "قهوه تک‌خاستگاه",
-    slug: "single-origin",
-    icon: "🌱",
-    color: "#6b4226",
-    parentId: "cat-coffee",
-    order: 0,
-    attributes: [],
-    hasVariants: false,
-    variantLabel: "",
-    defaultVariants: [],
-    hasGrinds: false,
-    defaultGrinds: [],
-  },
-  {
-    id: "sub-coffee-blend",
-    name: "بلند قهوه",
-    slug: "blend",
-    icon: "🔀",
-    color: "#6b4226",
-    parentId: "cat-coffee",
-    order: 1,
-    attributes: [],
-    hasVariants: false,
-    variantLabel: "",
-    defaultVariants: [],
-    hasGrinds: false,
-    defaultGrinds: [],
-  },
-  {
-    id: "cat-accessories",
-    name: "اکسسوری",
-    slug: "accessories",
-    icon: "🫖",
-    color: "#8b6914",
-    parentId: null,
-    order: 1,
-    attributes: [
-      { key: "brand", label: "برند", type: "text", options: [] },
-      { key: "material", label: "جنس", type: "text", options: [] },
-    ],
-    hasVariants: false,
-    variantLabel: "",
-    defaultVariants: [],
-    hasGrinds: false,
-    defaultGrinds: [],
-  },
-  {
-    id: "sub-acc-brewing",
-    name: "وسایل دم‌آوری",
-    slug: "brewing",
-    icon: "🫗",
-    color: "#8b6914",
-    parentId: "cat-accessories",
-    order: 0,
-    attributes: [],
-    hasVariants: false,
-    variantLabel: "",
-    defaultVariants: [],
-    hasGrinds: false,
-    defaultGrinds: [],
-  },
-  {
-    id: "sub-acc-grinder",
-    name: "آسیاب",
-    slug: "grinder",
-    icon: "⚙️",
-    color: "#8b6914",
-    parentId: "cat-accessories",
-    order: 1,
-    attributes: [],
-    hasVariants: false,
-    variantLabel: "",
-    defaultVariants: [],
-    hasGrinds: false,
-    defaultGrinds: [],
-  },
-];
-
-function load() {
-  try {
-    const raw = localStorage.getItem(KEY);
-    return raw ? JSON.parse(raw) : defaultCategories;
-  } catch { return defaultCategories; }
-}
-function save(v) { localStorage.setItem(KEY, JSON.stringify(v)); }
+import { api } from "@/lib/api.js";
 
 export const useCategoriesStore = defineStore("categories", () => {
-  const categories = ref(load());
+  const categories = ref([]);
+  const loading = ref(false);
+  const loaded = ref(false);
 
   const roots = computed(() =>
-    categories.value.filter((c) => !c.parentId).sort((a, b) => a.order - b.order)
+    categories.value.filter((c) => !c.parent_id).sort((a, b) => a.display_order - b.display_order)
   );
 
   function children(parentId) {
     return categories.value
-      .filter((c) => c.parentId === parentId)
-      .sort((a, b) => a.order - b.order);
+      .filter((c) => c.parent_id === parentId)
+      .sort((a, b) => a.display_order - b.display_order);
   }
 
   function getById(id) { return categories.value.find((c) => c.id === id); }
+  function getBySlug(slug) { return categories.value.find((c) => c.slug === slug); }
 
   function getRootFor(id) {
     const cat = getById(id);
     if (!cat) return null;
-    if (!cat.parentId) return cat;
-    return getById(cat.parentId) || cat;
+    if (!cat.parent_id) return cat;
+    return getById(cat.parent_id) || cat;
   }
 
   function getAttrsFor(id) {
@@ -146,61 +36,81 @@ export const useCategoriesStore = defineStore("categories", () => {
     roots.value.map((r) => ({ ...r, children: children(r.id) }))
   );
 
-  function add(data) {
-    const newCat = {
-      id: "cat-" + Date.now(),
-      name: data.name || "دسته جدید",
-      slug: data.slug || ("cat-" + Date.now()),
-      icon: data.icon || "📦",
-      color: data.color || "#6b7280",
-      parentId: data.parentId || null,
-      order: data.order ?? categories.value.filter((c) => c.parentId === (data.parentId || null)).length,
-      attributes: data.attributes || [],
-      hasVariants: data.hasVariants || false,
-      variantLabel: data.variantLabel || "",
-      defaultVariants: data.defaultVariants || [],
-      hasGrinds: data.hasGrinds || false,
-      defaultGrinds: data.defaultGrinds || [],
-    };
-    categories.value.push(newCat);
-    save(categories.value);
-    return newCat;
-  }
-
-  function update(id, patch) {
-    const idx = categories.value.findIndex((c) => c.id === id);
-    if (idx !== -1) {
-      categories.value[idx] = { ...categories.value[idx], ...patch };
-      save(categories.value);
+  async function fetchCategories() {
+    if (loaded.value) return;
+    loading.value = true;
+    try {
+      categories.value = await api.categories.list();
+      loaded.value = true;
+    } catch (e) {
+      console.error("خطا در دریافت دسته‌بندی‌ها:", e.message);
+    } finally {
+      loading.value = false;
     }
   }
 
-  function remove(id) {
-    if (!confirm("این دسته‌بندی و تمام زیردسته‌هایش حذف شوند؟")) return;
-    categories.value = categories.value.filter(
-      (c) => c.id !== id && c.parentId !== id
-    );
-    save(categories.value);
+  async function add(data) {
+    try {
+      const cat = await api.admin.categories.create({
+        name: data.name,
+        slug: data.slug || "",
+        parent_id: data.parentId || data.parent_id || null,
+        icon: data.icon || "📦",
+        color: data.color || "#6b7280",
+        has_variants: data.hasVariants || false,
+        variant_label: data.variantLabel || "",
+        has_grinds: data.hasGrinds || false,
+        default_variants_json: JSON.stringify(data.defaultVariants || []),
+        default_grinds_json: JSON.stringify(data.defaultGrinds || []),
+        attributes_json: JSON.stringify(data.attributes || []),
+        display_order: data.order ?? 0,
+        is_active: true,
+      });
+      loaded.value = false;
+      await fetchCategories();
+      return cat;
+    } catch (e) {
+      console.error(e.message);
+    }
   }
 
-  function reorder(id, dir) {
+  async function update(id, patch) {
     const cat = getById(id);
     if (!cat) return;
-    const siblings = cat.parentId ? children(cat.parentId) : roots.value;
-    const idx = siblings.findIndex((c) => c.id === id);
-    const swapIdx = dir === "up" ? idx - 1 : idx + 1;
-    if (swapIdx < 0 || swapIdx >= siblings.length) return;
-    const swapId = siblings[swapIdx].id;
-    const catIdx = categories.value.findIndex((c) => c.id === id);
-    const swapCatIdx = categories.value.findIndex((c) => c.id === swapId);
-    [categories.value[catIdx].order, categories.value[swapCatIdx].order] = [
-      categories.value[swapCatIdx].order,
-      categories.value[catIdx].order,
-    ];
-    save(categories.value);
+    try {
+      await api.admin.categories.update(id, {
+        name: patch.name ?? cat.name,
+        slug: patch.slug ?? cat.slug,
+        parent_id: patch.parentId ?? patch.parent_id ?? cat.parent_id,
+        icon: patch.icon ?? cat.icon,
+        color: patch.color ?? cat.color,
+        has_variants: patch.hasVariants ?? cat.has_variants,
+        variant_label: patch.variantLabel ?? cat.variant_label,
+        has_grinds: patch.hasGrinds ?? cat.has_grinds,
+        default_variants_json: JSON.stringify(patch.defaultVariants ?? cat.default_variants),
+        default_grinds_json: JSON.stringify(patch.defaultGrinds ?? cat.default_grinds),
+        attributes_json: JSON.stringify(patch.attributes ?? cat.attributes),
+        display_order: patch.order ?? cat.display_order,
+        is_active: patch.is_active ?? cat.is_active,
+        image: patch.image ?? cat.image,
+        description: patch.description ?? cat.description,
+      });
+      loaded.value = false;
+      await fetchCategories();
+    } catch (e) {
+      console.error(e.message);
+    }
   }
 
-  function getBySlug(slug) { return categories.value.find((c) => c.slug === slug); }
+  async function remove(id) {
+    if (!confirm("این دسته‌بندی حذف شود؟")) return;
+    try {
+      await api.admin.categories.remove(id);
+      categories.value = categories.value.filter((c) => c.id !== id && c.parent_id !== id);
+    } catch (e) {
+      console.error(e.message);
+    }
+  }
 
-  return { categories, roots, children, getById, getRootFor, getAttrsFor, getBySlug, add, update, remove, reorder, tree };
+  return { categories, roots, loading, loaded, children, getById, getBySlug, getRootFor, getAttrsFor, tree, fetchCategories, add, update, remove };
 });

@@ -6,16 +6,20 @@ import TheLayout from "@/components/site/TheLayout.vue";
 import SectionHeader from "@/components/SectionHeader.vue";
 import ProductCard from "@/components/ProductCard.vue";
 import { useWishlistStore } from "@/stores/wishlist.js";
-import { products } from "@/lib/data.js";
+import { useProductsStore } from "@/stores/products.js";
 import { useSeo } from "@/composables/useSeo.js";
+import { onMounted } from "vue";
 
 useSeo({ title: "علاقه‌مندی‌ها", description: "محصولات موردعلاقه شما در نوار" });
 
 const wishlistStore = useWishlistStore();
+const productsStore = useProductsStore();
 
-const wishlisted = computed(() =>
-  products.filter((p) => wishlistStore.ids.includes(p.id))
-);
+const wishlisted = computed(() => wishlistStore.items || []);
+
+onMounted(async () => {
+  await wishlistStore.fetchWishlist();
+});
 </script>
 
 <template>

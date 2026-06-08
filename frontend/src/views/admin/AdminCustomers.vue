@@ -1,12 +1,14 @@
 <script setup>
 import { ref, computed } from "vue";
-import { customers, formatPrice } from "@/lib/data.js";
 import { Search, MapPin, Phone, Mail, ShoppingBag, X, Pencil, Check } from "lucide-vue-next";
+
+function formatPrice(n) { return n ? Number(n).toLocaleString("fa-IR") : "۰"; }
+const customers = [];
 
 const search = ref("");
 const selected = ref(null);
 
-const list = ref(customers.map(c => ({ ...c })));
+const list = ref([...customers]);
 
 const filtered = computed(() =>
   list.value.filter(

@@ -1,7 +1,9 @@
 <script setup>
 import { ref, computed } from "vue";
 import { Plus, Trash2, Printer, Search, X } from "lucide-vue-next";
-import { products, formatPrice } from "@/lib/data.js";
+import { useProductsStore } from "@/stores/products.js";
+function formatPrice(n) { return n ? Number(n).toLocaleString("fa-IR") : "۰"; }
+const productsStore = useProductsStore();
 
 const customer = ref({ name: "", phone: "", address: "" });
 const searchQ = ref("");
@@ -13,8 +15,8 @@ const today = new Date().toLocaleDateString("fa-IR");
 
 const filtered = computed(() =>
   searchQ.value.trim()
-    ? products.filter((p) =>
-        p.name.includes(searchQ.value) || (p.origin && p.origin.includes(searchQ.value))
+    ? productsStore.products.filter((p) =>
+        (p.name && p.name.includes(searchQ.value)) || (p.short_description && p.short_description.includes(searchQ.value))
       ).slice(0, 8)
     : []
 );

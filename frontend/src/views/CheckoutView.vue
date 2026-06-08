@@ -10,8 +10,12 @@ import { useAdminNotificationsStore } from "@/stores/adminNotifications.js";
 import { useCouponsStore } from "@/stores/coupons.js";
 import { useAuthStore } from "@/stores/auth.js";
 import { useSiteSettingsStore } from "@/stores/siteSettings.js";
-import { formatPrice } from "@/lib/data.js";
 import { toFa } from "@/lib/utils.js";
+
+function formatPrice(n) {
+  if (!n && n !== 0) return "۰";
+  return Number(n).toLocaleString("fa-IR");
+}
 import { useSeo } from "@/composables/useSeo.js";
 
 useSeo({ title: "پرداخت", description: "تکمیل سفارش و پرداخت" });

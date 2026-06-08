@@ -1,9 +1,14 @@
 <script setup>
-import { computed } from "vue";
-import { products, posts, formatPrice } from "@/lib/data.js";
+import { computed, onMounted } from "vue";
 import { TrendingUp, Package, Users, DollarSign, Bell, Check, X, ShoppingBag, ArrowUpRight, ArrowDownRight } from "lucide-vue-next";
+import { useProductsStore } from "@/stores/products.js";
+import { usePostsStore } from "@/stores/posts.js";
 import { useAdminNotificationsStore } from "@/stores/adminNotifications.js";
 
+function formatPrice(n) { return n ? Number(n).toLocaleString("fa-IR") : "۰"; }
+
+const productsStore = useProductsStore();
+const postsStore = usePostsStore();
 const adminNotifStore = useAdminNotificationsStore();
 
 const stats = [
