@@ -37,11 +37,13 @@ export const useAuthStore = defineStore("auth", () => {
     }
   }
 
-  async function login({ email, password }) {
+  async function login({ email, username, password }) {
     loading.value = true;
     error.value = "";
     try {
-      const res = await api.auth.login({ email, password });
+      // Support both email and username fields
+      const credential = email || username || "";
+      const res = await api.auth.login({ email: credential, password });
       session.value = res.user;
       saveSession(res.user);
       return { ok: true };
@@ -71,16 +73,39 @@ export const useAuthStore = defineStore("auth", () => {
     }
   }
 
+  /**
+   * Sync user info from the server.
+   * Works with both Bearer token AND active Frappe session cookie.
+   * If neither is present, silently returns.
+   */
   async function fetchMe() {
-    if (!api.getToken()) return;
     try {
       const u = await api.auth.me();
-      session.value = { ...session.value, ...u };
+      // If Frappe session is active (no token saved locally) — save the user
+      session.value = { ...(session.value || {}), ...u };
       saveSession(session.value);
     } catch {
-      logout();
+      // 401 → clear local session (don't auto-logout on network errors)
+      if (session.value) logout();
     }
   }
 
-  return { isLoggedIn, user, isAdmin, loading, error, register, login, logout, updateUser, fetchMe };
+  /**
+   * Try to detect an active Frappe session (cookie-based) and log the user in
+   * automatically without requiring them to enter credentials again.
+   */
+  async function tryFrappeSession() {
+    if (session.value) return; // already logged in via token
+    try {
+      const u = await api.auth.me();
+      if (u && u.email) {
+        session.value = u;
+        saveSession(u);
+      }
+    } catch {
+      // No active session — that's fine
+    }
+  }
+
+  return { isLoggedIn, user, isAdmin, loading, error, register, login, logout, updateUser, fetchMe, tryFrappeSession };
 });

@@ -9,7 +9,7 @@ const router = useRouter();
 const route = useRoute();
 const authStore = useAuthStore();
 
-const form = ref({ email: "", password: "" });
+const form = ref({ identifier: "", password: "" }); // identifier = email OR username
 const showPass = ref(false);
 const loading = ref(false);
 const error = ref("");
@@ -31,7 +31,8 @@ async function submit(e) {
   e.preventDefault();
   error.value = "";
   loading.value = true;
-  const result = await authStore.login(form.value);
+  // Pass as email — backend resolves username→email automatically
+  const result = await authStore.login({ email: form.value.identifier, password: form.value.password });
   if (!result.ok) {
     error.value = result.error || "ایمیل یا رمز عبور نادرست است";
     loading.value = false;
@@ -65,13 +66,13 @@ async function submit(e) {
 
       <form @submit="submit" class="admin-login__form">
         <label class="admin-login__field">
-          <span class="admin-login__label">ایمیل مدیر</span>
+          <span class="admin-login__label">ایمیل یا نام کاربری</span>
           <input
-            v-model="form.email"
+            v-model="form.identifier"
             required
-            type="email"
+            type="text"
             dir="ltr"
-            placeholder="admin@example.com"
+            placeholder="admin@example.com یا admin"
             class="admin-login__input"
             autocomplete="username"
           />

@@ -17,3 +17,8 @@ themeStore.theme;
 
 import { useLayoutStore } from "./stores/layout.js";
 useLayoutStore();
+
+// Auto-detect active Frappe session (cookie-based) on startup
+import { useAuthStore } from "./stores/auth.js";
+const authStore = useAuthStore();
+authStore.tryFrappeSession();

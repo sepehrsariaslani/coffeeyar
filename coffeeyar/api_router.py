@@ -198,16 +198,27 @@ def _json(data: Any, status: int = 200):
 
 
 def _require_auth():
-    user = frappe.session.user
-    if user == "Guest":
+    """Raise AuthenticationError if no authenticated user is present.
+
+    Accepts either our Bearer token (via _resolve_user_from_token) or an
+    active Frappe session cookie.
+    """
+    user = _resolve_user_from_token()
+    if not user:
         frappe.throw(_("Not authenticated"), frappe.AuthenticationError)
 
-
 def _require_admin():
-    _require_auth()
-    if not frappe.db.get_value("User", frappe.session.user, "user_type") in ("System User",):
-        if "System Manager" not in frappe.get_roles():
-            frappe.throw(_("Not authorized"), frappe.PermissionError)
+    """Raise PermissionError if the caller is not a System Manager.
+
+    Works with both Bearer-token auth and Frappe session cookie.
+    """
+    user_email = _resolve_user_from_token()
+    if not user_email:
+        frappe.throw(_("Not authenticated"), frappe.AuthenticationError)
+
+    roles = frappe.get_roles(user=user_email)
+    if "System Manager" not in roles:
+        frappe.throw(_("Not authorized"), frappe.PermissionError)
 
 
 # ── Auth ──
@@ -266,17 +277,54 @@ def _handle_auth_register(payload: dict):
     )
 
 
+def _resolve_email_from_identifier(identifier: str) -> str:
+    """Accept email OR username/name and return the canonical email (User.name).
+
+    Frappe User.name IS the email address.  We also check:
+    1. Exact match on User.name (email).
+    2. Match on User.username field.
+    3. Match on User.first_name (fallback, case-insensitive).
+    """
+    identifier = identifier.strip()
+    if not identifier:
+        return ""
+
+    # 1 — direct email match
+    if frappe.db.exists("User", identifier):
+        return identifier
+
+    # 2 — username field
+    found = frappe.db.get_value("User", {"username": identifier}, "name")
+    if found:
+        return found
+
+    # 3 — first_name (case-insensitive)
+    found = frappe.db.get_value(
+        "User",
+        {"first_name": ["like", identifier]},
+        "name",
+    )
+    if found:
+        return found
+
+    return ""
+
 def _handle_auth_login(payload: dict):
-    email = (payload.get("email") or "").strip().lower()
+    identifier = (payload.get("email") or payload.get("username") or "").strip()
     password = (payload.get("password") or "").strip()
 
-    if not email or not password:
-        frappe.throw(_("Email and password are required"))
+    if not identifier or not password:
+        frappe.throw(_("نام کاربری/ایمیل و رمز عبور الزامی هستند"))
+
+    # Resolve to email (Frappe User.name)
+    email = _resolve_email_from_identifier(identifier)
+    if not email:
+        frappe.throw(_("نام کاربری یا رمز عبور نادرست است"))
 
     try:
         frappe.login(user=email, password=password)
     except frappe.AuthenticationError:
-        frappe.throw(_("Invalid email or password"))
+        frappe.throw(_("نام کاربری یا رمز عبور نادرست است"))
 
     user = frappe.get_doc("User", email)
     token = _generate_token(email)
@@ -288,7 +336,8 @@ def _handle_auth_login(payload: dict):
                 "name": user.first_name,
                 "email": user.email,
                 "phone": user.mobile_no,
-                "is_admin": "System Manager" in frappe.get_roles(),
+                "username": user.username or "",
+                "is_admin": "System Manager" in frappe.get_roles(user=email),
             },
         }
     )
@@ -303,27 +352,50 @@ def _generate_token(user: str) -> str:
 
 
 def _resolve_user_from_token() -> str | None:
+    """Return authenticated user email from Bearer token OR active Frappe session.
+
+    Priority:
+    1. Authorization: Bearer <token>  — our custom JWT-like token
+    2. frappe.session.user            — user already logged in via Frappe's own
+       cookie-based session (e.g. previously used /app or Desk)
+    """
+    # 1 — Bearer token
     auth = frappe.request.headers.get("Authorization") or ""
     if auth.startswith("Bearer "):
         token = auth[7:]
-        return frappe.cache().get(f"api_token:{token}")
+        cached = frappe.cache().get(f"api_token:{token}")
+        if cached:
+            return cached
+
+    # 2 — Active Frappe session cookie
+    session_user = getattr(frappe.session, "user", None)
+    if session_user and session_user not in ("Guest", "", None):
+        return session_user
+
     return None
 
 
 def _handle_auth_me():
     user_email = _resolve_user_from_token()
     if not user_email:
-        _require_auth()
-        user_email = frappe.session.user
+        return _json({"error": "Unauthorized"}, 401)
     user = frappe.get_doc("User", user_email)
-    profile = frappe.db.get_value("Customer Profile", {"user": user_email}, ["name", "full_name", "mobile", "email"], as_dict=True)
+    profile = frappe.db.get_value(
+        "Customer Profile",
+        {"user": user_email},
+        ["name", "full_name", "mobile", "email"],
+        as_dict=True,
+    )
+    roles = frappe.get_roles(user=user_email)
     return _json(
         {
             "name": user.first_name,
             "email": user.email,
             "phone": user.mobile_no,
-            "is_admin": "System Manager" in frappe.get_roles(),
+            "username": user.username or "",
+            "is_admin": "System Manager" in roles,
             "profile": profile or {},
+            "session_source": "frappe" if not frappe.request.headers.get("Authorization") else "token",
         }
     )
 
