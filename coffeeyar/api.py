@@ -33,9 +33,11 @@ def _slugify(text: str) -> str:
     return re.sub(r"-+", "-", value).strip("-")
 
 
-def _parse_json_payload(payload: str | dict[str, Any] | None) -> dict[str, Any]:
+def _parse_json_payload(payload: bytes | str | dict[str, Any] | None) -> dict[str, Any]:
     if isinstance(payload, dict):
         return payload
+    if isinstance(payload, bytes):
+        payload = payload.decode("utf-8")
     if isinstance(payload, str) and payload.strip():
         return frappe.parse_json(payload)
     return {}
@@ -701,3 +703,45 @@ def get_navigation():
         if key in out:
             out[key].append({"label": row.label, "to": row.route})
     return out
+
+
+def before_request_api():
+    """Registered as a before_request hook.
+    Strips the Authorization header for /_api/ routes so Frappe's validate_auth()
+    doesn't raise an HTML 401 error page for our custom Bearer tokens.
+    The token is saved to frappe.local._custom_api_token for later use
+    by _resolve_user_from_token() in api_router.py.
+    """
+    path = getattr(frappe.local, "request", None)
+    if path is None:
+        return
+    if not frappe.local.request.path.startswith("/_api/"):
+        return
+    auth = frappe.get_request_header("Authorization", "")
+    if auth.lower().startswith("bearer "):
+        frappe.local._custom_api_token = auth[7:]
+        frappe.request.environ.pop("HTTP_AUTHORIZATION", None)
+
+
+from frappe.website.page_renderers.base_renderer import BaseRenderer
+from werkzeug.wrappers import Response as WerkzeugResponse
+
+
+class ApiRenderer(BaseRenderer):
+    """Custom page renderer for the 'api_handler' endpoint.
+    Registered via the page_renderer hook.
+    """
+
+    def can_render(self):
+        return self.path == "api_handler"
+
+    def render(self):
+        from coffeeyar.api_router import handle_request
+
+        result = handle_request()
+        status_code = getattr(frappe.local.response, "http_status_code", 200)
+        return WerkzeugResponse(
+            frappe.as_json(result),
+            status=status_code,
+            content_type="application/json; charset=utf-8",
+        )

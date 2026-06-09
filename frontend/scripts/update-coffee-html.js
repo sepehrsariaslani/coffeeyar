@@ -10,7 +10,10 @@ import { fileURLToPath } from "url";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
-const distIndex = resolve(__dirname, "../dist/index.html");
+const distIndex = resolve(
+  __dirname,
+  "../../coffeeyar/public/frontend/index.html"
+);
 const coffeeHtml = resolve(
   __dirname,
   "../../coffeeyar/www/coffee.html"
@@ -18,9 +21,9 @@ const coffeeHtml = resolve(
 
 const dist = readFileSync(distIndex, "utf-8");
 
-// Extract the hashed filenames from the generated dist/index.html
-const jsMatch = dist.match(/src="\/assets\/(index-[^"]+\.js)"/);
-const cssMatch = dist.match(/href="\/assets\/(index-[^"]+\.css)"/);
+// Extract the hashed filenames from the generated index.html
+const jsMatch = dist.match(/src="\/assets\/coffeeyar\/frontend\/assets\/(index-[^"]+\.js)"/);
+const cssMatch = dist.match(/href="\/assets\/coffeeyar\/frontend\/assets\/(index-[^"]+\.css)"/);
 
 if (!jsMatch || !cssMatch) {
   console.error("❌  Could not find index JS/CSS in dist/index.html");

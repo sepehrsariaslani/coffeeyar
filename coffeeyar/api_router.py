@@ -32,12 +32,10 @@ def before_request_api():
         path = getattr(frappe.local, "request", None)
         if path is None:
             return
-        if not frappe.local.request.path.startswith("/api/"):
+        if not frappe.local.request.path.startswith(("/api/", "/_api/")):
             return
     except Exception:
         return
-    # API requests are handled by the api_handler website route
-    # (see website_route_rules in hooks.py); nothing to do here.
     return
 
 def handle_request():
@@ -47,6 +45,7 @@ def handle_request():
     payload = _parse_json_payload(body)
 
     route = path.rstrip("/")
+    route = re.sub(r"^/_api/", "/api/", route)
     route = re.sub(r"^/api/", "", route)
     segments = route.split("/") if route else []
     segment_count = len(segments)
@@ -222,7 +221,7 @@ def _require_admin():
     if not user_email:
         frappe.throw(_("Not authenticated"), frappe.AuthenticationError)
 
-    roles = frappe.get_roles(user=user_email)
+    roles = frappe.get_roles(user_email)
     if "System Manager" not in roles:
         frappe.throw(_("Not authorized"), frappe.PermissionError)
 
@@ -328,7 +327,8 @@ def _handle_auth_login(payload: dict):
         frappe.throw(_("نام کاربری یا رمز عبور نادرست است"))
 
     try:
-        frappe.login(user=email, password=password)
+        from frappe.utils.password import check_password
+        check_password(email, password)
     except frappe.AuthenticationError:
         frappe.throw(_("نام کاربری یا رمز عبور نادرست است"))
 
@@ -343,7 +343,7 @@ def _handle_auth_login(payload: dict):
                 "email": user.email,
                 "phone": user.mobile_no,
                 "username": user.username or "",
-                "is_admin": "System Manager" in frappe.get_roles(user=email),
+                "is_admin": "System Manager" in frappe.get_roles(email),
             },
         }
     )
@@ -353,7 +353,7 @@ def _generate_token(user: str) -> str:
     import secrets
 
     token = secrets.token_urlsafe(32)
-    frappe.cache().set(f"api_token:{token}", user, expires_in_sec=86400 * 30)
+    frappe.cache().set_value(f"api_token:{token}", user, expires_in_sec=86400 * 30)
     return token
 
 
@@ -361,19 +361,27 @@ def _resolve_user_from_token() -> str | None:
     """Return authenticated user email from Bearer token OR active Frappe session.
 
     Priority:
-    1. Authorization: Bearer <token>  — our custom JWT-like token
-    2. frappe.session.user            — user already logged in via Frappe's own
+    1. frappe.local._custom_api_token  — saved by before_request_api() hook
+    2. Authorization: Bearer <token>    — fallback (legacy)
+    3. frappe.session.user              — user already logged in via Frappe's own
        cookie-based session (e.g. previously used /app or Desk)
     """
-    # 1 — Bearer token
-    auth = frappe.request.headers.get("Authorization") or ""
-    if auth.startswith("Bearer "):
-        token = auth[7:]
-        cached = frappe.cache().get(f"api_token:{token}")
+    # 1 — custom token saved by before_request_api()
+    token = getattr(frappe.local, "_custom_api_token", None)
+    if token:
+        cached = frappe.cache().get_value(f"api_token:{token}")
         if cached:
             return cached
 
-    # 2 — Active Frappe session cookie
+    # 2 — Bearer token from header (fallback)
+    auth = frappe.request.headers.get("Authorization") or ""
+    if auth.startswith("Bearer "):
+        token = auth[7:]
+        cached = frappe.cache().get_value(f"api_token:{token}")
+        if cached:
+            return cached
+
+    # 3 — Active Frappe session cookie
     session_user = getattr(frappe.session, "user", None)
     if session_user and session_user not in ("Guest", "", None):
         return session_user
@@ -392,7 +400,7 @@ def _handle_auth_me():
         ["name", "full_name", "mobile", "email"],
         as_dict=True,
     )
-    roles = frappe.get_roles(user=user_email)
+    roles = frappe.get_roles(user_email)
     return _json(
         {
             "name": user.first_name,
@@ -401,7 +409,7 @@ def _handle_auth_me():
             "username": user.username or "",
             "is_admin": "System Manager" in roles,
             "profile": profile or {},
-            "session_source": "frappe" if not frappe.request.headers.get("Authorization") else "token",
+            "session_source": "token" if getattr(frappe.local, "_custom_api_token", None) else "frappe",
         }
     )
 
@@ -1331,13 +1339,17 @@ def _admin_coupons(segments: list[str], method: str, payload: dict):
         frappe.delete_doc("Coupon", segments[0], ignore_permissions=True)
         return _json({"ok": True})
     if method in ("PATCH", "PUT") and segments:
-        doc = frappe.get_doc("Return Request", segments[0])
-        if payload.get("status"):
-            doc.status = payload["status"]
-        if payload.get("admin_note") is not None:
-            doc.admin_note = payload["admin_note"]
+        doc = frappe.get_doc("Coupon", segments[0])
+        if len(segments) >= 2 and segments[1] == "toggle":
+            doc.is_active = not doc.is_active
+        else:
+            for key in ["code", "description", "discount_type", "discount_amount", "minimum_order_toman", "max_uses"]:
+                if key in payload:
+                    doc.set(key, payload[key])
+            if "is_active" in payload:
+                doc.set("is_active", bool(payload["is_active"]))
         doc.save(ignore_permissions=True)
-        return _json({"ok": True, "status": doc.status})
+        return _json({"ok": True, "is_active": doc.is_active})
     return _json({"error": "Not found"}, 404)
 
 

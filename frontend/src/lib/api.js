@@ -1,4 +1,4 @@
-const BASE = "/shop";
+const BASE = "/_api";
 
 function getToken() {
   return localStorage.getItem("navar_token_v1") || "";
