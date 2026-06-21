@@ -42,6 +42,7 @@ const loaded = ref(false)
 
 .gallery__frame {
   position: relative;
+  /* Mobile: aspect-ratio for natural gallery proportions */
   aspect-ratio: 4 / 5;
   overflow: hidden;
   background-color: #F0EDE8;
@@ -51,9 +52,14 @@ const loaded = ref(false)
 .gallery__img {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
+  padding: 8px;
   opacity: 0;
   transition: opacity 0.4s ease;
+}
+
+@media (max-width: 768px) {
+  .gallery__img { padding: 4px; }
 }
 
 .gallery__img--loaded {
@@ -93,5 +99,13 @@ const loaded = ref(false)
   font-weight: 400;
   letter-spacing: 0.06em;
   padding: 0.3rem 0.65rem;
+}
+
+/* Desktop: fixed height + contain */
+@media (min-width: 769px) {
+  .gallery__frame {
+    aspect-ratio: auto;
+    height: 560px;
+  }
 }
 </style>

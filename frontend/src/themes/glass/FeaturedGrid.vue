@@ -48,7 +48,7 @@ const displayItems = computed(() => props.items.slice(0, 4))
   box-shadow: inset 0 1px 0 rgba(255,255,255,0.75), 0 12px 32px rgba(100,60,220,0.16);
 }
 .gl-featured__media { aspect-ratio: 3/4; overflow: hidden; position: relative; }
-.gl-featured__img { width:100%; height:100%; object-fit:cover; transition: transform 0.5s cubic-bezier(0.25,0.46,0.45,0.94); }
+.gl-featured__img { width:100%; height:100%; object-fit:contain; padding:8px; transition: transform 0.5s cubic-bezier(0.25,0.46,0.45,0.94); }
 .gl-featured__item:hover .gl-featured__img { transform: scale(1.05); }
 .gl-featured__placeholder { width:100%; height:100%; background: linear-gradient(135deg, rgba(180,140,255,0.3), rgba(140,200,255,0.3)); }
 .gl-featured__shimmer {

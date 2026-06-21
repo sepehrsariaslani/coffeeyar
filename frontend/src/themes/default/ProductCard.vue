@@ -88,7 +88,7 @@ const meta = computed(() => {
 .card:hover .card__img { transform: scale(1.03); }
 .card:hover .card__title { color: #800000; }
 .card__media { aspect-ratio: 4 / 5; overflow: hidden; background-color: #F0EDE8; position: relative; }
-.card__img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.45s cubic-bezier(0.25,0.46,0.45,0.94); }
+.card__img { width: 100%; height: 100%; object-fit: contain; padding: 8px; transition: transform 0.45s cubic-bezier(0.25,0.46,0.45,0.94); }
 .card__placeholder { width: 100%; height: 100%; background: linear-gradient(135deg,#EDE9E4,#E0DBD5); }
 .card__badge { position: absolute; top: 0.75rem; right: 0.75rem; font-size: 0.65rem; letter-spacing: 0.08em; background-color: #800000; color: #fff; padding: 0.2rem 0.5rem; }
 .card__wishlist { position: absolute; top: 0.75rem; left: 0.75rem; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; background-color: rgba(255,255,255,0.9); backdrop-filter: blur(4px); border: none; cursor: pointer; color: #9e9890; opacity: 0; transform: scale(0.85); transition: opacity 0.2s, transform 0.2s, color 0.2s; }
@@ -112,7 +112,7 @@ const meta = computed(() => {
 .card-compact { cursor: pointer; display: flex; flex-direction: column; background-color: #FAFAF8; }
 .card-compact:hover .card-compact__img { transform: scale(1.05); }
 .card-compact__media { aspect-ratio: 1 / 1; overflow: hidden; background-color: #F0EDE8; position: relative; }
-.card-compact__img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.4s cubic-bezier(0.25,0.46,0.45,0.94); }
+.card-compact__img { width: 100%; height: 100%; object-fit: contain; padding: 6px; transition: transform 0.4s cubic-bezier(0.25,0.46,0.45,0.94); }
 .card-compact__placeholder { width: 100%; height: 100%; background: linear-gradient(135deg,#EDE9E4,#E0DBD5); }
 .card-compact__overlay { position: absolute; inset: 0; background: linear-gradient(to top, rgba(10,10,10,0.55) 0%, transparent 50%); display: flex; align-items: flex-end; padding: 0.75rem; opacity: 0; transition: opacity 0.25s; }
 .card-compact:hover .card-compact__overlay { opacity: 1; }
@@ -130,7 +130,7 @@ const meta = computed(() => {
 .card-h:hover { background-color: #F5F2EE; }
 .card-h:hover .card-h__title { color: #800000; }
 .card-h__media { width: 110px; min-width: 110px; overflow: hidden; position: relative; }
-.card-h__img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.4s; }
+.card-h__img { width: 100%; height: 100%; object-fit: contain; padding: 4px; transition: transform 0.4s; }
 .card-h:hover .card-h__img { transform: scale(1.05); }
 .card-h__placeholder { width: 100%; height: 100%; background: linear-gradient(135deg,#EDE9E4,#E0DBD5); }
 .card-h__body { flex: 1; padding: 1rem; display: flex; flex-direction: column; justify-content: space-between; min-width: 0; }

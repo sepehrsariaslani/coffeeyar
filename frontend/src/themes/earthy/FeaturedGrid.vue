@@ -30,7 +30,7 @@ const displayItems = computed(() => props.items.slice(0, 4))
 .ea-featured__item:hover { transform: translateY(-4px); box-shadow: 0 10px 28px rgba(45,36,22,0.10); }
 .ea-featured__item:hover .ea-featured__img { transform: scale(1.04); }
 .ea-featured__media { aspect-ratio: 3/4; overflow: hidden; background-color: #EDE5D6; }
-.ea-featured__img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.5s cubic-bezier(0.25,0.46,0.45,0.94); }
+.ea-featured__img { width: 100%; height: 100%; object-fit: contain; padding: 8px; transition: transform 0.5s cubic-bezier(0.25,0.46,0.45,0.94); }
 .ea-featured__placeholder { width: 100%; height: 100%; background: linear-gradient(135deg, #E8DFC9, #DDD3BC); }
 .ea-featured__info { display: flex; align-items: center; justify-content: space-between; padding: 0.65rem 0.85rem; border-top: 1.5px solid #D6CBB8; }
 .ea-featured__name { font-size: 0.78rem; color: #2d2416; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 80%; font-weight: 500; }

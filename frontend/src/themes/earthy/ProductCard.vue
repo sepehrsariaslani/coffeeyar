@@ -63,7 +63,7 @@ const meta = computed(() => {
 .ea-card:hover { transform:translateY(-4px); box-shadow:0 12px 32px rgba(45,36,22,0.12); }
 .ea-card:hover .ea-card__title { color:#4a7c59; }
 .ea-card__media { aspect-ratio:4/5; overflow:hidden; position:relative; background:#EDE5D6; border-radius:10px 10px 0 0; }
-.ea-card__img { width:100%; height:100%; object-fit:cover; transition:transform 0.45s cubic-bezier(0.25,0.46,0.45,0.94); }
+.ea-card__img { width:100%; height:100%; object-fit:contain; padding:8px; transition:transform 0.45s cubic-bezier(0.25,0.46,0.45,0.94); }
 .ea-card:hover .ea-card__img { transform:scale(1.04); }
 .ea-card__placeholder { width:100%; height:100%; background:linear-gradient(135deg,#E8DFC9,#DDD3BC); }
 .ea-card__wish { position:absolute; top:0.75rem; left:0.75rem; width:30px; height:30px; display:flex; align-items:center; justify-content:center; background:rgba(253,250,245,0.9); backdrop-filter:blur(4px); border:1.5px solid #D6CBB8; border-radius:50%; cursor:pointer; color:#9e8a72; opacity:0; transform:scale(0.8); transition:all 0.2s; }
@@ -82,7 +82,7 @@ const meta = computed(() => {
 .ea-compact { cursor:pointer; display:flex; flex-direction:column; background:#FDFAF5; border:1.5px solid #D6CBB8; border-radius:12px; overflow:hidden; transition:transform 0.22s; }
 .ea-compact:hover { transform:translateY(-3px); }
 .ea-compact__media { aspect-ratio:1/1; overflow:hidden; position:relative; }
-.ea-compact__img { width:100%; height:100%; object-fit:cover; transition:transform 0.4s; }
+.ea-compact__img { width:100%; height:100%; object-fit:contain; padding:6px; transition:transform 0.4s; }
 .ea-compact:hover .ea-compact__img { transform:scale(1.05); }
 .ea-compact__placeholder { width:100%; height:100%; background:linear-gradient(135deg,#E8DFC9,#DDD3BC); }
 .ea-compact__overlay { position:absolute; inset:0; background:linear-gradient(to top, rgba(30,20,8,0.55) 0%, transparent 55%); display:flex; align-items:flex-end; padding:0.75rem; opacity:0; transition:opacity 0.25s; }
@@ -97,7 +97,7 @@ const meta = computed(() => {
 .ea-card-h:hover { background:#F5EFE4; }
 .ea-card-h:hover .ea-card-h__title { color:#4a7c59; }
 .ea-card-h__media { width:100px; min-width:100px; overflow:hidden; border-radius:8px 0 0 8px; }
-.ea-card-h__img { width:100%; height:100%; object-fit:cover; }
+.ea-card-h__img { width:100%; height:100%; object-fit:contain; padding:4px; }
 .ea-card-h__placeholder { width:100%; height:100%; background:linear-gradient(135deg,#E8DFC9,#DDD3BC); }
 .ea-card-h__body { flex:1; padding:0.85rem 1rem; display:flex; flex-direction:column; justify-content:center; gap:0.25rem; min-width:0; }
 .ea-card-h__origin { font-size:0.62rem; letter-spacing:0.1em; text-transform:uppercase; color:#4a7c59; font-weight:600; }

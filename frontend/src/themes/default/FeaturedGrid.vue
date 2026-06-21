@@ -29,7 +29,7 @@ const displayItems = computed(() => props.items.slice(0, 4))
 .featured__item { background-color: #FAFAF8; display: flex; flex-direction: column; text-decoration: none; overflow: hidden; position: relative; }
 .featured__item:hover .featured__img { transform: scale(1.04); }
 .featured__media { aspect-ratio: 3/4; overflow: hidden; background-color: #F0EDE8; }
-.featured__img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.5s cubic-bezier(0.25,0.46,0.45,0.94); }
+.featured__img { width: 100%; height: 100%; object-fit: contain; padding: 8px; transition: transform 0.5s cubic-bezier(0.25,0.46,0.45,0.94); }
 .featured__placeholder { width: 100%; height: 100%; background: linear-gradient(135deg, #EDE9E4, #E0DBD5); }
 .featured__info { display: flex; align-items: center; justify-content: space-between; padding: 0.75rem 0.85rem; border-top: 1px solid #E8E4DE; }
 .featured__name { font-size: 0.78rem; color: #1a1a1a; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 80%; }

@@ -82,7 +82,7 @@ const meta = computed(() => {
   box-shadow: inset 0 1.5px 0 rgba(255,255,255,0.8), 0 20px 48px rgba(100,60,220,0.18), 0 4px 12px rgba(0,0,0,0.08);
 }
 .gl-card__media { aspect-ratio: 4/5; overflow: hidden; position: relative; }
-.gl-card__img { width:100%; height:100%; object-fit:cover; transition: transform 0.5s cubic-bezier(0.25,0.46,0.45,0.94); }
+.gl-card__img { width:100%; height:100%; object-fit:contain; padding:8px; transition: transform 0.5s cubic-bezier(0.25,0.46,0.45,0.94); }
 .gl-card:hover .gl-card__img { transform: scale(1.05); }
 .gl-card__placeholder { width:100%; height:100%; background: linear-gradient(135deg, rgba(180,140,255,0.35), rgba(140,200,255,0.35)); }
 .gl-card__wish {
@@ -117,7 +117,7 @@ const meta = computed(() => {
 .gl-compact { cursor:pointer; background: rgba(255,255,255,0.44); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.65); border-radius: 16px; overflow: hidden; transition: transform 0.25s; }
 .gl-compact:hover { transform: translateY(-4px); }
 .gl-compact__media { aspect-ratio: 1/1; position: relative; overflow: hidden; }
-.gl-compact__img { width:100%; height:100%; object-fit:cover; transition: transform 0.45s; }
+.gl-compact__img { width:100%; height:100%; object-fit:contain; padding:6px; transition: transform 0.45s; }
 .gl-compact:hover .gl-compact__img { transform: scale(1.06); }
 .gl-compact__placeholder { width:100%; height:100%; background: linear-gradient(135deg, rgba(180,140,255,0.35), rgba(140,200,255,0.35)); }
 .gl-compact__overlay { position: absolute; inset: 0; background: linear-gradient(to top, rgba(20,8,60,0.5) 0%, transparent 55%); display: flex; align-items: flex-end; padding: 0.75rem; opacity: 0; transition: opacity 0.25s; }
@@ -132,7 +132,7 @@ const meta = computed(() => {
 .gl-card-h { cursor:pointer; display:flex; background: rgba(255,255,255,0.44); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border: 1px solid rgba(255,255,255,0.65); border-radius: 14px; overflow:hidden; height:110px; transition: transform 0.2s; }
 .gl-card-h:hover { transform: translateY(-2px); }
 .gl-card-h__media { width:90px; min-width:90px; overflow:hidden; }
-.gl-card-h__img { width:100%; height:100%; object-fit:cover; }
+.gl-card-h__img { width:100%; height:100%; object-fit:contain; padding:4px; }
 .gl-card-h__placeholder { width:100%; height:100%; background: linear-gradient(135deg, rgba(180,140,255,0.3), rgba(140,200,255,0.3)); }
 .gl-card-h__body { flex:1; padding:0.75rem 1rem; display:flex; flex-direction:column; justify-content:center; gap:0.25rem; min-width:0; }
 .gl-card-h__origin { font-size:0.62rem; letter-spacing:0.1em; text-transform:uppercase; color: oklch(0.46 0.22 278); font-weight:600; }
