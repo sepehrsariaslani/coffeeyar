@@ -22,7 +22,7 @@ const meta = computed(() => {
 </script>
 
 <template>
-  <article v-if="cardVariant === 'standard'" class="card" @click="$router.push(`/products/${product.id}`)">
+  <article v-if="cardVariant === 'standard'" class="card" @click="$router.push(`/products/${product.slug || product.id}`)">
     <div class="card__media">
       <img v-if="product.image" :src="product.image" :alt="product.name" class="card__img" />
       <div v-else class="card__placeholder" />
@@ -44,7 +44,7 @@ const meta = computed(() => {
     </footer>
   </article>
 
-  <article v-else-if="cardVariant === 'compact'" class="card-compact" @click="$router.push(`/products/${product.id}`)">
+  <article v-else-if="cardVariant === 'compact'" class="card-compact" @click="$router.push(`/products/${product.slug || product.id}`)">
     <div class="card-compact__media">
       <img v-if="product.image" :src="product.image" :alt="product.name" class="card-compact__img" />
       <div v-else class="card-compact__placeholder" />
@@ -61,7 +61,7 @@ const meta = computed(() => {
     </div>
   </article>
 
-  <article v-else class="card-h" @click="$router.push(`/products/${product.id}`)">
+  <article v-else class="card-h" @click="$router.push(`/products/${product.slug || product.id}`)">
     <div class="card-h__media">
       <img v-if="product.image" :src="product.image" :alt="product.name" class="card-h__img" />
       <div v-else class="card-h__placeholder" />

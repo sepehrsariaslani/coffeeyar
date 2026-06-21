@@ -57,10 +57,10 @@ onMounted(async () => {
     <!-- Hero -->
     <HeroSection
       :image="heroImg"
-      :title="contentStore.content.home.heroTitle"
-      :subtitle="contentStore.content.home.heroSubtitle"
-      :eyebrow="contentStore.content.home.heroTag"
-      :cta-label="contentStore.content.home.heroCtaPrimary"
+      :title="contentStore.content?.home?.heroTitle"
+      :subtitle="contentStore.content?.home?.heroSubtitle"
+      :eyebrow="contentStore.content?.home?.heroTag"
+      :cta-label="contentStore.content?.home?.heroCtaPrimary"
     />
 
     <!-- Brands Marquee -->
@@ -98,8 +98,8 @@ onMounted(async () => {
     <!-- Featured grid -->
     <div v-if="featuredProducts.length" class="border-b border-border">
       <SectionHeader
-        :title="contentStore.content.home.featuredTitle || 'محصولات ویژه'"
-        :tag="contentStore.content.home.featuredTag || 'منتخب'"
+        :title="contentStore.content?.home?.featuredTitle || 'محصولات ویژه'"
+        :tag="contentStore.content?.home?.featuredTag || 'منتخب'"
         to="/products"
       />
       <FeaturedGrid :items="featuredProducts" />
@@ -110,7 +110,7 @@ onMounted(async () => {
       <SectionHeader title="همه محصولات" tag="کاتالوگ" to="/products" link-label="مشاهده کامل" />
 
       <div class="px-[5vw]">
-        <div class="flex items-center gap-1 border-b border-[#E8E4DE] pt-4">
+        <div class="flex flex-wrap items-center gap-1 border-b border-[#E8E4DE] pt-4">
           <button
             v-for="c in categories"
             :key="c.value"
@@ -150,20 +150,20 @@ onMounted(async () => {
     </section>
 
     <!-- Manifesto -->
-    <section v-if="contentStore.content.about.mission" class="border-b border-border bg-foreground text-background">
+    <section v-if="contentStore.content?.about?.mission" class="border-b border-border bg-foreground text-background">
       <div class="mx-auto max-w-4xl px-6 py-32 text-center">
         <p class="text-2xl font-light leading-relaxed md:text-4xl">
-          {{ contentStore.content.about.mission }}
+          {{ contentStore.content?.about?.mission }}
         </p>
-        <div class="mt-8 text-xs uppercase tracking-[0.3em] opacity-60">{{ contentStore.content.about.vision }}</div>
+        <div class="mt-8 text-xs uppercase tracking-[0.3em] opacity-60">{{ contentStore.content?.about?.vision }}</div>
       </div>
     </section>
 
     <!-- Three pillars / Values -->
-    <section v-if="contentStore.content.about.values.length">
+    <section v-if="contentStore.content?.about?.values?.length">
       <div class="mx-auto grid max-w-7xl gap-px bg-border md:grid-cols-3">
         <div
-          v-for="(x, xi) in contentStore.content.about.values"
+          v-for="(x, xi) in contentStore.content?.about?.values"
           :key="xi"
           class="bg-background p-12"
         >

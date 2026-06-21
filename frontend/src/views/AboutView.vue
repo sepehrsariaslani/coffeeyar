@@ -9,10 +9,10 @@ import { Leaf, Flame, Truck, Award } from "lucide-vue-next";
 useSeo({ title: "درباره ما — نوار", description: "داستان نوار، از منشأ دانه تا فنجان شما." });
 
 const contentStore = useContentStore();
-const ab = computed(() => contentStore.content.about);
+const ab = computed(() => contentStore.content?.about);
 
 const pillars = computed(() =>
-  contentStore.content.about.values.length
+  contentStore.content?.about?.values?.length
     ? contentStore.content.about.values.map((v, i) => ({
         icon: [Leaf, Flame, Truck, Award][i % 4],
         n: String(i + 1).padStart(2, "۰"),

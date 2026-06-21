@@ -15,7 +15,7 @@ const meta = computed(() => {
 
 <template>
   <!-- Standard -->
-  <article v-if="cardVariant === 'standard'" class="dk-card" @click="$router.push(`/products/${product.id}`)">
+  <article v-if="cardVariant === 'standard'" class="dk-card" @click="$router.push(`/products/${product.slug || product.id}`)">
     <div class="dk-card__media">
       <img v-if="product.image" :src="product.image" :alt="product.name" class="dk-card__img" />
       <div v-else class="dk-card__placeholder" />
@@ -32,7 +32,7 @@ const meta = computed(() => {
   </article>
 
   <!-- Compact -->
-  <article v-else-if="cardVariant === 'compact'" class="dk-compact" @click="$router.push(`/products/${product.id}`)">
+  <article v-else-if="cardVariant === 'compact'" class="dk-compact" @click="$router.push(`/products/${product.slug || product.id}`)">
     <div class="dk-compact__media">
       <img v-if="product.image" :src="product.image" :alt="product.name" class="dk-compact__img" />
       <div v-else class="dk-compact__placeholder" />
@@ -45,7 +45,7 @@ const meta = computed(() => {
   </article>
 
   <!-- Horizontal -->
-  <article v-else class="dk-card-h" @click="$router.push(`/products/${product.id}`)">
+  <article v-else class="dk-card-h" @click="$router.push(`/products/${product.slug || product.id}`)">
     <div class="dk-card-h__media">
       <img v-if="product.image" :src="product.image" :alt="product.name" class="dk-card-h__img" />
       <div v-else class="dk-card-h__placeholder" />

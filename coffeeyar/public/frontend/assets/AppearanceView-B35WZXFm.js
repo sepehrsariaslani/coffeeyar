@@ -1,0 +1,1 @@
+import{Z as r,A as s,G as a,l as n,i as o}from"./index-Do42BPbp.js";const c={class:"min-h-screen flex items-center justify-center",dir:"rtl"},l={__name:"AppearanceView",setup(p){const t=r();return s(()=>{t.replace("/admin/appearance")}),(i,e)=>(a(),n("div",c,[...e[0]||(e[0]=[o("p",{class:"text-muted-foreground text-sm"},"در حال انتقال...",-1)])]))}};export{l as default};

@@ -45,7 +45,7 @@ def _parse_json_payload(payload: bytes | str | dict[str, Any] | None) -> dict[st
 
 def _get_settings() -> frappe.model.document.Document:
     settings = frappe.get_single(SETTINGS_DOCTYPE)
-    if not settings.shipping_fee_toman:
+    if not settings.get("shipping_fee_toman"):
         settings.shipping_fee_toman = 120000
     if not settings.zarinpal_request_url:
         settings.zarinpal_request_url = "https://sandbox.zarinpal.com/pg/v4/payment/request.json"

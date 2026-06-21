@@ -2,33 +2,18 @@ import { defineStore } from "pinia";
 import { ref } from "vue";
 import { api } from "@/lib/api.js";
 
-const defaultSettings = {
-  shop_name: "نوار",
-  description: "قهوه‌ی تخصصی، تازه برشته شده.",
-  phone: "",
-  email: "",
-  address: "",
-  instagram: "#",
-  telegram: "#",
-  enamad_code: "",
-  payment_online: true,
-  payment_cod: true,
-  shipping: {
-    standard: { enabled: true, label: "ارسال عادی", days: "۲ تا ۴ روز کاری", price: 45000, free_threshold: 500000 },
-    express: { enabled: true, label: "ارسال اکسپرس", days: "۲۴ ساعته", price: 90000, free_threshold: 0 },
-  },
-};
-
 export const useSiteSettingsStore = defineStore("siteSettings", () => {
-  const settings = ref({ ...defaultSettings });
+  const settings = ref(null);
   const loaded = ref(false);
 
   async function fetchSettings() {
     if (loaded.value) return;
     try {
       const s = await api.site.settings();
-      settings.value = { ...defaultSettings, ...s };
-      loaded.value = true;
+      if (s && typeof s === "object") {
+        settings.value = s;
+        loaded.value = true;
+      }
     } catch (e) {
       console.error("خطا در دریافت تنظیمات:", e.message);
     }
@@ -58,6 +43,7 @@ export const useSiteSettingsStore = defineStore("siteSettings", () => {
     }
   }
 
+  // Auto-fetch on store creation
   fetchSettings();
 
   return { settings, loaded, fetchSettings, save };

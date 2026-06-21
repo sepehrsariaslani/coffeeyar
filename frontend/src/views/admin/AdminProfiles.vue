@@ -2,12 +2,19 @@
 import { ref, computed, watch } from 'vue'
 import { Plus, Trash2, Edit2, Check, X, BarChart2 } from 'lucide-vue-next'
 import { useProductProfilesStore } from '@/stores/productProfiles.js'
-import { products } from '@/lib/data.js'
+import { useProductsStore } from '@/stores/products.js'
 import ProfileChart from '@/components/site/ProfileChart.vue'
 import AppSelect from '@/components/AppSelect.vue'
 import { toFa } from '@/lib/utils.js'
 
 const store = useProductProfilesStore()
+const productsStore = useProductsStore()
+
+const products = computed(() => productsStore.products.map(p => ({ id: p.id, name: p.title || p.name, slug: p.slug })))
+
+onMounted(async () => {
+  await productsStore.fetchProducts({ page_size: 100 })
+})
 
 const tab = ref('profiles')
 

@@ -16,7 +16,7 @@ const tabs = [
   { key: "shipping", icon: "📦" },
 ];
 
-const active = computed(() => store.policies[activeTab.value]);
+const active = computed(() => store.policies?.[activeTab.value]);
 
 function renderContent(text) {
   return text

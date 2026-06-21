@@ -140,6 +140,10 @@ def handle_request():
         if resource == "navigation" and method == "GET":
             return _handle_navigation()
 
+        # ── Brands (public) ──
+        if resource == "brands" and method == "GET":
+            return _handle_public_brands()
+
         # ── Addresses ──
         if resource == "addresses":
             if method == "GET":
@@ -1085,6 +1089,8 @@ def _handle_admin(segments: list[str], method: str, payload: dict, args: dict):
 
     if resource == "products":
         return _admin_products(segments[1:], method, payload)
+    if resource == "attributes":
+        return _admin_attributes(method, payload)
     if resource == "categories":
         return _admin_categories(segments[1:], method, payload)
     if resource == "orders":
@@ -1148,7 +1154,7 @@ def _handle_admin_dashboard():
 
 def _admin_products(segments: list[str], method: str, payload: dict):
     if method == "GET":
-        rows = frappe.get_all("Product", fields=["name", "item_name", "slug", "price_toman", "stock_qty", "is_published", "display_order"], order_by="display_order asc")
+        rows = frappe.get_all("Product", fields=["name", "item_name", "slug", "price_toman", "stock_qty", "is_published", "display_order", "image", "attributes_json"], order_by="display_order asc")
         for r in rows:
             r["id"] = r.name
         return _json(rows)
@@ -1178,6 +1184,9 @@ def _admin_products(segments: list[str], method: str, payload: dict):
         for key in ["is_published", "is_featured", "has_variants"]:
             if key in payload:
                 doc.set(key, bool(payload[key]))
+        # Handle attributes_json if provided
+        if "attributes_json" in payload:
+            doc.set("attributes_json", payload["attributes_json"])
         doc.save(ignore_permissions=True)
         return _json({"ok": True})
     if method == "DELETE" and segments:
@@ -1223,6 +1232,53 @@ def _admin_categories(segments: list[str], method: str, payload: dict):
         return _json({"ok": True})
     if method == "DELETE" and segments:
         frappe.delete_doc("Product Category", segments[0], ignore_permissions=True)
+        return _json({"ok": True})
+    return _json({"error": "Not found"}, 404)
+
+
+def _admin_attributes(method: str, payload: dict):
+    """Simple CRUD for Product Attribute - returns list of attributes with their values."""
+    if method == "GET":
+        attrs = frappe.get_all("Product Attribute", fields=["name", "title", "slug", "display_order"], order_by="display_order asc")
+        result = []
+        for a in attrs:
+            attr_doc = frappe.get_doc("Product Attribute", a.name)
+            values = []
+            for v in attr_doc.get("attribute_values", []):
+                values.append({"value": v.attribute_value, "abbr": v.abbr or ""})
+            result.append({
+                "id": a.name,
+                "name": a.title,
+                "slug": a.slug,
+                "values": values,
+            })
+        return _json(result)
+    if method == "POST":
+        title = payload.get("title") or payload.get("name") or ""
+        if not title:
+            frappe.throw("عنوان ویژگی الزامی است")
+        slug = payload.get("slug") or _slugify(title)
+        if frappe.db.exists("Product Attribute", {"slug": slug}):
+            slug = slug + "-" + frappe.generate_hash(length=4)
+        doc = frappe.get_doc({
+            "doctype": "Product Attribute",
+            "title": title,
+            "slug": slug,
+            "display_order": _to_int(payload.get("display_order"), 0),
+            "is_filterable": bool(payload.get("is_filterable", 0)),
+            "is_active": 1,
+        }).insert(ignore_permissions=True)
+        return _json({"id": doc.name, "ok": True}, 201)
+    if method == "PUT" and payload.get("id"):
+        doc = frappe.get_doc("Product Attribute", payload["id"])
+        if payload.get("title"):
+            doc.title = payload["title"]
+        if payload.get("is_filterable") is not None:
+            doc.is_filterable = bool(payload["is_filterable"])
+        doc.save(ignore_permissions=True)
+        return _json({"ok": True})
+    if method == "DELETE" and payload.get("id"):
+        frappe.delete_doc("Product Attribute", payload["id"], ignore_permissions=True)
         return _json({"ok": True})
     return _json({"error": "Not found"}, 404)
 
@@ -1373,6 +1429,24 @@ def _handle_public_policies():
 def _handle_public_product_global_faqs():
     doc = _get_single_doctype("Product Global FAQ Setting")
     return _json(_parse_json_field(doc.faqs_json if hasattr(doc, 'faqs_json') else ""))
+
+
+def _handle_public_brands():
+    """Return all active coffee brands ordered by display_order."""
+    rows = frappe.get_all(
+        "Coffee Brand",
+        filters={"is_active": 1},
+        fields=["name", "brand_name", "country", "logo", "website", "display_order"],
+        order_by="display_order asc",
+    )
+    return _json([{
+        "id": r.name,
+        "name": r.brand_name,
+        "country": r.country or "",
+        "logo": r.logo or "",
+        "website": r.website or "",
+        "display_order": r.display_order or 0,
+    } for r in rows])
 
 
 # ── Admin: Content ──

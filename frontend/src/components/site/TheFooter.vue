@@ -4,10 +4,29 @@ import { RouterLink } from "vue-router";
 import { Instagram, Send, MapPin, Phone, Mail } from "lucide-vue-next";
 import { useSiteSettingsStore } from "@/stores/siteSettings.js";
 import { useLayoutStore } from "@/stores/layout.js";
+import { useNavigationStore } from "@/stores/navigation.js";
 
 const siteSettings = useSiteSettingsStore();
 const layoutStore = useLayoutStore();
+const navStore = useNavigationStore();
 const variant = computed(() => layoutStore.footerVariant);
+
+// Footer links from API navigation
+const footerLinks = computed(() => {
+  if (navStore.footerLinks && navStore.footerLinks.length) {
+    return navStore.footerLinks;
+  }
+  // Fallback defaults
+  return [
+    { label: "محصولات", to: "/products" },
+    { label: "درباره ما", to: "/about" },
+    { label: "بلاگ", to: "/blog" },
+    { label: "سوالات متداول", to: "/faq" },
+    { label: "پیگیری سفارش", to: "/tracking" },
+    { label: "تماس با ما", to: "/contact" },
+    { label: "قوانین سایت", to: "/policies" },
+  ];
+});
 
 /**
  * Normalized settings — the API returns snake_case fields
@@ -57,13 +76,9 @@ const s = computed(() => {
       <div>
         <h4 class="mb-4 text-xs uppercase tracking-widest text-muted-foreground">پیمایش</h4>
         <ul class="space-y-2.5 text-sm">
-          <li><RouterLink to="/products" class="hover:text-maroon transition-colors">محصولات</RouterLink></li>
-          <li><RouterLink to="/about" class="hover:text-maroon transition-colors">درباره ما</RouterLink></li>
-          <li><RouterLink to="/blog" class="hover:text-maroon transition-colors">بلاگ</RouterLink></li>
-          <li><RouterLink to="/faq" class="hover:text-maroon transition-colors">سوالات متداول</RouterLink></li>
-          <li><RouterLink to="/tracking" class="hover:text-maroon transition-colors">پیگیری سفارش</RouterLink></li>
-          <li><RouterLink to="/contact" class="hover:text-maroon transition-colors">تماس با ما</RouterLink></li>
-          <li><RouterLink to="/policies" class="hover:text-maroon transition-colors">قوانین سایت</RouterLink></li>
+          <li v-for="link in footerLinks" :key="link.to || link.route">
+            <RouterLink :to="link.to || link.route" class="hover:text-maroon transition-colors">{{ link.label }}</RouterLink>
+          </li>
         </ul>
       </div>
 
@@ -100,10 +115,7 @@ const s = computed(() => {
       <div class="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-3 px-6 py-5 text-xs text-muted-foreground">
         <span>© {{ new Date().getFullYear() }} {{ s.shopName || 'نوار' }}. تمام حقوق محفوظ است.</span>
         <div class="flex items-center gap-4">
-          <RouterLink to="/policies" class="hover:text-maroon">قوانین سایت</RouterLink>
-          <RouterLink to="/faq" class="hover:text-maroon">سوالات متداول</RouterLink>
-          <RouterLink to="/tracking" class="hover:text-maroon">پیگیری سفارش</RouterLink>
-          <RouterLink to="/contact" class="hover:text-maroon">تماس با ما</RouterLink>
+          <RouterLink v-for="link in footerLinks.slice(0, 4)" :key="link.to || link.route" :to="link.to || link.route" class="hover:text-maroon">{{ link.label }}</RouterLink>
         </div>
       </div>
     </div>
@@ -118,13 +130,7 @@ const s = computed(() => {
       <p class="text-sm text-muted-foreground leading-7 mb-8 max-w-md mx-auto">{{ s.description }}</p>
 
       <nav class="flex flex-wrap justify-center gap-x-8 gap-y-3 text-sm mb-8">
-        <RouterLink to="/products" class="hover:text-maroon transition-colors">محصولات</RouterLink>
-        <RouterLink to="/about" class="hover:text-maroon transition-colors">درباره ما</RouterLink>
-        <RouterLink to="/blog" class="hover:text-maroon transition-colors">بلاگ</RouterLink>
-        <RouterLink to="/faq" class="hover:text-maroon transition-colors">سوالات</RouterLink>
-        <RouterLink to="/tracking" class="hover:text-maroon transition-colors">پیگیری سفارش</RouterLink>
-        <RouterLink to="/contact" class="hover:text-maroon transition-colors">تماس</RouterLink>
-        <RouterLink to="/policies" class="hover:text-maroon transition-colors">قوانین</RouterLink>
+        <RouterLink v-for="link in footerLinks" :key="link.to || link.route" :to="link.to || link.route" class="hover:text-maroon transition-colors">{{ link.label }}</RouterLink>
       </nav>
 
       <div class="flex justify-center gap-5 mb-10">
@@ -164,12 +170,9 @@ const s = computed(() => {
       <div>
         <h4 class="mb-5 text-[10px] uppercase tracking-widest text-white/35">پیمایش</h4>
         <ul class="space-y-3 text-sm">
-          <li><RouterLink to="/products" class="footer-dark__link">محصولات</RouterLink></li>
-          <li><RouterLink to="/about" class="footer-dark__link">درباره ما</RouterLink></li>
-          <li><RouterLink to="/blog" class="footer-dark__link">بلاگ</RouterLink></li>
-          <li><RouterLink to="/faq" class="footer-dark__link">سوالات متداول</RouterLink></li>
-          <li><RouterLink to="/tracking" class="footer-dark__link">پیگیری سفارش</RouterLink></li>
-          <li><RouterLink to="/policies" class="footer-dark__link">قوانین سایت</RouterLink></li>
+          <li v-for="link in footerLinks" :key="link.to || link.route">
+            <RouterLink :to="link.to || link.route" class="footer-dark__link">{{ link.label }}</RouterLink>
+          </li>
         </ul>
       </div>
 

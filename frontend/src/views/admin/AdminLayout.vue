@@ -5,7 +5,7 @@ import {
   Package, FileText, ShoppingBag, LayoutDashboard, ArrowRight,
   Users, Layers, FileEdit, HelpCircle, Menu, X, FolderOpen, PieChart,
   Tag, RotateCcw, Bell, MessageSquare, Globe, Ticket, Receipt, Palette,
-  ChevronDown,
+  ChevronDown, Image,
 } from "lucide-vue-next";
 import { useAdminNotificationsStore } from "@/stores/adminNotifications.js";
 
@@ -24,6 +24,7 @@ const navGroups = [
     label: "محصولات",
     items: [
       { to: "/admin/products",   label: "محصولات",           icon: Package },
+      { to: "/admin/product-attributes", label: "ویژگی‌ها",    icon: Tag },
       { to: "/admin/groups",     label: "گروه‌های محصول",    icon: FolderOpen },
       { to: "/admin/templates",  label: "قالب‌ها",           icon: Layers },
       { to: "/admin/profiles",   label: "پروفایل‌های محصول", icon: PieChart },

@@ -15,7 +15,7 @@ const meta = computed(() => {
 
 <template>
   <!-- Standard -->
-  <article v-if="cardVariant === 'standard'" class="ea-card" @click="$router.push(`/products/${product.id}`)">
+  <article v-if="cardVariant === 'standard'" class="ea-card" @click="$router.push(`/products/${product.slug || product.id}`)">
     <div class="ea-card__media">
       <img v-if="product.image" :src="product.image" :alt="product.name" class="ea-card__img" />
       <div v-else class="ea-card__placeholder" />
@@ -32,7 +32,7 @@ const meta = computed(() => {
   </article>
 
   <!-- Compact -->
-  <article v-else-if="cardVariant === 'compact'" class="ea-compact" @click="$router.push(`/products/${product.id}`)">
+  <article v-else-if="cardVariant === 'compact'" class="ea-compact" @click="$router.push(`/products/${product.slug || product.id}`)">
     <div class="ea-compact__media">
       <img v-if="product.image" :src="product.image" :alt="product.name" class="ea-compact__img" />
       <div v-else class="ea-compact__placeholder" />
@@ -45,7 +45,7 @@ const meta = computed(() => {
   </article>
 
   <!-- Horizontal -->
-  <article v-else class="ea-card-h" @click="$router.push(`/products/${product.id}`)">
+  <article v-else class="ea-card-h" @click="$router.push(`/products/${product.slug || product.id}`)">
     <div class="ea-card-h__media">
       <img v-if="product.image" :src="product.image" :alt="product.name" class="ea-card-h__img" />
       <div v-else class="ea-card-h__placeholder" />

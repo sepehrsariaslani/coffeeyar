@@ -35,6 +35,7 @@ const router = createRouter({
         { path: "groups", component: () => import("@/views/admin/AdminGroups.vue") },
         { path: "templates", component: () => import("@/views/admin/AdminTemplates.vue") },
         { path: "profiles", component: () => import("@/views/admin/AdminProfiles.vue") },
+        { path: "product-attributes", component: () => import("@/views/admin/AdminProductAttributes.vue") },
         { path: "categories", component: () => import("@/views/admin/AdminCategories.vue") },
         { path: "orders", component: () => import("@/views/admin/AdminOrders.vue") },
         { path: "returns", component: () => import("@/views/admin/AdminReturns.vue") },

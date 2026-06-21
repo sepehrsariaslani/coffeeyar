@@ -1,22 +1,26 @@
 <script setup>
-const brands = [
-  { name: "Tim Wendelboe", country: "نروژ" },
-  { name: "Square Mile", country: "انگلستان" },
-  { name: "Onyx Coffee Lab", country: "آمریکا" },
-  { name: "Intelligentsia", country: "آمریکا" },
-  { name: "کافه کتاب", country: "تهران" },
-  { name: "Counter Culture", country: "آمریکا" },
-  { name: "قهوه آریا", country: "تهران" },
-  { name: "Koppi Roasters", country: "سوئد" },
-  { name: "قهوه سپید", country: "اصفهان" },
-  { name: "Heart Coffee", country: "پورتلند" },
-  { name: "کافه نگار", country: "مشهد" },
-  { name: "Fuglen Coffee", country: "اسلو" },
-];
+import { ref, onMounted } from "vue";
+import { api } from "@/lib/api.js";
+
+const brands = ref([]);
+const loading = ref(true);
+
+onMounted(async () => {
+  try {
+    const data = await api.brands.list();
+    if (Array.isArray(data) && data.length) {
+      brands.value = data;
+    }
+  } catch (e) {
+    console.error("خطا در دریافت برندها:", e.message);
+  } finally {
+    loading.value = false;
+  }
+});
 </script>
 
 <template>
-  <section class="border-b border-border overflow-hidden py-6 bg-muted/30">
+  <section v-if="brands.length" class="border-b border-border overflow-hidden py-6 bg-muted/30">
     <div class="mb-4 px-[5vw]">
       <span class="text-xs uppercase tracking-[0.3em] text-maroon/70">برندهایی که با ما هستند</span>
     </div>

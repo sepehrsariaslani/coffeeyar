@@ -11,7 +11,7 @@ useSeo({ title: "تماس با ما — نوار", description: "سؤال، هم
 
 const contentStore = useContentStore();
 const settingsStore = useSiteSettingsStore();
-const ct = computed(() => contentStore.content.contact);
+const ct = computed(() => contentStore.content?.contact);
 
 onMounted(() => settingsStore.fetchSettings());
 

@@ -2,7 +2,6 @@
 import { ref, computed, watch, onMounted, nextTick } from "vue";
 import { useRoute } from "vue-router";
 import { useProductsStore } from "@/stores/products.js";
-function formatPrice(n) { return n ? Number(n).toLocaleString("fa-IR") : "۰"; }
 import { useTemplatesStore } from "@/stores/templates.js";
 import { useCategoriesStore } from "@/stores/categories.js";
 import { Plus, Pencil, Trash2, Search, X, Eye, EyeOff, Layers, Check, Download, Upload, FolderOpen, ChevronDown, BarChart2 } from "lucide-vue-next";
@@ -10,12 +9,33 @@ import ViewSwitcher from "@/components/admin/ViewSwitcher.vue";
 import ImageUploader from "@/components/ImageUploader.vue";
 
 const route = useRoute();
-
 const templatesStore = useTemplatesStore();
 const categoriesStore = useCategoriesStore();
-
 const productsStore = useProductsStore();
-const list = ref([]);
+
+// ── Map API fields to internal format ──
+const list = computed(() => {
+  return productsStore.products.map((p) => ({
+    id: p.name || p.slug,
+    name: p.title,
+    slug: p.slug,
+    categoryId: p.category,
+    categoryTitle: p.category_title,
+    price: p.effective_price_toman || p.price_toman,
+    priceBase: p.price_toman,
+    discount: p.discount_toman,
+    stock: p.stock_qty > 0 ? "in_stock" : "out_of_stock",
+    stockCount: p.stock_qty,
+    image: p.image,
+    shortDescription: p.short_description,
+    hasVariants: p.has_variants,
+    isFeatured: p.is_featured,
+    isPublished: p.is_published,
+    displayOrder: p.display_order,
+    attributes: p.attributes_json ? (() => { try { return JSON.parse(p.attributes_json); } catch { return []; } })() : [],
+  }));
+});
+
 const query = ref("");
 const categoryFilter = ref("all");
 const subCategoryFilter = ref("all");
@@ -32,14 +52,14 @@ const filtered = computed(() =>
     const queryOk =
       !query.value ||
       p.name.includes(query.value) ||
-      Object.values(p.attrs || {}).some((v) => String(v).includes(query.value));
+      (p.slug || "").includes(query.value);
     return catOk && subOk && queryOk;
   })
 );
 
 const catName = (catId) => {
   if (!catId) return "—";
-  return categoriesStore.getById(catId)?.name || "—";
+  return categoriesStore.getById(catId)?.name || catId || "—";
 };
 const subCatName = (subId) => {
   if (!subId) return "—";
@@ -48,8 +68,7 @@ const subCatName = (subId) => {
 
 function remove(id) {
   if (confirm("این محصول حذف شود؟")) {
-    list.value = list.value.filter((p) => p.id !== id);
-    if (inlineEdit.value === id) inlineEdit.value = null;
+    productsStore.deleteProduct(id);
   }
 }
 
@@ -63,9 +82,9 @@ function toggleHide(id) {
 function save(data) {
   const exists = list.value.find((p) => p.id === data.id);
   if (exists) {
-    list.value = list.value.map((p) => (p.id === data.id ? data : p));
+    productsStore.updateProduct(data.id, data);
   } else {
-    list.value.push(data);
+    productsStore.createProduct(data);
   }
   editState.value = { mode: "closed" };
 }
@@ -88,10 +107,7 @@ function openInline(p) {
 }
 
 function saveInline() {
-  list.value = list.value.map((p) => {
-    if (p.id !== inlineForm.value.id) return p;
-    return { ...p, ...inlineForm.value };
-  });
+  productsStore.updateProduct(inlineForm.value.id, inlineForm.value);
   inlineEdit.value = null;
 }
 
@@ -109,11 +125,11 @@ const emptyProduct = {
 // ─── CSV Export / Import ────────────────────────────────────────────────────
 
 function exportCSV() {
-  const headers = ["id", "categoryId", "subCategoryId", "name", "price", "description", "stock", "stockCount"];
+  const headers = ["id", "name", "price", "categoryId", "stockCount"];
   const rows = list.value.map((p) => [
-    p.id, p.categoryId || "", p.subCategoryId || "", p.name, p.price,
-    (p.description || "").replace(/\r?\n/g, " "),
-    p.stock || "in_stock", p.stockCount ?? 0,
+    p.id, p.name, p.price,
+    p.categoryId || "",
+    p.stockCount ?? 0,
   ]);
   const escape = (v) => `"${String(v ?? "").replace(/"/g, '""')}"`;
   const csv = [headers, ...rows].map((r) => r.map(escape).join(",")).join("\r\n");
@@ -170,9 +186,6 @@ function handleImport(e) {
           const p = parseFloat(row[idx("price")]);
           if (!isNaN(p)) match.price = p;
         }
-        if (idx("description") >= 0) match.description = row[idx("description")] || match.description;
-        if (idx("roast") >= 0 && row[idx("roast")]) match.roast = row[idx("roast")];
-        if (idx("category") >= 0 && row[idx("category")]) match.category = row[idx("category")];
         updated++;
       });
       alert(`${updated} محصول با موفقیت بروزرسانی شد.`);
@@ -280,7 +293,10 @@ const activeTabs = computed(() => [
   { id: "faqs", label: "سوالات" },
 ]);
 
-onMounted(() => {
+onMounted(async () => {
+  // Fetch products from API
+  await productsStore.fetchProducts();
+
   const tplId = route.query.template;
   if (tplId) {
     openCreate();
@@ -364,6 +380,15 @@ const reportStats = computed(() => {
 
 <template>
   <div class="p-4 md:p-10">
+    <!-- Loading state -->
+    <div v-if="productsStore.loading" class="flex items-center justify-center py-20">
+      <div class="text-center">
+        <div class="inline-block h-8 w-8 animate-spin border-4 border-maroon border-t-transparent rounded-full"></div>
+        <p class="mt-4 text-sm text-muted-foreground">در حال بارگذاری محصولات…</p>
+      </div>
+    </div>
+
+    <template v-else>
     <div class="mb-8 flex flex-wrap items-end justify-between gap-4">
       <div>
         <h1 class="text-3xl font-light">محصولات <span class="text-maroon">.</span></h1>
@@ -479,9 +504,9 @@ const reportStats = computed(() => {
           <div v-else class="h-14 w-14 shrink-0 bg-muted flex items-center justify-center text-muted-foreground text-xs">بدون</div>
           <div class="flex-1 min-w-0">
             <div class="font-medium text-sm truncate">{{ p.name }}</div>
-            <div class="mt-0.5 text-xs text-muted-foreground">{{ catName(p.categoryId) }}{{ p.subCategoryId ? ' / ' + subCatName(p.subCategoryId) : '' }}</div>
+            <div class="mt-0.5 text-xs text-muted-foreground">{{ p.categoryTitle || catName(p.categoryId) }}</div>
             <div class="mt-1 flex items-center gap-2 flex-wrap">
-              <span class="text-xs text-maroon font-medium">{{ formatPrice(p.price) }}</span>
+              <span class="text-xs text-maroon font-medium">{{ p.price ? Number(p.price).toLocaleString("fa-IR") : "۰" }}</span>
               <span :class="['text-xs', hidden.has(p.id) ? 'text-muted-foreground' : 'text-maroon']">
                 {{ hidden.has(p.id) ? "پنهان" : "فعال" }}
               </span>
@@ -564,9 +589,9 @@ const reportStats = computed(() => {
         <thead class="bg-muted text-xs uppercase tracking-widest text-muted-foreground">
           <tr>
             <th class="px-5 py-4 text-right">محصول</th>
-            <th class="px-5 py-4 text-right">دسته اصلی</th>
-            <th class="px-5 py-4 text-right">زیردسته</th>
+            <th class="px-5 py-4 text-right">دسته‌بندی</th>
             <th class="px-5 py-4 text-right">قیمت</th>
+            <th class="px-5 py-4 text-right">موجودی</th>
             <th class="px-5 py-4 text-right">وضعیت</th>
             <th class="px-5 py-4"></th>
           </tr>
@@ -580,28 +605,25 @@ const reportStats = computed(() => {
                   <div v-else class="h-11 w-11 bg-muted flex items-center justify-center text-muted-foreground text-xs shrink-0">بدون</div>
                   <div>
                     <div class="font-medium">{{ p.name }}</div>
-                    <div class="text-xs text-muted-foreground">{{ p.notes?.join(" · ") || "—" }}</div>
+                    <div class="text-xs text-muted-foreground">{{ p.shortDescription || "—" }}</div>
                   </div>
                 </div>
               </td>
               <td class="px-5 py-3">
                 <span :class="['text-xs px-2 py-0.5 border', p.categoryId ? 'border-maroon/30 text-maroon' : 'border-border text-muted-foreground']">
-                  {{ catName(p.categoryId) }}
+                  {{ p.categoryTitle || catName(p.categoryId) }}
                 </span>
               </td>
-              <td class="px-5 py-3 text-muted-foreground text-sm">
-                {{ subCatName(p.subCategoryId) }}
+              <td class="px-5 py-3 text-maroon text-sm">{{ p.price ? Number(p.price).toLocaleString("fa-IR") : "۰" }}</td>
+              <td class="px-5 py-3 text-sm">
+                <span :class="p.stock === 'out_of_stock' ? 'text-red-500' : 'text-green-600'">
+                  {{ p.stock === 'out_of_stock' ? 'ناموجود' : p.stockCount ? `${p.stockCount} عدد` : 'موجود' }}
+                </span>
               </td>
-              <td class="px-5 py-3 text-maroon text-sm">{{ formatPrice(p.price) }}</td>
               <td class="px-5 py-3">
-                <div class="space-y-1">
-                  <span :class="['text-xs block', hidden.has(p.id) ? 'text-muted-foreground' : 'text-green-600']">
-                    {{ hidden.has(p.id) ? "پنهان" : "فعال" }}
-                  </span>
-                  <span :class="['text-xs block', p.stock === 'out_of_stock' ? 'text-red-500' : p.stock === 'low_stock' ? 'text-amber-500' : 'text-muted-foreground']">
-                    {{ p.stock === 'out_of_stock' ? 'ناموجود' : p.stock === 'low_stock' ? `محدود (${p.stockCount})` : p.stockCount ? `موجود (${p.stockCount})` : 'موجود' }}
-                  </span>
-                </div>
+                <span :class="['text-xs', hidden.has(p.id) ? 'text-muted-foreground' : 'text-green-600']">
+                  {{ hidden.has(p.id) ? "پنهان" : "فعال" }}
+                </span>
               </td>
               <td class="px-5 py-3">
                 <div class="flex justify-end gap-1">
@@ -698,14 +720,14 @@ const reportStats = computed(() => {
             <img v-if="p.image" :src="p.image" alt="" class="w-full h-full object-cover" />
             <div v-else class="w-full h-full flex items-center justify-center text-muted-foreground text-xs">بدون تصویر</div>
             <div class="absolute top-2 right-2">
-              <span v-if="p.type === 'coffee'" class="bg-maroon text-white text-[10px] px-1.5 py-0.5">{{ p.roast }}</span>
-              <span v-else class="bg-foreground text-background text-[10px] px-1.5 py-0.5">اکسسوری</span>
+              <span v-if="p.hasVariants" class="bg-maroon text-white text-[10px] px-1.5 py-0.5">چند واریانت</span>
+              <span v-else class="bg-foreground text-background text-[10px] px-1.5 py-0.5">ساده</span>
             </div>
           </div>
           <div class="p-3">
             <div class="font-medium text-sm truncate">{{ p.name }}</div>
-            <div class="text-xs text-muted-foreground mt-0.5 truncate">{{ catName(p.categoryId) }}</div>
-            <div class="text-maroon text-sm font-medium mt-2">{{ formatPrice(p.price) }}</div>
+            <div class="text-xs text-muted-foreground mt-0.5 truncate">{{ p.categoryTitle || catName(p.categoryId) }}</div>
+            <div class="text-maroon text-sm font-medium mt-2">{{ p.price ? Number(p.price).toLocaleString("fa-IR") : "۰" }}</div>
             <div class="mt-3 flex items-center gap-1">
               <button @click="openEdit(p)" class="flex-1 border border-border py-1.5 text-xs hover:bg-accent text-center transition-colors">ویرایش</button>
               <button
@@ -745,8 +767,7 @@ const reportStats = computed(() => {
                   <div v-else class="h-10 w-10 bg-muted shrink-0 flex items-center justify-center text-[10px] text-muted-foreground">بدون</div>
                   <div class="min-w-0 flex-1">
                     <div class="text-xs font-medium truncate">{{ p.name }}</div>
-                    <div class="text-maroon text-xs mt-0.5">{{ formatPrice(p.price) }}</div>
-                    <div class="text-[10px] text-muted-foreground mt-0.5">{{ subCatName(p.subCategoryId) }}</div>
+                    <div class="text-maroon text-xs mt-0.5">{{ p.price ? Number(p.price).toLocaleString("fa-IR") : "۰" }}</div>
                   </div>
                 </div>
               </div>
@@ -782,9 +803,9 @@ const reportStats = computed(() => {
               <div v-else class="h-9 w-9 bg-muted shrink-0" />
               <div class="flex-1 min-w-0">
                 <div class="text-sm font-medium truncate">{{ p.name }}</div>
-                <div class="text-xs text-muted-foreground">{{ catName(p.categoryId) }}{{ p.subCategoryId ? ' · ' + subCatName(p.subCategoryId) : '' }}</div>
+                <div class="text-xs text-muted-foreground">{{ p.categoryTitle || catName(p.categoryId) }}</div>
               </div>
-              <div class="text-sm text-maroon shrink-0">{{ formatPrice(p.price) }}</div>
+              <div class="text-sm text-maroon shrink-0">{{ p.price ? Number(p.price).toLocaleString("fa-IR") : "۰" }}</div>
               <div class="flex gap-1 shrink-0">
                 <button @click="openEdit(p)" class="p-1.5 hover:bg-accent text-muted-foreground hover:text-foreground" title="ویرایش">
                   <Layers class="h-3.5 w-3.5" />
@@ -813,8 +834,8 @@ const reportStats = computed(() => {
           <div
             v-for="stat in [
               { label: 'کل محصولات', value: reportStats.total },
-              { label: 'میانگین قیمت', value: formatPrice(reportStats.avgPrice) },
-              { label: 'بیشترین قیمت', value: formatPrice(reportStats.maxPrice) },
+              { label: 'میانگین قیمت', value: reportStats.avgPrice ? Number(reportStats.avgPrice).toLocaleString('fa-IR') : '۰' },
+              { label: 'بیشترین قیمت', value: reportStats.maxPrice ? Number(reportStats.maxPrice).toLocaleString('fa-IR') : '۰' },
             ]"
             :key="stat.label"
             class="border border-border p-5"
@@ -855,7 +876,7 @@ const reportStats = computed(() => {
               <div class="flex-1 h-1.5 bg-muted rounded-full overflow-hidden">
                 <div class="h-full bg-maroon/70 rounded-full" :style="`width:${(p.price/reportStats.maxPrice*100)}%`" />
               </div>
-              <span class="text-xs text-maroon w-24 text-left">{{ formatPrice(p.price) }}</span>
+              <span class="text-xs text-maroon w-24 text-left">{{ p.price ? Number(p.price).toLocaleString("fa-IR") : "۰" }}</span>
             </div>
           </div>
         </div>
@@ -1073,6 +1094,7 @@ const reportStats = computed(() => {
         </form>
       </aside>
     </template>
+    </template><!-- /loading check -->
   </div>
 </template>
 

@@ -1,1 +1,0 @@
-@media print{body>*:not(#print-invoice){display:none!important}#print-invoice{display:block!important;position:fixed;inset:0}}

@@ -89,7 +89,7 @@ onMounted(async () => {
         مجموعه‌ای از محصولات منتخب نوار. هر انتخاب داستانی دارد.
       </p>
       <!-- Tabs (one per root category) -->
-      <div class="flex border-t border-border px-[5vw]">
+      <div class="flex flex-wrap border-t border-border px-[5vw]">
         <button
           v-for="cat in categoriesStore.roots"
           :key="cat.id"

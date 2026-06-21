@@ -133,8 +133,15 @@ export const api = {
     form.append("file", file);
     const token = getToken();
     const headers = {};
+    // Always include both auth header and cookies for session-based auth
     if (token) headers["Authorization"] = `Bearer ${token}`;
-    const res = await fetch(`${BASE}/upload`, { method: "POST", headers, body: form });
+    // Include credentials so Frappe session cookie is sent too
+    const res = await fetch(`${BASE}/upload`, { 
+      method: "POST", 
+      headers, 
+      body: form,
+      credentials: "include"  // Send cookies for session auth
+    });
     if (!res.ok) {
       let msg = `خطا: ${res.status}`;
       try { const err = await res.json(); msg = err.detail || err.message || err.error || msg; } catch {}
@@ -171,6 +178,11 @@ export const api = {
     navigation: () => get("/navigation"),
   },
 
+  // Brands (public)
+  brands: {
+    list: () => get("/brands"),
+  },
+
   // Public theme (no auth required)
   theme: {
     get: () => get("/theme"),
@@ -185,6 +197,13 @@ export const api = {
       create: (data) => post("/admin/products", data),
       update: (id, data) => put(`/admin/products/${id}`, data),
       remove: (id) => del(`/admin/products/${id}`),
+    },
+
+    attributes: {
+      list: () => get("/admin/attributes"),
+      create: (data) => post("/admin/attributes", data),
+      update: (id, data) => put(`/admin/attributes/${id}`, data),
+      remove: (id) => del(`/admin/attributes/${id}`),
     },
 
     categories: {

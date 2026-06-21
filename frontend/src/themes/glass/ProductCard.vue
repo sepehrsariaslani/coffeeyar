@@ -19,7 +19,7 @@ const meta = computed(() => {
 
 <template>
   <!-- Standard -->
-  <article v-if="cardVariant === 'standard'" class="gl-card" @click="$router.push(`/products/${product.id}`)">
+  <article v-if="cardVariant === 'standard'" class="gl-card" @click="$router.push(`/products/${product.slug || product.id}`)">
     <div class="gl-card__media">
       <img v-if="product.image" :src="product.image" :alt="product.name" class="gl-card__img" />
       <div v-else class="gl-card__placeholder" />
@@ -37,7 +37,7 @@ const meta = computed(() => {
   </article>
 
   <!-- Compact -->
-  <article v-else-if="cardVariant === 'compact'" class="gl-compact" @click="$router.push(`/products/${product.id}`)">
+  <article v-else-if="cardVariant === 'compact'" class="gl-compact" @click="$router.push(`/products/${product.slug || product.id}`)">
     <div class="gl-compact__media">
       <img v-if="product.image" :src="product.image" :alt="product.name" class="gl-compact__img" />
       <div v-else class="gl-compact__placeholder" />
@@ -50,7 +50,7 @@ const meta = computed(() => {
   </article>
 
   <!-- Horizontal -->
-  <article v-else class="gl-card-h" @click="$router.push(`/products/${product.id}`)">
+  <article v-else class="gl-card-h" @click="$router.push(`/products/${product.slug || product.id}`)">
     <div class="gl-card-h__media">
       <img v-if="product.image" :src="product.image" :alt="product.name" class="gl-card-h__img" />
       <div v-else class="gl-card-h__placeholder" />

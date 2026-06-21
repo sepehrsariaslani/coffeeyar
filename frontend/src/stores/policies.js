@@ -4,127 +4,35 @@ import { api } from "@/lib/api";
 
 const KEY = "navar-policies-v1";
 
-const defaults = {
-  terms: {
-    title: "شرایط و ضوابط استفاده",
-    content: `با استفاده از این وب‌سایت، شما موافقت خود را با شرایط زیر اعلام می‌کنید.
-
-**۱. استفاده از سایت**
-این وب‌سایت صرفاً برای خریداری محصولات ارائه‌شده طراحی شده است. هرگونه استفاده غیرقانونی یا مغایر با این شرایط ممنوع است.
-
-**۲. ثبت‌نام و حساب کاربری**
-اطلاعات وارد‌شده در هنگام ثبت‌نام باید دقیق و صحیح باشد. مسئولیت حفظ امنیت رمز عبور به عهده‌ی کاربر است.
-
-**۳. سفارش‌گذاری**
-ثبت سفارش به منزله‌ی قبول قیمت و شرایط تحویل درج‌شده است. پس از تأیید سفارش، امکان تغییر وجود ندارد.
-
-**۴. قیمت‌گذاری**
-قیمت‌ها به تومان نمایش داده می‌شوند و ممکن است بدون اطلاع قبلی تغییر کنند. قیمت نهایی در زمان تکمیل سفارش ملاک است.
-
-**۵. مالکیت معنوی**
-تمامی محتوا، تصاویر، متن‌ها و طراحی این سایت متعلق به فروشگاه است و هرگونه کپی‌برداری بدون اجازه ممنوع است.`,
-  },
-  return: {
-    title: "قوانین بازگشت و مرجوعی کالا",
-    content: `**بازگشت کالا در شرایط زیر پذیرفته می‌شود:**
-
-**۱. مهلت مرجوعی**
-مشتری تا ۷ روز پس از دریافت کالا می‌تواند درخواست مرجوعی ثبت کند.
-
-**۲. شرایط کالا**
-- کالا باید سالم و در بسته‌بندی اصلی باشد.
-- کالا نباید استفاده یا باز شده باشد.
-- برچسب و کارتن اصلی باید موجود باشد.
-
-**۳. کالاهای غیرقابل مرجوعی**
-- مواد غذایی و محصولات فاسدشدنی
-- کالاهایی که به درخواست مشتری سفارشی‌سازی شده‌اند
-- محصولاتی که بسته‌بندی‌شان باز شده است
-
-**۴. روش بازگشت وجه**
-پس از دریافت و تأیید کالا، وجه به همان روش پرداخت (یا کیف‌پول) ظرف ۳ تا ۵ روز کاری عودت داده می‌شود.
-
-**۵. هزینه ارسال مرجوعی**
-در صورتی که کالا معیوب یا اشتباه ارسال شده باشد، هزینه ارسال به عهده فروشگاه است. در غیر این صورت هزینه برعهده مشتری است.`,
-  },
-  privacy: {
-    title: "سیاست حفظ حریم خصوصی",
-    content: `ما به حریم خصوصی شما احترام می‌گذاریم.
-
-**اطلاعاتی که جمع‌آوری می‌کنیم:**
-- نام، شماره تماس و ایمیل برای مدیریت سفارش
-- آدرس ارسال برای تحویل کالا
-- تاریخچه سفارش برای ارائه‌ی خدمات بهتر
-
-**نحوه استفاده از اطلاعات:**
-- پردازش و ارسال سفارش‌ها
-- اطلاع‌رسانی درباره وضعیت سفارش
-- بهبود تجربه خرید
-
-**اشتراک‌گذاری اطلاعات:**
-اطلاعات شخصی شما با هیچ شخص ثالثی بدون اجازه شما به اشتراک گذاشته نمی‌شود، مگر برای انجام سفارش (مثل شرکت پیک).
-
-**امنیت داده:**
-اطلاعات شما با استفاده از پروتکل SSL رمزگذاری می‌شود.
-
-**حذف حساب:**
-برای حذف اطلاعات خود می‌توانید با پشتیبانی تماس بگیرید.`,
-  },
-  shipping: {
-    title: "شرایط ارسال",
-    content: `**ارسال عادی (پست پیشتاز)**
-- زمان تحویل: ۲ تا ۴ روز کاری
-- هزینه ارسال: ۴۵,۰۰۰ تومان
-- ارسال رایگان برای خریدهای بالای ۵۰۰,۰۰۰ تومان
-
-**ارسال اکسپرس (تیپاکس / پیشرو)**
-- زمان تحویل: ۲۴ ساعته (مناطق تهران)
-- هزینه ارسال: ۹۰,۰۰۰ تومان
-
-**نکات مهم:**
-- ارسال به سراسر ایران امکان‌پذیر است.
-- سفارش‌های ثبت‌شده تا ساعت ۱۴ روز جاری، همان روز آماده ارسال می‌شوند.
-- پس از ارسال، کد رهگیری از طریق SMS ارسال می‌شود.
-- برای مناطق دورافتاده ممکن است زمان بیشتری طول بکشد.`,
-  },
-};
-
 export const usePoliciesStore = defineStore("policies", () => {
-  const policies = ref(JSON.parse(JSON.stringify(defaults)));
+  const policies = ref(null);
   const loaded = ref(false);
 
   async function fetchPolicies() {
+    if (loaded.value) return;
     try {
       const data = await api.policies.get();
       if (data && typeof data === "object") {
-        Object.keys(data).forEach((k) => {
-          if (policies.value[k]) {
-            policies.value[k] = { ...policies.value[k], ...data[k] };
-          }
-        });
-        localStorage.setItem(KEY, JSON.stringify(policies.value));
+        policies.value = data;
+        localStorage.setItem(KEY, JSON.stringify(data));
+        loaded.value = true;
       }
     } catch {
-      const saved = loadFromStorage();
-      if (saved) {
-        Object.keys(saved).forEach((k) => {
-          if (policies.value[k]) policies.value[k] = { ...policies.value[k], ...saved[k] };
-        });
+      // Fallback to localStorage cache
+      try {
+        const saved = localStorage.getItem(KEY);
+        if (saved) {
+          policies.value = JSON.parse(saved);
+        }
+      } catch {
+        // silent
       }
     }
     loaded.value = true;
   }
 
-  function loadFromStorage() {
-    try {
-      const saved = localStorage.getItem(KEY);
-      return saved ? JSON.parse(saved) : null;
-    } catch {
-      return null;
-    }
-  }
-
   async function saveToServer() {
+    if (!policies.value) return;
     try {
       await api.admin.policies.update(policies.value);
     } catch {
@@ -133,11 +41,13 @@ export const usePoliciesStore = defineStore("policies", () => {
   }
 
   function save() {
+    if (!policies.value) return;
     localStorage.setItem(KEY, JSON.stringify(policies.value));
     saveToServer();
   }
 
+  // Auto-fetch on store creation
   fetchPolicies();
 
-  return { policies, loaded, save };
+  return { policies, loaded, save, fetchPolicies };
 });

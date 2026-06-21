@@ -11,6 +11,7 @@ import { useLayoutStore } from "@/stores/layout.js";
 import { toFa } from "@/lib/utils.js";
 import SearchModal from "@/components/SearchModal.vue";
 import ThemeSwitcher from "@/components/site/ThemeSwitcher.vue";
+import { useNavigationStore } from "@/stores/navigation.js";
 import { onMounted, onUnmounted } from "vue";
 
 const route = useRoute();
@@ -20,6 +21,7 @@ const wishlistStore = useWishlistStore();
 const notifStore = useNotificationsStore();
 const walletStore = useWalletStore();
 const layoutStore = useLayoutStore();
+const navStore = useNavigationStore();
 
 const open = ref(false);
 const searchOpen = ref(false);
@@ -46,7 +48,8 @@ function onClickOutside(e) {
 onMounted(() => { window.addEventListener("keydown", onSearchKey); window.addEventListener("click", onClickOutside); });
 onUnmounted(() => { window.removeEventListener("keydown", onSearchKey); window.removeEventListener("click", onClickOutside); });
 
-const links = [
+// Use navigation from API, fallback to defaults if empty
+const defaultLinks = [
   { to: "/", label: "خانه", exact: true },
   { to: "/products", label: "محصولات" },
   { to: "/about", label: "درباره ما" },
@@ -54,6 +57,18 @@ const links = [
   { to: "/faq", label: "سوالات" },
   { to: "/contact", label: "تماس" },
 ];
+
+const links = computed(() => {
+  const navLinks = navStore.headerLinks;
+  if (navLinks && navLinks.length) {
+    return navLinks.map((l) => ({
+      to: l.to || l.route || "/",
+      label: l.label || "",
+      exact: (l.to || l.route) === "/",
+    }));
+  }
+  return defaultLinks;
+});
 
 function isActive(link) {
   if (link.exact) return route.path === link.to;

@@ -10,14 +10,63 @@ export const useProductsStore = defineStore("products", () => {
   const page = ref(1);
   const hasNext = ref(false);
 
+  function _mapProduct(p) {
+    return {
+      // Identity
+      id: p.slug || p.name,
+      name: p.title || p.name,
+      slug: p.slug || p.name,
+      // Category
+      category: p.category,
+      category_title: p.category_title,
+      category_name: p.category_title,
+      category_slug: p.category,
+      // Pricing
+      price: p.effective_price_toman || p.price_toman || 0,
+      price_toman: p.price_toman || 0,
+      discount_toman: p.discount_toman || 0,
+      effective_price_toman: p.effective_price_toman || p.price_toman || 0,
+      // Stock
+      stock_qty: p.stock_qty || 0,
+      stock: p.stock_qty > 5 ? "in_stock" : p.stock_qty > 0 ? "low_stock" : "out_of_stock",
+      // Media
+      image: p.image,
+      gallery: p.gallery || (p.image ? [p.image] : []),
+      gallery_json: p.gallery_json,
+      // Description
+      short_description: p.short_description,
+      description: p.description || p.short_description,
+      // Flags
+      has_variants: p.has_variants,
+      is_featured: p.is_featured,
+      is_published: p.is_published,
+      display_order: p.display_order,
+      // Variants
+      variants: p.variants || [],
+      // Extra fields expected by components
+      type: p.type || "coffee",
+      origin: p.origin || p.category_title || "",
+      roast: p.roast || "",
+      notes: p.notes || [],
+      grinds: p.grinds || [],
+      specs: p.specs || [],
+      flavor: p.flavor || null,
+      brand: p.brand || "",
+      productFaqs: p.product_faqs || [],
+      // SEO
+      seo_title: p.seo_title || "",
+      seo_description: p.seo_description || "",
+    };
+  }
+
   async function fetchProducts(params = {}) {
     loading.value = true;
     try {
       const res = await api.products.list(params);
-      products.value = res.items;
-      total.value = res.total;
-      page.value = res.page;
-      hasNext.value = res.has_next;
+      products.value = (res.items || []).map(_mapProduct);
+      total.value = res.total || 0;
+      page.value = res.page || 1;
+      hasNext.value = res.has_next || false;
       return res;
     } catch (e) {
       console.error("خطا در دریافت محصولات:", e.message);
@@ -30,7 +79,8 @@ export const useProductsStore = defineStore("products", () => {
   async function fetchProduct(slug) {
     loading.value = true;
     try {
-      currentProduct.value = await api.products.get(slug);
+      const raw = await api.products.get(slug);
+      currentProduct.value = _mapProduct(raw);
       return currentProduct.value;
     } catch (e) {
       console.error("خطا در دریافت محصول:", e.message);

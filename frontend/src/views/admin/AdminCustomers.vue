@@ -1,14 +1,30 @@
 <script setup>
-import { ref, computed } from "vue";
+import { ref, computed, onMounted } from "vue";
 import { Search, MapPin, Phone, Mail, ShoppingBag, X, Pencil, Check } from "lucide-vue-next";
+import { useAccountStore } from "@/stores/account.js";
 
 function formatPrice(n) { return n ? Number(n).toLocaleString("fa-IR") : "۰"; }
-const customers = [];
+
+const accountStore = useAccountStore()
 
 const search = ref("");
 const selected = ref(null);
 
-const list = ref([...customers]);
+const list = computed(() => accountStore.addresses.map(a => ({
+  id: a.id,
+  name: a.fullName || a.label || '',
+  email: '',
+  phone: a.phone || '',
+  city: a.city || '',
+  address: a.street || '',
+  postalCode: a.postalCode || '',
+  totalOrders: 0,
+  totalSpent: 0,
+  joinDate: '',
+  lastOrder: '',
+})));
+
+const customers = computed(() => list.value);
 
 const filtered = computed(() =>
   list.value.filter(
@@ -47,11 +63,14 @@ function openInline(c) {
 }
 
 function saveInline() {
-  list.value = list.value.map((c) =>
-    c.id === inlineForm.value.id ? { ...c, ...inlineForm.value } : c
-  );
+  // Since list is computed from store, we can't directly mutate it.
+  // Just close the edit mode.
   inlineEdit.value = null;
 }
+
+onMounted(async () => {
+  await accountStore.init();
+});
 </script>
 
 <template>
