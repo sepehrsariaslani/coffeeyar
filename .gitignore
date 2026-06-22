@@ -4,3 +4,9 @@ __pycache__/
 .env
 *.log
 node_modules/
+# Frontend build artifacts
+coffeeyar/public/frontend/assets/
+coffeeyar/public/frontend/*.css
+coffeeyar/public/frontend/*.map
+coffeeyar/public/frontend/index.html
+coffeeyar/www/coffee.html
