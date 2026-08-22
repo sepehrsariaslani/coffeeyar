@@ -1,6 +1,7 @@
 import { defineStore } from "pinia";
 import { ref, watch } from "vue";
 import { api } from "@/lib/api";
+import { isDemoMode } from "@/lib/demo.js";
 
 export const DESIGN_THEMES = {
   minimal: {
@@ -160,6 +161,7 @@ export const useLayoutStore = defineStore("layout", () => {
   applyAccentColor(accentColor.value);
 
   async function fetchLayout() {
+    if (isDemoMode) return;
     try {
       const data = await api.admin.theme.get();
       if (data && data.layout) {
@@ -189,6 +191,7 @@ export const useLayoutStore = defineStore("layout", () => {
   }
 
   async function saveToServer() {
+    if (isDemoMode) return;
     try {
       await api.admin.theme.update({
         layout: {

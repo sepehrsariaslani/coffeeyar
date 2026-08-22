@@ -1,6 +1,8 @@
 import { defineStore } from "pinia";
 import { ref, computed } from "vue";
 import { api } from "@/lib/api.js";
+import { isDemoMode } from "@/lib/demo.js";
+import { copyDemo, DEMO_CATEGORIES } from "@/data/demoData.js";
 
 export const useCategoriesStore = defineStore("categories", () => {
   const categories = ref([]);
@@ -40,10 +42,12 @@ export const useCategoriesStore = defineStore("categories", () => {
     if (loaded.value) return;
     loading.value = true;
     try {
-      categories.value = await api.categories.list();
+      categories.value = isDemoMode ? copyDemo(DEMO_CATEGORIES) : await api.categories.list();
       loaded.value = true;
     } catch (e) {
       console.error("خطا در دریافت دسته‌بندی‌ها:", e.message);
+      categories.value = copyDemo(DEMO_CATEGORIES);
+      loaded.value = true;
     } finally {
       loading.value = false;
     }

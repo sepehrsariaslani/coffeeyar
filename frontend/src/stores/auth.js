@@ -1,6 +1,7 @@
 import { defineStore } from "pinia";
 import { ref, computed } from "vue";
 import { api } from "@/lib/api.js";
+import { isDemoMode } from "@/lib/demo.js";
 
 const SESSION_KEY = "navar_session_v1";
 
@@ -95,7 +96,7 @@ export const useAuthStore = defineStore("auth", () => {
    * automatically without requiring them to enter credentials again.
    */
   async function tryFrappeSession() {
-    if (session.value) return; // already logged in via token
+    if (session.value || isDemoMode) return; // already logged in via token or local preview
     try {
       const u = await api.auth.me();
       if (u && u.email) {

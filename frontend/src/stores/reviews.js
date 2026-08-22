@@ -1,11 +1,16 @@
 import { defineStore } from "pinia";
 import { ref } from "vue";
 import { api } from "@/lib/api.js";
+import { isDemoMode } from "@/lib/demo.js";
 
 export const useReviewsStore = defineStore("reviews", () => {
   const reviewsMap = ref({});
 
   async function fetchReviews(productId) {
+    if (isDemoMode) {
+      reviewsMap.value[productId] = [];
+      return [];
+    }
     try {
       const list = await api.reviews.list(productId);
       reviewsMap.value[productId] = list;

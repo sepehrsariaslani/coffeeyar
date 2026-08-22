@@ -8,7 +8,7 @@ const layoutStore = useLayoutStore();
 const cardVariant = computed(() => props.variant || layoutStore.cardVariant);
 const formatPrice = (v) => Number(v || 0).toLocaleString('fa-IR');
 const meta = computed(() => {
-  if (props.product.type === 'accessory') return { origin: props.product.category, roast: props.product.brand, notes: props.product.specs?.slice(0,2).map(s=>s.value).join(' · ') };
+  if (props.product.type === 'accessory') return { origin: props.product.category_title || props.product.category, roast: props.product.brand, notes: props.product.specs?.slice(0,2).map(s=>s.value).join(' · ') };
   return { origin: props.product.origin, roast: props.product.roast, notes: props.product.notes?.join(' · ') };
 });
 </script>

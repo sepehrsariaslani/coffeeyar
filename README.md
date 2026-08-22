@@ -4,6 +4,16 @@ Minimal coffee storefront for Peakjoy
 
 ### Installation
 
+For a quick frontend preview in the sandbox:
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+The Vite preview includes a small local catalogue of coffee and accessory products, categories, brands, and page content, so it renders even when a Frappe backend/database is not running. To use a live Frappe API during development, start the backend and run with `VITE_DEMO_MODE=false` (optionally set `VITE_API_TARGET` to its URL).
+
 You can install this app using the [bench](https://github.com/frappe/bench) CLI:
 
 ```bash

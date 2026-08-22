@@ -1,6 +1,8 @@
 import { defineStore } from "pinia";
 import { ref } from "vue";
 import { api } from "@/lib/api.js";
+import { isDemoMode } from "@/lib/demo.js";
+import { copyDemo, DEMO_POSTS } from "@/data/demoData.js";
 
 export const usePostsStore = defineStore("posts", () => {
   const posts = ref([]);
@@ -11,18 +13,20 @@ export const usePostsStore = defineStore("posts", () => {
     if (loaded.value) return;
     loading.value = true;
     try {
-      const res = await api.blog.list(1, 100);
-      posts.value = res.items.map((p) => ({
+      const res = isDemoMode ? { items: copyDemo(DEMO_POSTS) } : await api.blog.list(1, 100);
+      posts.value = (res.items || []).map((p) => ({
         ...p,
         body: p.content,
         status: p.is_published ? "published" : "draft",
-        date: p.published_on || p.created_at?.slice(0, 10) || "",
+        date: p.published_on || p.created_at?.slice(0, 10) || p.date || "",
         coverImage: p.cover_image,
-        readTime: p.read_time,
+        readTime: p.read_time || p.readTime,
       }));
       loaded.value = true;
     } catch (e) {
       console.error("خطا در دریافت پست‌ها:", e.message);
+      posts.value = copyDemo(DEMO_POSTS);
+      loaded.value = true;
     } finally {
       loading.value = false;
     }

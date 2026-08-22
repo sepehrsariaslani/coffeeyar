@@ -1,6 +1,8 @@
 import { defineStore } from "pinia";
 import { ref } from "vue";
 import { api } from "@/lib/api.js";
+import { isDemoMode } from "@/lib/demo.js";
+import { getDemoProduct, getDemoProducts } from "@/data/demoData.js";
 
 export const useProductsStore = defineStore("products", () => {
   const products = ref([]);
@@ -19,8 +21,9 @@ export const useProductsStore = defineStore("products", () => {
       // Category
       category: p.category,
       category_title: p.category_title,
-      category_name: p.category_title,
-      category_slug: p.category,
+      category_name: p.category_title || p.category,
+      category_slug: p.category_slug || p.category_root || p.category,
+      category_id: p.category,
       // Pricing
       price: p.effective_price_toman || p.price_toman || 0,
       price_toman: p.price_toman || 0,
@@ -62,15 +65,21 @@ export const useProductsStore = defineStore("products", () => {
   async function fetchProducts(params = {}) {
     loading.value = true;
     try {
-      const res = await api.products.list(params);
+      const res = isDemoMode ? getDemoProducts(params) : await api.products.list(params);
       products.value = (res.items || []).map(_mapProduct);
       total.value = res.total || 0;
       page.value = res.page || 1;
       hasNext.value = res.has_next || false;
       return res;
     } catch (e) {
+      // A local catalogue keeps the preview useful when the API is offline.
       console.error("خطا در دریافت محصولات:", e.message);
-      return { items: [], total: 0 };
+      const fallback = getDemoProducts(params);
+      products.value = fallback.items.map(_mapProduct);
+      total.value = fallback.total;
+      page.value = fallback.page;
+      hasNext.value = fallback.has_next;
+      return fallback;
     } finally {
       loading.value = false;
     }
@@ -79,12 +88,14 @@ export const useProductsStore = defineStore("products", () => {
   async function fetchProduct(slug) {
     loading.value = true;
     try {
-      const raw = await api.products.get(slug);
-      currentProduct.value = _mapProduct(raw);
+      const raw = isDemoMode ? getDemoProduct(slug) : await api.products.get(slug);
+      currentProduct.value = raw ? _mapProduct(raw) : null;
       return currentProduct.value;
     } catch (e) {
       console.error("خطا در دریافت محصول:", e.message);
-      return null;
+      const fallback = getDemoProduct(slug);
+      currentProduct.value = fallback ? _mapProduct(fallback) : null;
+      return currentProduct.value;
     } finally {
       loading.value = false;
     }

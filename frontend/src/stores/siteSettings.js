@@ -1,21 +1,31 @@
 import { defineStore } from "pinia";
 import { ref } from "vue";
 import { api } from "@/lib/api.js";
+import { isDemoMode } from "@/lib/demo.js";
+import { copyDemo, DEMO_SITE_SETTINGS } from "@/data/demoData.js";
 
 export const useSiteSettingsStore = defineStore("siteSettings", () => {
-  const settings = ref(null);
+  const settings = ref(copyDemo(DEMO_SITE_SETTINGS));
   const loaded = ref(false);
+
+  function normalizeSettings(value) {
+    if (!value || typeof value !== "object") return copyDemo(DEMO_SITE_SETTINGS);
+    return {
+      ...value,
+      shopName: value.shopName || value.shop_name || DEMO_SITE_SETTINGS.shopName,
+    };
+  }
 
   async function fetchSettings() {
     if (loaded.value) return;
     try {
-      const s = await api.site.settings();
-      if (s && typeof s === "object") {
-        settings.value = s;
-        loaded.value = true;
-      }
+      const s = isDemoMode ? copyDemo(DEMO_SITE_SETTINGS) : await api.site.settings();
+      settings.value = normalizeSettings(s);
+      loaded.value = true;
     } catch (e) {
       console.error("خطا در دریافت تنظیمات:", e.message);
+      settings.value = copyDemo(DEMO_SITE_SETTINGS);
+      loaded.value = true;
     }
   }
 

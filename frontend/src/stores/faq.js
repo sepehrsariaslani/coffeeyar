@@ -1,6 +1,8 @@
 import { defineStore } from "pinia";
 import { ref } from "vue";
 import { api } from "@/lib/api.js";
+import { isDemoMode } from "@/lib/demo.js";
+import { copyDemo, DEMO_FAQS } from "@/data/demoData.js";
 
 export const useFaqStore = defineStore("faq", () => {
   const faqs = ref([]);
@@ -11,10 +13,12 @@ export const useFaqStore = defineStore("faq", () => {
     if (loaded.value) return;
     loading.value = true;
     try {
-      faqs.value = await api.faq.list();
+      faqs.value = isDemoMode ? copyDemo(DEMO_FAQS) : await api.faq.list();
       loaded.value = true;
     } catch (e) {
       console.error(e.message);
+      faqs.value = copyDemo(DEMO_FAQS);
+      loaded.value = true;
     } finally {
       loading.value = false;
     }

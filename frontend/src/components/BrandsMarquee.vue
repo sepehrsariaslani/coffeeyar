@@ -1,18 +1,19 @@
 <script setup>
 import { ref, onMounted } from "vue";
 import { api } from "@/lib/api.js";
+import { isDemoMode } from "@/lib/demo.js";
+import { copyDemo, DEMO_BRANDS } from "@/data/demoData.js";
 
 const brands = ref([]);
 const loading = ref(true);
 
 onMounted(async () => {
   try {
-    const data = await api.brands.list();
-    if (Array.isArray(data) && data.length) {
-      brands.value = data;
-    }
+    const data = isDemoMode ? copyDemo(DEMO_BRANDS) : await api.brands.list();
+    brands.value = Array.isArray(data) && data.length ? data : copyDemo(DEMO_BRANDS);
   } catch (e) {
     console.error("خطا در دریافت برندها:", e.message);
+    brands.value = copyDemo(DEMO_BRANDS);
   } finally {
     loading.value = false;
   }

@@ -15,7 +15,7 @@ const formatPrice = (value) => Number(value || 0).toLocaleString('fa-IR');
 
 const meta = computed(() => {
   if (props.product.type === 'accessory') {
-    return { origin: props.product.category, roast: props.product.brand, notes: props.product.specs?.slice(0, 2).map(s => s.value).join(' · ') };
+    return { origin: props.product.category_title || props.product.category, roast: props.product.brand, notes: props.product.specs?.slice(0, 2).map(s => s.value).join(' · ') };
   }
   return { origin: props.product.origin, roast: props.product.roast, notes: props.product.notes?.join(' · ') };
 });

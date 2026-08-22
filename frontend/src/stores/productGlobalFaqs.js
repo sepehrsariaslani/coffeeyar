@@ -1,6 +1,8 @@
 import { defineStore } from "pinia";
 import { ref } from "vue";
 import { api } from "@/lib/api";
+import { isDemoMode } from "@/lib/demo.js";
+import { copyDemo, DEMO_GLOBAL_FAQS } from "@/data/demoData.js";
 
 export const useProductGlobalFaqsStore = defineStore("productGlobalFaqs", () => {
   const faqs = ref([]);
@@ -9,25 +11,25 @@ export const useProductGlobalFaqsStore = defineStore("productGlobalFaqs", () => 
   async function fetchFaqs() {
     if (loaded.value) return;
     try {
-      const data = await api.productGlobalFaqs.get();
+      const data = isDemoMode ? copyDemo(DEMO_GLOBAL_FAQS) : await api.productGlobalFaqs.get();
       if (Array.isArray(data) && data.length > 0) {
         faqs.value = data;
         localStorage.setItem("productGlobalFaqs", JSON.stringify(data));
-        loaded.value = true;
       }
     } catch {
-      // Fallback to localStorage cache
+      // Fallback to localStorage cache, then to the local preview content.
       try {
         const saved = localStorage.getItem("productGlobalFaqs");
-        if (saved) faqs.value = JSON.parse(saved);
+        faqs.value = saved ? JSON.parse(saved) : copyDemo(DEMO_GLOBAL_FAQS);
       } catch {
-        // silent
+        faqs.value = copyDemo(DEMO_GLOBAL_FAQS);
       }
     }
     loaded.value = true;
   }
 
   async function saveToServer() {
+    if (isDemoMode) return;
     try {
       await api.admin.productFaqs.update(faqs.value);
     } catch {

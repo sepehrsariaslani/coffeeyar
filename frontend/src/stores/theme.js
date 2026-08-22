@@ -1,6 +1,7 @@
 import { defineStore } from "pinia";
 import { ref, watch } from "vue";
 import { api } from "@/lib/api";
+import { isDemoMode } from "@/lib/demo.js";
 
 const STORAGE_KEY = "navar_theme_v1";
 
@@ -81,6 +82,7 @@ export const useThemeStore = defineStore("theme", () => {
   applyTheme(theme.value);
 
   async function fetchTheme() {
+    if (isDemoMode) return;
     try {
       // Public endpoint — no auth needed, works for all visitors
       const data = await api.theme.get();
@@ -96,6 +98,7 @@ export const useThemeStore = defineStore("theme", () => {
   }
 
   async function saveToServer() {
+    if (isDemoMode) return;
     try {
       // Admin-only write endpoint
       await api.admin.theme.update({ theme: theme.value });

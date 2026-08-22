@@ -4,7 +4,7 @@
  *
  * Run automatically via "postbuild" in package.json.
  */
-import { readFileSync, writeFileSync } from "fs";
+import { existsSync, readFileSync, writeFileSync } from "fs";
 import { resolve, dirname } from "path";
 import { fileURLToPath } from "url";
 
@@ -35,6 +35,11 @@ const cssFile = cssMatch[1];
 
 console.log(`✅  JS  → ${jsFile}`);
 console.log(`✅  CSS → ${cssFile}`);
+
+if (!existsSync(coffeeHtml)) {
+  console.warn("⚠️  coffee.html is not present; leaving the standalone build in public/frontend.");
+  process.exit(0);
+}
 
 let coffee = readFileSync(coffeeHtml, "utf-8");
 
