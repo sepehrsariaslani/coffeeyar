@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, watch, onMounted } from "vue";
+import { ref, computed, watch } from "vue";
 import { useRoute, RouterLink } from "vue-router";
 import { ChevronDown, Star } from "lucide-vue-next";
 import TheLayout from "@/components/site/TheLayout.vue";
@@ -114,15 +114,19 @@ const globalFaqs = computed(() =>
   globalFaqsStore.getFaqsForType(isAccessory.value ? "accessory" : "coffee")
 );
 
-onMounted(async () => {
-  const slug = route.params.id;
-  console.log('[ProductDetailView] slug:', slug);
-  if (slug && slug !== "undefined") {
-    const result = await productsStore.fetchProduct(slug);
-    console.log('[ProductDetailView] product:', result);
-    await reviewsStore.fetchReviews(slug);
+async function loadProduct(slug) {
+  if (!slug || slug === "undefined") {
+    productsStore.currentProduct = null;
+    return;
   }
-});
+
+  await productsStore.fetchProduct(slug);
+  await reviewsStore.fetchReviews(slug);
+}
+
+// The same component instance is reused when moving from one product to
+// another, so react to the route param instead of relying on mount only.
+watch(() => route.params.id, loadProduct, { immediate: true });
 
 const related = computed(() =>
   productsStore.products

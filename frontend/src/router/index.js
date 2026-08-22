@@ -2,8 +2,22 @@ import { createRouter, createWebHistory } from "vue-router";
 import { useLayoutStore, applyDesignTheme } from "@/stores/layout.js";
 import { useAuthStore } from "@/stores/auth.js";
 
+// Vite serves the standalone preview below BASE_URL, while Frappe serves the
+// same SPA from the website root. Detect the current location so both modes
+// generate working links (including product detail URLs).
+function getRouterBase() {
+  const configuredBase = import.meta.env.BASE_URL || "/";
+  if (configuredBase === "/" || typeof window === "undefined") return "/";
+
+  const baseWithoutTrailingSlash = configuredBase.replace(/\/$/, "");
+  const path = window.location.pathname;
+  return path === baseWithoutTrailingSlash || path.startsWith(`${baseWithoutTrailingSlash}/`)
+    ? configuredBase
+    : "/";
+}
+
 const router = createRouter({
-  history: createWebHistory(),
+  history: createWebHistory(getRouterBase()),
   routes: [
     { path: "/", component: () => import("@/views/HomeView.vue") },
     { path: "/products", component: () => import("@/views/ProductsView.vue") },
