@@ -8,6 +8,7 @@ import {
   ACCENT_COLORS,
   BUTTON_STYLES,
   PAGE_LIST,
+  resolvePagePath,
 } from "@/stores/layout.js";
 
 const layoutStore = useLayoutStore();
@@ -16,26 +17,27 @@ const open = ref(false);
 const panelRef = ref(null);
 
 const themes = Object.entries(DESIGN_THEMES).map(([key, val]) => ({ key, ...val }));
+const currentPageKey = computed(() => resolvePagePath(route.path));
 
 const currentPageLabel = computed(() => {
-  const match = PAGE_LIST.find((p) => p.path === route.path);
+  const match = PAGE_LIST.find((p) => p.path === currentPageKey.value);
   return match ? match.label : null;
 });
 
 const isPageLocked = computed(() =>
-  !!layoutStore.pageDesigns[route.path]
+  !!layoutStore.pageDesigns[currentPageKey.value]
 );
 
 const pageTheme = computed(() =>
-  layoutStore.pageDesigns[route.path] || layoutStore.themeName
+  layoutStore.pageDesigns[currentPageKey.value] || layoutStore.themeName
 );
 
 function lockPage(themeKey) {
-  layoutStore.setPageDesign(route.path, themeKey);
+  layoutStore.setPageDesign(currentPageKey.value, themeKey);
 }
 
 function unlockPage() {
-  layoutStore.setPageDesign(route.path, null);
+  layoutStore.setPageDesign(currentPageKey.value, null);
 }
 
 function toggle() { open.value = !open.value; }

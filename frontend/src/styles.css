@@ -668,3 +668,280 @@ html.ui-pill textarea {
 .accent-amber  { --maroon: oklch(0.52 0.14 55);  --maroon-foreground: oklch(1 0 0); --ring: oklch(0.52 0.14 55); }
 .accent-purple { --maroon: oklch(0.44 0.18 295); --maroon-foreground: oklch(1 0 0); --ring: oklch(0.44 0.18 295); }
 .accent-rose   { --maroon: oklch(0.47 0.2 340);  --maroon-foreground: oklch(1 0 0); --ring: oklch(0.47 0.2 340); }
+
+/* ─── Component design scopes ─────────────────────────
+   The admin panel can override one component without changing the rest of
+   the page. These scopes mirror the document-level theme rules above, but
+   are attached to the resolver wrappers as well. Scoped component CSS is
+   intentionally overridden here so a modern card can live on a dark page.
+─────────────────────────────────────────────────────── */
+.design-component-scope {
+  display: contents;
+}
+
+.design-component-scope[data-design-theme="modern"] {
+  --background: #ffffff;
+  --foreground: #0a0f1e;
+  --card: #ffffff;
+  --card-foreground: #0a0f1e;
+  --popover: #ffffff;
+  --popover-foreground: #0a0f1e;
+  --primary: #0a0f1e;
+  --primary-foreground: #ffffff;
+  --secondary: #f1f5f9;
+  --secondary-foreground: #0a0f1e;
+  --muted: #f1f5f9;
+  --muted-foreground: #64748b;
+  --accent: #eef2ff;
+  --accent-foreground: #0a0f1e;
+  --border: #e2e8f0;
+  --input: #e2e8f0;
+  --sidebar: #f8fafc;
+}
+.design-component-scope[data-design-theme="modern"] > header,
+.design-component-scope[data-design-theme="modern"] > footer {
+  border-radius: 12px;
+  box-shadow: 0 4px 24px rgba(59, 91, 219, 0.07);
+}
+.design-component-scope[data-design-theme="modern"] .card,
+.design-component-scope[data-design-theme="modern"] .card-compact,
+.design-component-scope[data-design-theme="modern"] .card-h {
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 12px !important;
+  background: #ffffff !important;
+  box-shadow: 0 4px 24px rgba(59, 91, 219, 0.07), 0 1px 4px rgba(0, 0, 0, 0.04) !important;
+  overflow: hidden;
+}
+.design-component-scope[data-design-theme="modern"] .card__media,
+.design-component-scope[data-design-theme="modern"] .card-compact__media {
+  background: #f1f5f9;
+}
+.design-component-scope[data-design-theme="modern"] .card__title,
+.design-component-scope[data-design-theme="modern"] .card-compact__title,
+.design-component-scope[data-design-theme="modern"] .card-h__title,
+.design-component-scope[data-design-theme="modern"] .section-header__title {
+  color: #0a0f1e;
+}
+.design-component-scope[data-design-theme="modern"] .section-header {
+  border-bottom-color: #e2e8f0;
+}
+.design-component-scope[data-design-theme="modern"] .hero {
+  clip-path: polygon(0 0, 100% 0, 100% 92%, 96% 100%, 0 100%);
+}
+.design-component-scope[data-design-theme="modern"] .featured__grid {
+  gap: 0.75rem;
+  background: #e2e8f0;
+  border-color: #e2e8f0;
+}
+.design-component-scope[data-design-theme="modern"] .featured__item {
+  border-radius: 12px;
+  background: #ffffff;
+  overflow: hidden;
+}
+.design-component-scope[data-design-theme="modern"] button,
+.design-component-scope[data-design-theme="modern"] input,
+.design-component-scope[data-design-theme="modern"] select,
+.design-component-scope[data-design-theme="modern"] textarea {
+  border-radius: 8px;
+}
+
+.design-component-scope[data-design-theme="bento"] {
+  --background: #f0efec;
+  --foreground: #111111;
+  --card: #e6e5e1;
+  --card-foreground: #111111;
+  --popover: #fafaf8;
+  --popover-foreground: #111111;
+  --primary: #111111;
+  --primary-foreground: #ffffff;
+  --secondary: #e6e5e1;
+  --secondary-foreground: #111111;
+  --muted: #e5e4e0;
+  --muted-foreground: #5f5f5b;
+  --accent: #deddd8;
+  --accent-foreground: #111111;
+  --border: #d8d7d2;
+  --input: #d8d7d2;
+  --sidebar: #f6f5f2;
+}
+.design-component-scope[data-design-theme="bento"] > header,
+.design-component-scope[data-design-theme="bento"] > footer {
+  border-radius: 14px;
+}
+.design-component-scope[data-design-theme="bento"] .card,
+.design-component-scope[data-design-theme="bento"] .card-compact,
+.design-component-scope[data-design-theme="bento"] .card-h {
+  border: none !important;
+  border-radius: 14px !important;
+  background: #e6e5e1 !important;
+  box-shadow: none !important;
+  overflow: hidden;
+}
+.design-component-scope[data-design-theme="bento"] .section-header {
+  border-bottom: 0;
+}
+.design-component-scope[data-design-theme="bento"] .featured__grid {
+  gap: 0.75rem;
+  background: transparent;
+  border: 0;
+}
+.design-component-scope[data-design-theme="bento"] .featured__item {
+  border-radius: 14px;
+  background: #e6e5e1;
+  overflow: hidden;
+}
+.design-component-scope[data-design-theme="bento"] button,
+.design-component-scope[data-design-theme="bento"] input,
+.design-component-scope[data-design-theme="bento"] select,
+.design-component-scope[data-design-theme="bento"] textarea {
+  border-radius: 8px;
+}
+
+.design-component-scope[data-design-theme="scandinavian"] {
+  --background: #f7f5f2;
+  --foreground: #4b4b4b;
+  --card: #f7f5f2;
+  --card-foreground: #4b4b4b;
+  --popover: #fdfcfa;
+  --popover-foreground: #4b4b4b;
+  --primary: #4b4b4b;
+  --primary-foreground: #f7f5f2;
+  --secondary: #ede6da;
+  --secondary-foreground: #4b4b4b;
+  --muted: #ede6da;
+  --muted-foreground: #7a7268;
+  --accent: #e5ddd0;
+  --accent-foreground: #4b4b4b;
+  --border: #dcc5a1;
+  --input: #dcc5a1;
+  --sidebar: #f0ece6;
+}
+.design-component-scope[data-design-theme="scandinavian"] > header,
+.design-component-scope[data-design-theme="scandinavian"] > footer,
+.design-component-scope[data-design-theme="scandinavian"] .card,
+.design-component-scope[data-design-theme="scandinavian"] .card-compact,
+.design-component-scope[data-design-theme="scandinavian"] .card-h {
+  border-radius: 6px;
+  border-color: #dcc5a1 !important;
+  box-shadow: 0 2px 10px rgba(75, 75, 75, 0.06);
+}
+.design-component-scope[data-design-theme="scandinavian"] .featured__item {
+  border-radius: 6px;
+  background: #f7f5f2;
+}
+.design-component-scope[data-design-theme="scandinavian"] button,
+.design-component-scope[data-design-theme="scandinavian"] input,
+.design-component-scope[data-design-theme="scandinavian"] select,
+.design-component-scope[data-design-theme="scandinavian"] textarea {
+  border-radius: 4px;
+}
+
+.design-component-scope[data-design-theme="swiss"] {
+  --background: #ffffff;
+  --foreground: #111111;
+  --card: #ffffff;
+  --card-foreground: #111111;
+  --popover: #ffffff;
+  --popover-foreground: #111111;
+  --primary: #111111;
+  --primary-foreground: #ffffff;
+  --secondary: #f5f5f5;
+  --secondary-foreground: #111111;
+  --muted: #f5f5f5;
+  --muted-foreground: #444444;
+  --accent: #eeeeee;
+  --accent-foreground: #111111;
+  --border: #111111;
+  --input: #111111;
+  --sidebar: #fafafa;
+}
+.design-component-scope[data-design-theme="swiss"] > header {
+  border-bottom: 3px solid #111111 !important;
+}
+.design-component-scope[data-design-theme="swiss"] .card,
+.design-component-scope[data-design-theme="swiss"] .card-compact,
+.design-component-scope[data-design-theme="swiss"] .card-h,
+.design-component-scope[data-design-theme="swiss"] .featured__item {
+  border: 2px solid #111111 !important;
+  border-radius: 0 !important;
+  background: #ffffff !important;
+  box-shadow: none !important;
+}
+.design-component-scope[data-design-theme="swiss"] .section-header__title,
+.design-component-scope[data-design-theme="swiss"] .card__title,
+.design-component-scope[data-design-theme="swiss"] .card-compact__title,
+.design-component-scope[data-design-theme="swiss"] .card-h__title {
+  font-weight: 700;
+  color: #111111;
+}
+.design-component-scope[data-design-theme="swiss"] button,
+.design-component-scope[data-design-theme="swiss"] input,
+.design-component-scope[data-design-theme="swiss"] select,
+.design-component-scope[data-design-theme="swiss"] textarea {
+  border-radius: 0;
+}
+
+.design-component-scope[data-design-theme="dark"] {
+  --background: #161412;
+  --foreground: #f5f0ea;
+  --card: #1f1c19;
+  --card-foreground: #f5f0ea;
+  --popover: #1f1c19;
+  --popover-foreground: #f5f0ea;
+  --primary: #f5f0ea;
+  --primary-foreground: #161412;
+  --secondary: #2a2622;
+  --secondary-foreground: #f5f0ea;
+  --muted: #2a2622;
+  --muted-foreground: #a49c94;
+  --accent: #302b26;
+  --accent-foreground: #f5f0ea;
+  --border: rgba(255, 255, 255, 0.1);
+  --input: rgba(255, 255, 255, 0.15);
+  --sidebar: #1f1c19;
+}
+
+.design-component-scope[data-design-theme="earthy"] {
+  --background: #f4f7f2;
+  --foreground: #1a2a18;
+  --card: #f4f7f2;
+  --card-foreground: #1a2a18;
+  --popover: #f4f7f2;
+  --popover-foreground: #1a2a18;
+  --primary: #1a2a18;
+  --primary-foreground: #f4f7f2;
+  --secondary: #e8efe5;
+  --secondary-foreground: #1a2a18;
+  --muted: #e8efe5;
+  --muted-foreground: #4a6248;
+  --accent: #dde9d9;
+  --accent-foreground: #1a2a18;
+  --border: #c8d8c4;
+  --input: #c8d8c4;
+  --sidebar: #edf2eb;
+}
+.design-component-scope[data-design-theme="earthy"] .card,
+.design-component-scope[data-design-theme="earthy"] .card-compact,
+.design-component-scope[data-design-theme="earthy"] .card-h {
+  border-radius: 6px;
+}
+
+.design-component-scope[data-design-theme="glass"] {
+  --background: rgba(238, 244, 255, 0.38);
+  --foreground: #10133b;
+  --card: rgba(255, 255, 255, 0.52);
+  --card-foreground: #10133b;
+  --popover: rgba(255, 255, 255, 0.88);
+  --popover-foreground: #10133b;
+  --primary: #26327f;
+  --primary-foreground: #ffffff;
+  --secondary: rgba(255, 255, 255, 0.35);
+  --secondary-foreground: #10133b;
+  --muted: rgba(255, 255, 255, 0.3);
+  --muted-foreground: #53609b;
+  --accent: rgba(255, 255, 255, 0.25);
+  --accent-foreground: #10133b;
+  --border: rgba(255, 255, 255, 0.45);
+  --input: rgba(255, 255, 255, 0.32);
+  --sidebar: rgba(255, 255, 255, 0.48);
+}

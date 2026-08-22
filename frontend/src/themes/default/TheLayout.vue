@@ -1,6 +1,6 @@
 <script setup>
-import TheHeader from "./TheHeader.vue";
-import TheFooter from "./TheFooter.vue";
+import TheHeader from "@/components/site/TheHeaderResolver.vue";
+import TheFooter from "@/components/site/TheFooterResolver.vue";
 import MobileBottomNav from "@/components/site/MobileBottomNav.vue";
 import StickyCategoryBar from "@/components/site/StickyCategoryBar.vue";
 </script>

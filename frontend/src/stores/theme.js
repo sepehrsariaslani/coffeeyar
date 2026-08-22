@@ -5,8 +5,6 @@ import { isDemoMode } from "@/lib/demo.js";
 
 const STORAGE_KEY = "navar_theme_v1";
 
-const ALL_THEME_CLASSES = ["dark", "theme-modern", "theme-earthy", "theme-glass"];
-
 const defaults = {
   accentHue: 22,
   accentChroma: 0.09,
@@ -28,25 +26,9 @@ function loadTheme() {
 export function applyTheme(t) {
   const root = document.documentElement;
 
-  root.classList.remove(...ALL_THEME_CLASSES);
-  if (t.themeClass) root.classList.add(t.themeClass);
-
-  if (t.themeClass === "theme-glass" || t.themeClass === "theme-modern" || t.themeClass === "theme-earthy" || t.themeClass === "dark") {
-    root.style.removeProperty("--maroon");
-    root.style.removeProperty("--background");
-    root.style.removeProperty("--card");
-    root.style.removeProperty("--popover");
-    root.style.removeProperty("--sidebar");
-    root.style.removeProperty("--muted");
-    root.style.removeProperty("--secondary");
-    root.style.removeProperty("--accent");
-    root.style.removeProperty("--sidebar-accent");
-    root.style.removeProperty("--border");
-    root.style.removeProperty("--sidebar-border");
-    root.style.removeProperty("--input");
-    return;
-  }
-
+  // This store owns the color tokens only. Design classes are controlled by
+  // layoutStore, so changing a palette must never remove the active design
+  // theme or a component override.
   const maroon = `oklch(${t.accentLightness} ${t.accentChroma} ${t.accentHue})`;
   const bg     = `oklch(${t.bgLightness} ${t.bgChroma} ${t.bgHue})`;
   const sidebar  = `oklch(${Math.min(t.bgLightness + 0.01, 1)} ${t.bgChroma} ${t.bgHue})`;

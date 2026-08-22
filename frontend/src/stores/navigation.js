@@ -1,6 +1,7 @@
 import { defineStore } from "pinia";
 import { ref } from "vue";
 import { api } from "@/lib/api";
+import { isDemoMode } from "@/lib/demo.js";
 
 export const useNavigationStore = defineStore("navigation", () => {
   const headerLinks = ref([]);
@@ -10,6 +11,10 @@ export const useNavigationStore = defineStore("navigation", () => {
 
   async function fetchNavigation() {
     if (loaded.value) return;
+    if (isDemoMode) {
+      loaded.value = true;
+      return;
+    }
     try {
       const data = await api.site.navigation();
       if (data && typeof data === "object") {

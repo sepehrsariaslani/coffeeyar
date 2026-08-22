@@ -7,8 +7,8 @@ description: Site-wide appearance customization architecture for نوار — de
 
 All customization state lives in `src/stores/layout.js` (Pinia), persisted to localStorage under key `navar_layout_v3`.
 
-### Themes (5 options: minimal / modern / dark / earthy / glass)
-- Applied as a class on `<html>` element via `applyTheme()`
+### Themes (9 options: minimal / bento / modern / dark / earthy / scandinavian / swiss / glass)
+- Applied as a class on `<html>` element via `applyDesignTheme()`
 - **minimal**: sharp 0px radius, no shadows, warm off-white, default
 - **modern**: 12px card radius, 8px btn radius, blue accent, diagonal hero clip-path via CSS `.hero::after`, drop shadows
 - **dark**: adds `dark` class, 2px radius, warm glow shadows
@@ -30,6 +30,12 @@ All customization state lives in `src/stores/layout.js` (Pinia), persisted to lo
 
 ### Button style (3 options: sharp/rounded/pill)
 - Applied as class `ui-rounded` or `ui-pill` on `<html>`
+
+### Component theme inheritance
+- `layoutStore.componentThemes` stores optional global theme overrides for layout, header, footer, hero, section header, featured grid, and product card.
+- `pageComponentThemes` stores final per-page component overrides. Resolvers use page component → global component → page theme → global theme precedence.
+- All design-aware resolvers use `layoutStore`, not `themeStore.themeClass`. The color store owns color tokens only and must not remove design classes.
+- Resolver wrappers expose `data-design-theme` scopes so a modern/bento/scandinavian/swiss component can be styled independently on a page using another design.
 
 ## Entry points
 - Admin: `/admin/appearance` → `AdminAppearance.vue` — full control including header/footer/hero/card variants

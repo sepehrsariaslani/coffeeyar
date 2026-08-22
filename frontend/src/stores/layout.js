@@ -25,7 +25,7 @@ export const DESIGN_THEMES = {
   dark: {
     label: "تاریک",
     desc: "شب‌گرد، نرم‌چشم",
-    class: "theme-dark",
+    class: "dark",
     preview: { bg: "#161412", text: "#F5F0EA", accent: "#D4956A", border: "#2E2A26" },
   },
   earthy: {
@@ -97,12 +97,33 @@ export const ACCENT_COLORS = [
 ];
 
 export const PAGE_LIST = [
-  { path: "/",         label: "صفحه اصلی" },
-  { path: "/products", label: "محصولات" },
-  { path: "/blog",     label: "بلاگ" },
-  { path: "/about",    label: "درباره ما" },
-  { path: "/contact",  label: "تماس" },
-  { path: "/account",  label: "حساب کاربری" },
+  { path: "/",              label: "صفحه اصلی" },
+  { path: "/products",      label: "محصولات" },
+  { path: "/products/:id",  label: "جزئیات محصول" },
+  { path: "/blog",          label: "بلاگ" },
+  { path: "/blog/:slug",    label: "مقاله بلاگ" },
+  { path: "/about",         label: "درباره ما" },
+  { path: "/contact",       label: "تماس" },
+  { path: "/faq",           label: "سوالات متداول" },
+  { path: "/cart",          label: "سبد خرید" },
+  { path: "/checkout",      label: "تسویه حساب" },
+  { path: "/wishlist",      label: "علاقه‌مندی‌ها" },
+  { path: "/account",       label: "حساب کاربری" },
+  { path: "/tracking",      label: "پیگیری سفارش" },
+  { path: "/policies",      label: "قوانین سایت" },
+];
+
+// A component can inherit the active design, or opt into another design
+// without changing the rest of the page. These keys are also used by the
+// admin appearance panel and the themed component resolvers.
+export const DESIGN_COMPONENTS = [
+  { id: "layout", label: "چیدمان صفحه" },
+  { id: "header", label: "هدر" },
+  { id: "footer", label: "فوتر" },
+  { id: "hero", label: "بنر اصلی" },
+  { id: "sectionHeader", label: "عنوان بخش‌ها" },
+  { id: "featuredGrid", label: "گرید منتخب" },
+  { id: "productCard", label: "کارت محصول" },
 ];
 
 const THEME_CLASSES  = Object.values(DESIGN_THEMES).map((t) => t.class).filter(Boolean);
@@ -110,12 +131,13 @@ const BTN_CLASS_MAP  = { sharp: "", rounded: "ui-rounded", pill: "ui-pill" };
 const ACCENT_CLASS_LIST = ACCENT_COLORS.map((a) => a.class).filter(Boolean);
 
 export function applyDesignTheme(name) {
+  if (typeof document === "undefined") return;
   const html = document.documentElement;
   THEME_CLASSES.forEach((c) => html.classList.remove(c));
-  html.classList.remove("dark");
-  const t = DESIGN_THEMES[name];
-  if (t?.class === "theme-dark") html.classList.add("dark");
-  else if (t?.class) html.classList.add(t.class);
+  const themeKey = DESIGN_THEMES[name] ? name : "minimal";
+  const themeClass = DESIGN_THEMES[themeKey]?.class;
+  if (themeClass) html.classList.add(themeClass);
+  html.dataset.designTheme = themeKey;
 }
 
 function applyButtonStyle(style) {
@@ -132,11 +154,19 @@ function applyAccentColor(id) {
   if (item?.class) html.classList.add(item.class);
 }
 
+export function resolvePagePath(path = "") {
+  if (PAGE_LIST.some((page) => page.path === path)) return path;
+  if (path.startsWith("/products/")) return "/products/:id";
+  if (path.startsWith("/blog/")) return "/blog/:slug";
+  return path;
+}
+
 if (typeof window !== "undefined") {
   window.addEventListener("message", (e) => {
     if (e.data?.type === "navar-design-preview") {
       applyDesignTheme(e.data.designTheme || "minimal");
       applyButtonStyle(e.data.buttonStyle || "sharp");
+      window.dispatchEvent(new CustomEvent("navar-design-preview-state", { detail: e.data }));
     }
   });
 }
@@ -155,6 +185,24 @@ export const useLayoutStore = defineStore("layout", () => {
   const buttonStyle   = ref(saved.buttonStyle   || "sharp");
   const accentColor   = ref(saved.accentColor   || "default");
   const pageDesigns   = ref(saved.pageDesigns   || {});
+  const componentThemes = ref(saved.componentThemes || {});
+  const pageComponentThemes = ref(saved.pageComponentThemes || {});
+
+  function applyDesignPreviewState(data = {}) {
+    if (DESIGN_THEMES[data.designTheme]) themeName.value = data.designTheme;
+    if (BUTTON_STYLES.some((style) => style.id === data.buttonStyle)) buttonStyle.value = data.buttonStyle;
+    if (data.pageDesigns && typeof data.pageDesigns === "object") pageDesigns.value = { ...data.pageDesigns };
+    if (data.componentThemes && typeof data.componentThemes === "object") componentThemes.value = { ...data.componentThemes };
+    if (data.pageComponentThemes && typeof data.pageComponentThemes === "object") {
+      pageComponentThemes.value = { ...data.pageComponentThemes };
+    }
+  }
+
+  if (typeof window !== "undefined") {
+    window.addEventListener("navar-design-preview-state", (event) => {
+      applyDesignPreviewState(event.detail);
+    });
+  }
 
   applyDesignTheme(themeName.value);
   applyButtonStyle(buttonStyle.value);
@@ -174,6 +222,8 @@ export const useLayoutStore = defineStore("layout", () => {
         if (l.buttonStyle) buttonStyle.value = l.buttonStyle;
         if (l.accentColor) accentColor.value = l.accentColor;
         if (l.pageDesigns) pageDesigns.value = l.pageDesigns;
+        if (l.componentThemes) componentThemes.value = l.componentThemes;
+        if (l.pageComponentThemes) pageComponentThemes.value = l.pageComponentThemes;
         saveToStorage();
       }
     } catch {
@@ -187,6 +237,8 @@ export const useLayoutStore = defineStore("layout", () => {
       footerVariant: footerVariant.value, heroVariant: heroVariant.value,
       cardVariant: cardVariant.value, buttonStyle: buttonStyle.value,
       accentColor: accentColor.value, pageDesigns: pageDesigns.value,
+      componentThemes: componentThemes.value,
+      pageComponentThemes: pageComponentThemes.value,
     }));
   }
 
@@ -203,6 +255,8 @@ export const useLayoutStore = defineStore("layout", () => {
           buttonStyle: buttonStyle.value,
           accentColor: accentColor.value,
           pageDesigns: pageDesigns.value,
+          componentThemes: componentThemes.value,
+          pageComponentThemes: pageComponentThemes.value,
         },
       });
     } catch {
@@ -221,7 +275,45 @@ export const useLayoutStore = defineStore("layout", () => {
   }
 
   function getEffectiveDesign(path) {
-    return pageDesigns.value[path] || themeName.value;
+    const pageKey = resolvePagePath(path);
+    return pageDesigns.value[pageKey] || themeName.value;
+  }
+
+  function getComponentTheme(component, path = "") {
+    const pageKey = resolvePagePath(path);
+    const pageOverrides = pageComponentThemes.value[pageKey] || pageComponentThemes.value[path];
+    if (pageOverrides && pageOverrides[component]) return pageOverrides[component];
+    if (componentThemes.value[component]) return componentThemes.value[component];
+    return getEffectiveDesign(path);
+  }
+
+  function setComponentTheme(component, theme, path = null) {
+    if (path) {
+      const next = { ...pageComponentThemes.value };
+      const pageOverrides = { ...(next[path] || {}) };
+      if (theme) pageOverrides[component] = theme;
+      else delete pageOverrides[component];
+      if (Object.keys(pageOverrides).length) next[path] = pageOverrides;
+      else delete next[path];
+      pageComponentThemes.value = next;
+    } else {
+      const next = { ...componentThemes.value };
+      if (theme) next[component] = theme;
+      else delete next[component];
+      componentThemes.value = next;
+    }
+    save();
+  }
+
+  function clearComponentThemes(path = null) {
+    if (path) {
+      const next = { ...pageComponentThemes.value };
+      delete next[path];
+      pageComponentThemes.value = next;
+    } else {
+      componentThemes.value = {};
+    }
+    save();
   }
 
   watch(themeName,   (n) => { applyDesignTheme(n);  save(); });
@@ -234,6 +326,8 @@ export const useLayoutStore = defineStore("layout", () => {
   return {
     themeName, headerVariant, footerVariant, heroVariant,
     cardVariant, buttonStyle, accentColor, pageDesigns,
-    setPageDesign, getEffectiveDesign,
+    componentThemes, pageComponentThemes,
+    setPageDesign, getEffectiveDesign, getComponentTheme,
+    setComponentTheme, clearComponentThemes,
   };
 });

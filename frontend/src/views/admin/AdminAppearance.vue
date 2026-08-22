@@ -3,7 +3,7 @@ import { ref, computed, watch, toRaw } from "vue";
 import {
   useLayoutStore,
   DESIGN_THEMES, HEADER_VARIANTS, FOOTER_VARIANTS,
-  HERO_VARIANTS, CARD_VARIANTS, BUTTON_STYLES, ACCENT_COLORS, PAGE_LIST,
+  HERO_VARIANTS, CARD_VARIANTS, BUTTON_STYLES, ACCENT_COLORS, PAGE_LIST, DESIGN_COMPONENTS,
 } from "@/stores/layout.js";
 import { useThemeStore } from "@/stores/theme.js";
 import {
@@ -22,6 +22,31 @@ const tabs = [
   { id: "components", label: "کامپوننت‌ها", icon: Layers },
   { id: "pages",      label: "صفحات",       icon: Globe },
 ];
+
+const componentThemeOptions = Object.entries(DESIGN_THEMES).map(([key, theme]) => ({ key, ...theme }));
+const pageComponentOpen = ref({});
+
+function togglePageComponents(path) {
+  pageComponentOpen.value = {
+    ...pageComponentOpen.value,
+    [path]: !pageComponentOpen.value[path],
+  };
+}
+
+function pageComponentTheme(path, component) {
+  return layoutStore.pageComponentThemes[path]?.[component] || "";
+}
+
+function setPageComponentTheme(path, component, value) {
+  layoutStore.setComponentTheme(component, value || null, path);
+}
+
+function clearAllPageOverrides() {
+  PAGE_LIST.forEach((page) => {
+    layoutStore.setPageDesign(page.path, null);
+    layoutStore.clearComponentThemes(page.path);
+  });
+}
 
 // ── Component preview styles per theme ───────────────
 const COMP_PREVIEW = {
@@ -151,9 +176,10 @@ const COMP_PREVIEW = {
 const compPreview = computed(() => COMP_PREVIEW[layoutStore.themeName] || COMP_PREVIEW.minimal);
 
 // ── Live Preview ──────────────────────────────────────
-const iframeRef     = ref(null);
-const previewReady  = ref(false);
-const previewDevice = ref("desktop");
+const iframeRef       = ref(null);
+const mobileIframeRef = ref(null);
+const previewReady    = ref(false);
+const previewDevice   = ref("desktop");
 const previewPage   = ref("/");
 const iframeKey     = ref(0);
 
@@ -172,15 +198,44 @@ const MOB_H     = 2400;
 const desktopScale = computed(() => PANEL_W / IFRAME_W);
 const mobileScale  = computed(() => (PANEL_W * 0.44) / MOB_W);
 
+function postToFrame(frame, message) {
+  try { frame?.contentWindow?.postMessage(message, "*"); } catch {}
+}
+
+function postToFrames(message) {
+  postToFrame(iframeRef.value, message);
+  postToFrame(mobileIframeRef.value, message);
+}
+
 function sendColorToIframe(val) {
-  try { iframeRef.value?.contentWindow?.postMessage({ type: "navar-theme-preview", theme: toRaw(val) }, "*"); } catch {}
+  postToFrames({ type: "navar-theme-preview", theme: toRaw(val) });
 }
+
 function sendDesignToIframe() {
-  try { iframeRef.value?.contentWindow?.postMessage({ type: "navar-design-preview", designTheme: layoutStore.themeName, buttonStyle: layoutStore.buttonStyle }, "*"); } catch {}
+  postToFrames({
+    type: "navar-design-preview",
+    designTheme: layoutStore.themeName,
+    buttonStyle: layoutStore.buttonStyle,
+    pageDesigns: toRaw(layoutStore.pageDesigns),
+    componentThemes: toRaw(layoutStore.componentThemes),
+    pageComponentThemes: toRaw(layoutStore.pageComponentThemes),
+  });
 }
-function onIframeLoad() {
+
+function onIframeLoad(event) {
   previewReady.value = true;
-  setTimeout(() => { sendColorToIframe(toRaw(themeStore.theme)); sendDesignToIframe(); }, 120);
+  setTimeout(() => {
+    const frame = event?.target;
+    postToFrame(frame, { type: "navar-theme-preview", theme: toRaw(themeStore.theme) });
+    postToFrame(frame, {
+      type: "navar-design-preview",
+      designTheme: layoutStore.themeName,
+      buttonStyle: layoutStore.buttonStyle,
+      pageDesigns: toRaw(layoutStore.pageDesigns),
+      componentThemes: toRaw(layoutStore.componentThemes),
+      pageComponentThemes: toRaw(layoutStore.pageComponentThemes),
+    });
+  }, 120);
 }
 function switchPage(path) { previewPage.value = path; previewReady.value = false; iframeKey.value++; }
 function reloadPreview() { previewReady.value = false; iframeKey.value++; }
@@ -190,10 +245,20 @@ watch(() => themeStore.theme, (val) => {
   if (rafId) cancelAnimationFrame(rafId);
   rafId = requestAnimationFrame(() => sendColorToIframe(toRaw(val)));
 }, { deep: true });
-watch([() => layoutStore.themeName, () => layoutStore.buttonStyle], () => {
-  if (rafId) cancelAnimationFrame(rafId);
-  rafId = requestAnimationFrame(() => sendDesignToIframe());
-});
+watch(
+  [
+    () => layoutStore.themeName,
+    () => layoutStore.buttonStyle,
+    () => layoutStore.pageDesigns,
+    () => layoutStore.componentThemes,
+    () => layoutStore.pageComponentThemes,
+  ],
+  () => {
+    if (rafId) cancelAnimationFrame(rafId);
+    rafId = requestAnimationFrame(() => sendDesignToIframe());
+  },
+  { deep: true },
+);
 
 // ── Full coordinated color palettes ─────────────────
 const FULL_PRESETS = [
@@ -606,7 +671,47 @@ function isBgPresetActive(p) {
         <!-- ══ TAB: COMPONENTS ═══════════════════════════ -->
         <div v-else-if="activeTab === 'components'" class="p-6 space-y-8">
 
-          <p class="text-xs text-muted-foreground">تنظیم دقیق چیدمان کامپوننت‌ها — مستقل از تم طراحی. پیش‌نمایش در پنل کناری آپدیت می‌شه.</p>
+          <p class="text-xs text-muted-foreground">هر کامپوننت به‌صورت پیش‌فرض از تم کلی ارث می‌برد. اگر برای یک کامپوننت تم دیگری انتخاب کنید، فقط همان بخش تغییر می‌کند و بقیه صفحه دست‌نخورده می‌ماند.</p>
+
+          <!-- Component design inheritance -->
+          <section class="border border-border bg-muted/20 p-5">
+            <div class="mb-4 flex items-start justify-between gap-4">
+              <div>
+                <div class="flex items-center gap-2">
+                  <Layers class="h-4 w-4 text-maroon" />
+                  <h2 class="text-sm font-medium">تم هر کامپوننت</h2>
+                </div>
+                <p class="mt-1 text-xs leading-6 text-muted-foreground">«همگام با تم کلی» یعنی انتخاب شما از تم صفحه و سپس تم کلی پیروی می‌کند.</p>
+              </div>
+              <button
+                type="button"
+                @click="layoutStore.clearComponentThemes()"
+                class="shrink-0 border border-dashed border-border px-3 py-1.5 text-[10px] text-muted-foreground transition-colors hover:border-maroon hover:text-maroon"
+              >
+                پاک‌سازی overrides
+              </button>
+            </div>
+
+            <div class="grid gap-2 sm:grid-cols-2">
+              <label
+                v-for="component in DESIGN_COMPONENTS"
+                :key="component.id"
+                class="flex items-center justify-between gap-3 border border-border bg-background px-3 py-2.5"
+              >
+                <span class="text-xs font-medium">{{ component.label }}</span>
+                <select
+                  :value="layoutStore.componentThemes[component.id] || ''"
+                  @change="layoutStore.setComponentTheme(component.id, $event.target.value || null)"
+                  class="min-w-0 max-w-[9rem] border border-border bg-background px-2 py-1.5 text-[11px] outline-none focus:border-maroon"
+                >
+                  <option value="">همگام با تم کلی</option>
+                  <option v-for="theme in componentThemeOptions" :key="theme.key" :value="theme.key">
+                    {{ theme.label }}
+                  </option>
+                </select>
+              </label>
+            </div>
+          </section>
 
           <!-- Header -->
           <section>
@@ -808,7 +913,7 @@ function isBgPresetActive(p) {
             <button
               v-if="Object.values(layoutStore.pageDesigns).filter(Boolean).length"
               type="button"
-              @click="PAGE_LIST.forEach(p => layoutStore.setPageDesign(p.path, null))"
+              @click="clearAllPageOverrides()"
               class="flex items-center gap-1.5 border border-dashed border-border px-3 py-1.5 text-xs text-muted-foreground transition-colors hover:border-red-400 hover:text-red-500"
             >
               <RotateCcw class="h-3 w-3" />
@@ -924,6 +1029,46 @@ function isBgPresetActive(p) {
                   </button>
                 </div>
               </div>
+
+              <!-- Per-page component overrides -->
+              <div class="border-t border-border/60 px-4 py-3">
+                <button
+                  type="button"
+                  @click="togglePageComponents(page.path)"
+                  class="flex w-full items-center justify-between text-right text-xs text-muted-foreground transition-colors hover:text-maroon"
+                >
+                  <span class="flex items-center gap-2">
+                    <Layers class="h-3.5 w-3.5" />
+                    سفارشی‌سازی کامپوننت‌های این صفحه
+                    <span v-if="layoutStore.pageComponentThemes[page.path] && Object.keys(layoutStore.pageComponentThemes[page.path]).length" class="rounded-full bg-maroon/10 px-1.5 py-0.5 text-[9px] text-maroon">
+                      {{ Object.keys(layoutStore.pageComponentThemes[page.path]).length }}
+                    </span>
+                  </span>
+                  <span class="text-[10px]">{{ pageComponentOpen[page.path] ? 'بستن' : 'باز کردن' }}</span>
+                </button>
+
+                <div v-if="pageComponentOpen[page.path]" class="mt-3 space-y-2 border-t border-border/60 pt-3">
+                  <div class="flex items-center justify-between gap-3">
+                    <p class="text-[10px] leading-5 text-muted-foreground">این تنظیمات فقط روی همین صفحه اعمال می‌شوند و بر تم کلی سایت اثری ندارند.</p>
+                    <button
+                      type="button"
+                      @click="layoutStore.clearComponentThemes(page.path)"
+                      class="shrink-0 text-[10px] text-muted-foreground underline underline-offset-2 hover:text-red-500"
+                    >پاک‌سازی</button>
+                  </div>
+                  <label v-for="component in DESIGN_COMPONENTS" :key="component.id" class="flex items-center justify-between gap-3 border border-border bg-background px-3 py-2">
+                    <span class="text-[11px]">{{ component.label }}</span>
+                    <select
+                      :value="pageComponentTheme(page.path, component.id)"
+                      @change="setPageComponentTheme(page.path, component.id, $event.target.value)"
+                      class="max-w-[9rem] border border-border bg-background px-2 py-1 text-[10px] outline-none focus:border-maroon"
+                    >
+                      <option value="">از تم صفحه</option>
+                      <option v-for="theme in componentThemeOptions" :key="theme.key" :value="theme.key">{{ theme.label }}</option>
+                    </select>
+                  </label>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -987,7 +1132,7 @@ function isBgPresetActive(p) {
             <div class="relative rounded-[1.3rem] bg-background w-full h-full overflow-hidden">
               <div :style="{ width:`${MOB_W}px`, height:`${MOB_H}px`, transform:`scale(${mobileScale})`, transformOrigin:'top right', position:'absolute', top:0, right:0, pointerEvents:'none' }">
                 <iframe
-                  :key="iframeKey+'m'" :src="previewPage"
+                  :key="iframeKey+'m'" ref="mobileIframeRef" :src="previewPage"
                   @load="onIframeLoad"
                   class="border-0"
                   :style="{ width:`${MOB_W}px`, height:`${MOB_H}px`, display:'block' }"
