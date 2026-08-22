@@ -1,7 +1,7 @@
 import { defineStore } from "pinia";
 import { ref, computed } from "vue";
 import { api } from "@/lib/api.js";
-import { isDemoMode } from "@/lib/demo.js";
+import { authenticateDemoAdmin, isDemoMode } from "@/lib/demo.js";
 
 const SESSION_KEY = "navar_session_v1";
 
@@ -42,8 +42,19 @@ export const useAuthStore = defineStore("auth", () => {
     loading.value = true;
     error.value = "";
     try {
-      // Support both email and username fields
+      // Support both email and username fields. In the standalone Vite
+      // preview, authenticate the demo administrator locally; a full Frappe
+      // deployment continues to use the real API endpoint.
       const credential = email || username || "";
+      if (isDemoMode) {
+        const demoUser = await authenticateDemoAdmin(credential, password);
+        if (!demoUser) throw new Error("نام کاربری یا رمز عبور نادرست است");
+        api.setToken("demo-admin-session");
+        session.value = demoUser;
+        saveSession(demoUser);
+        return { ok: true };
+      }
+
       const res = await api.auth.login({ email: credential, password });
       session.value = res.user;
       saveSession(res.user);

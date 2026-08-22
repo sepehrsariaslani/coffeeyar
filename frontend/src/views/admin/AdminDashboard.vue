@@ -5,6 +5,8 @@ import { useProductsStore } from "@/stores/products.js";
 import { usePostsStore } from "@/stores/posts.js";
 import { useAdminNotificationsStore } from "@/stores/adminNotifications.js";
 import { api } from "@/lib/api.js";
+import { isDemoMode } from "@/lib/demo.js";
+import { getDemoDashboard } from "@/data/demoData.js";
 
 function formatPrice(n) { return n ? Number(n).toLocaleString("fa-IR") : "۰"; }
 
@@ -18,9 +20,15 @@ const dashboardLoading = ref(true);
 
 onMounted(async () => {
   try {
-    dashboardData.value = await api.admin.dashboard();
+    const dashboardRequest = isDemoMode ? Promise.resolve(getDemoDashboard()) : api.admin.dashboard();
+    await Promise.all([
+      dashboardRequest.then((data) => { dashboardData.value = data; }),
+      productsStore.fetchProducts({ page_size: 100 }),
+      postsStore.fetchPosts(),
+    ]);
   } catch (e) {
     console.error("خطا در دریافت داشبورد:", e.message);
+    dashboardData.value = getDemoDashboard();
   } finally {
     dashboardLoading.value = false;
   }

@@ -17,6 +17,8 @@ export const useProductsStore = defineStore("products", () => {
       // Identity
       id: p.slug || p.name,
       name: p.title || p.name,
+      title: p.title || p.name,
+      item_name: p.title || p.name,
       slug: p.slug || p.name,
       // Category
       category: p.category,

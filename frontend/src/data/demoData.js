@@ -622,3 +622,13 @@ export function getDemoProduct(slug) {
   const item = DEMO_PRODUCTS.find((product) => product.slug === slug || product.id === slug);
   return item ? copyDemo(item) : null;
 }
+
+export function getDemoDashboard() {
+  return {
+    total_revenue: 18450000,
+    total_orders: 28,
+    total_customers: 96,
+    total_products: DEMO_PRODUCTS.length,
+    recent_orders: 12,
+  };
+}
