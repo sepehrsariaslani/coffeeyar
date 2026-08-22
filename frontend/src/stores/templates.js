@@ -1,6 +1,7 @@
 import { defineStore } from "pinia";
 import { ref } from "vue";
 import { api } from "@/lib/api";
+import { isDemoMode } from "@/lib/demo.js";
 
 const STORAGE_KEY = "navar_templates";
 
@@ -89,6 +90,11 @@ export const useTemplatesStore = defineStore("templates", () => {
 
   async function fetchTemplates() {
     loading.value = true;
+    if (isDemoMode) {
+      templates.value = loadTemplates();
+      loading.value = false;
+      return;
+    }
     try {
       const data = await api.admin.templates.get();
       if (Array.isArray(data) && data.length > 0) {
@@ -113,6 +119,7 @@ export const useTemplatesStore = defineStore("templates", () => {
   }
 
   async function saveToServer() {
+    if (isDemoMode) return;
     try {
       await api.admin.templates.update(templates.value);
     } catch {

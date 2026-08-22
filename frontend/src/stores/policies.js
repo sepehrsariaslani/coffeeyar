@@ -1,38 +1,38 @@
 import { defineStore } from "pinia";
 import { ref } from "vue";
 import { api } from "@/lib/api";
+import { isDemoMode } from "@/lib/demo.js";
+import { copyDemo, DEMO_POLICIES } from "@/data/demoData.js";
 
 const KEY = "navar-policies-v1";
 
 export const usePoliciesStore = defineStore("policies", () => {
-  const policies = ref(null);
+  const policies = ref(copyDemo(DEMO_POLICIES));
   const loaded = ref(false);
 
   async function fetchPolicies() {
     if (loaded.value) return;
     try {
-      const data = await api.policies.get();
+      const data = isDemoMode ? copyDemo(DEMO_POLICIES) : await api.policies.get();
       if (data && typeof data === "object") {
         policies.value = data;
         localStorage.setItem(KEY, JSON.stringify(data));
-        loaded.value = true;
       }
+      loaded.value = true;
     } catch {
-      // Fallback to localStorage cache
+      // Fallback to localStorage cache, then to local preview content.
       try {
         const saved = localStorage.getItem(KEY);
-        if (saved) {
-          policies.value = JSON.parse(saved);
-        }
+        policies.value = saved ? JSON.parse(saved) : copyDemo(DEMO_POLICIES);
       } catch {
-        // silent
+        policies.value = copyDemo(DEMO_POLICIES);
       }
+      loaded.value = true;
     }
-    loaded.value = true;
   }
 
   async function saveToServer() {
-    if (!policies.value) return;
+    if (isDemoMode || !policies.value) return;
     try {
       await api.admin.policies.update(policies.value);
     } catch {

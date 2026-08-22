@@ -1,5 +1,6 @@
 <script setup>
 import { ref, computed, watch, toRaw } from "vue";
+import { useRouter } from "vue-router";
 import {
   useLayoutStore,
   DESIGN_THEMES, HEADER_VARIANTS, FOOTER_VARIANTS,
@@ -11,6 +12,7 @@ import {
   Monitor, Smartphone, RefreshCw, RotateCcw, Globe, Eye, Lock,
 } from "lucide-vue-next";
 
+const router = useRouter();
 const layoutStore = useLayoutStore();
 const themeStore  = useThemeStore();
 const t = computed(() => themeStore.theme);
@@ -56,13 +58,13 @@ const COMP_PREVIEW = {
     navLogo: { fontWeight: "700", fontSize: "14px", color: "#111111", letterSpacing: "-0.02em" },
     navLinks: { display: "flex", gap: "16px" },
     navLink: { fontSize: "11px", color: "#666666" },
-    btnPrimary: { background: "#111111", color: "#FFFFFF", borderRadius: "10px", padding: "8px 18px", fontSize: "12px", fontWeight: "500", boxShadow: "0 1px 4px rgba(0,0,0,0.10)", border: "none", cursor: "default" },
-    btnOutline: { background: "transparent", color: "#111111", borderRadius: "10px", padding: "8px 18px", fontSize: "12px", border: "1.5px solid #E0E0E0", cursor: "default" },
-    card: { background: "#FFFFFF", border: "1px solid #E5E5E5", borderRadius: "10px", overflow: "hidden", boxShadow: "0 2px 8px rgba(0,0,0,0.05)" },
+    btnPrimary: { background: "#111111", color: "#FFFFFF", borderRadius: "0px", padding: "8px 18px", fontSize: "12px", fontWeight: "500", boxShadow: "none", border: "none", cursor: "default" },
+    btnOutline: { background: "transparent", color: "#111111", borderRadius: "0px", padding: "8px 18px", fontSize: "12px", border: "1px solid #E0E0E0", cursor: "default" },
+    card: { background: "#FFFFFF", border: "1px solid #E5E5E5", borderRadius: "0px", overflow: "hidden", boxShadow: "none" },
     cardTitle: { fontSize: "12px", fontWeight: "600", color: "#111111", marginBottom: "2px" },
     cardPrice: { fontSize: "11px", color: "#888888" },
-    input: { background: "#F5F5F5", border: "1px solid #E5E5E5", borderRadius: "8px", padding: "8px 12px", fontSize: "12px", width: "100%", color: "#111111", outline: "none" },
-    badge: { background: "#F5F5F5", color: "#444444", borderRadius: "4px", padding: "2px 7px", fontSize: "10px", display: "inline-block" },
+    input: { background: "#F5F5F5", border: "1px solid #E5E5E5", borderRadius: "0px", padding: "8px 12px", fontSize: "12px", width: "100%", color: "#111111", outline: "none" },
+    badge: { background: "#F5F5F5", color: "#444444", borderRadius: "0px", padding: "2px 7px", fontSize: "10px", display: "inline-block" },
     accentBar: "#111111",
   },
   bento: {
@@ -181,6 +183,7 @@ const mobileIframeRef = ref(null);
 const previewReady    = ref(false);
 const previewDevice   = ref("desktop");
 const previewPage   = ref("/");
+const previewUrl     = computed(() => router.resolve(previewPage.value).href);
 const iframeKey     = ref(0);
 
 const PREVIEW_PAGES = [
@@ -196,7 +199,11 @@ const PANEL_W   = 490;
 const MOB_W     = 390;
 const MOB_H     = 2400;
 const desktopScale = computed(() => PANEL_W / IFRAME_W);
-const mobileScale  = computed(() => (PANEL_W * 0.44) / MOB_W);
+// Keep the phone readable while leaving room for the panel's padding and
+// device bezel. The iframe itself stays at a real 390px mobile viewport.
+const mobileScale = computed(() => Math.min(0.82, (PANEL_W - 38) / MOB_W));
+const mobileFrameWidth = computed(() => Math.round(MOB_W * mobileScale.value + 14));
+const mobileFrameHeight = computed(() => Math.round(MOB_H * mobileScale.value + 14));
 
 function postToFrame(frame, message) {
   try { frame?.contentWindow?.postMessage(message, "*"); } catch {}
@@ -238,6 +245,11 @@ function onIframeLoad(event) {
   }, 120);
 }
 function switchPage(path) { previewPage.value = path; previewReady.value = false; iframeKey.value++; }
+function switchDevice(device) {
+  if (previewDevice.value === device) return;
+  previewReady.value = false;
+  previewDevice.value = device;
+}
 function reloadPreview() { previewReady.value = false; iframeKey.value++; }
 
 let rafId = null;
@@ -422,7 +434,7 @@ function isBgPresetActive(p) {
                       :style="{
                         background: theme.preview.accent,
                         color: key === 'dark' ? '#0D0B09' : '#fff',
-                        borderRadius: key === 'minimal' ? '6px' : key === 'glass' ? '999px' : key === 'swiss' ? '0' : key === 'scandinavian' ? '3px' : key === 'bento' ? '6px' : '5px',
+                        borderRadius: key === 'minimal' ? '0' : key === 'glass' ? '999px' : key === 'swiss' ? '0' : key === 'scandinavian' ? '3px' : key === 'bento' ? '6px' : '5px',
                         border: key === 'swiss' ? '2px solid ' + theme.preview.text : 'none',
                         textTransform: key === 'swiss' ? 'uppercase' : 'none',
                         letterSpacing: key === 'swiss' ? '0.06em' : 'normal',
@@ -434,7 +446,7 @@ function isBgPresetActive(p) {
                       :style="{
                         background: key === 'bento' ? 'oklch(0.91 0 0)' : key === 'dark' ? '#1F1C19' : theme.preview.bg,
                         border: '1px solid ' + theme.preview.border,
-                        borderRadius: key === 'minimal' ? '5px' : key === 'glass' ? '10px' : key === 'swiss' ? '0' : key === 'scandinavian' ? '3px' : key === 'bento' ? '8px' : '6px',
+                        borderRadius: key === 'minimal' ? '0' : key === 'glass' ? '10px' : key === 'swiss' ? '0' : key === 'scandinavian' ? '3px' : key === 'bento' ? '8px' : '6px',
                         boxShadow: key === 'glass' ? 'inset 0 1px 0 rgba(255,255,255,0.5)' : 'none',
                       }"
                     >
@@ -1085,8 +1097,8 @@ function isBgPresetActive(p) {
             :class="['px-2.5 py-1 text-xs transition-colors rounded-sm', previewPage === pg.path ? 'bg-foreground text-background' : 'hover:bg-accent text-muted-foreground']">{{ pg.label }}</button>
         </div>
         <div class="flex items-center gap-1 shrink-0">
-          <button type="button" @click="previewDevice='desktop'" :class="['p-1.5 rounded-sm', previewDevice==='desktop'?'bg-foreground text-background':'hover:bg-accent text-muted-foreground']"><Monitor class="h-3.5 w-3.5" /></button>
-          <button type="button" @click="previewDevice='mobile'" :class="['p-1.5 rounded-sm', previewDevice==='mobile'?'bg-foreground text-background':'hover:bg-accent text-muted-foreground']"><Smartphone class="h-3.5 w-3.5" /></button>
+          <button type="button" @click="switchDevice('desktop')" :class="['p-1.5 rounded-sm', previewDevice==='desktop'?'bg-foreground text-background':'hover:bg-accent text-muted-foreground']"><Monitor class="h-3.5 w-3.5" /></button>
+          <button type="button" @click="switchDevice('mobile')" :class="['p-1.5 rounded-sm', previewDevice==='mobile'?'bg-foreground text-background':'hover:bg-accent text-muted-foreground']"><Smartphone class="h-3.5 w-3.5" /></button>
           <button type="button" @click="reloadPreview" class="p-1.5 rounded-sm hover:bg-accent text-muted-foreground"><RefreshCw class="h-3.5 w-3.5" /></button>
         </div>
       </div>
@@ -1106,7 +1118,7 @@ function isBgPresetActive(p) {
             <div class="relative" :style="{ height: `${Math.round(IFRAME_H * desktopScale)}px` }">
               <div :style="{ width:`${IFRAME_W}px`, height:`${IFRAME_H}px`, transform:`scale(${desktopScale})`, transformOrigin:'top right', position:'absolute', top:0, right:0, pointerEvents:'none' }">
                 <iframe
-                  :key="iframeKey" ref="iframeRef" :src="previewPage"
+                  :key="iframeKey" ref="iframeRef" :src="previewUrl"
                   @load="onIframeLoad"
                   class="border-0"
                   :style="{ width:`${IFRAME_W}px`, height:`${IFRAME_H}px`, display:'block' }"
@@ -1126,13 +1138,13 @@ function isBgPresetActive(p) {
         <div v-else class="flex justify-center w-full">
           <div
             class="relative rounded-[1.8rem] border-[7px] border-foreground/80 bg-foreground/80 shadow-2xl overflow-hidden"
-            :style="{ width:`${Math.round(MOB_W*mobileScale)}px`, height:`${Math.round(MOB_H*mobileScale)}px` }"
+            :style="{ width: `${mobileFrameWidth}px`, height: `${mobileFrameHeight}px` }"
           >
             <div class="absolute top-0 left-1/2 -translate-x-1/2 z-20 h-3.5 w-14 rounded-b-xl bg-foreground/80" />
             <div class="relative rounded-[1.3rem] bg-background w-full h-full overflow-hidden">
               <div :style="{ width:`${MOB_W}px`, height:`${MOB_H}px`, transform:`scale(${mobileScale})`, transformOrigin:'top right', position:'absolute', top:0, right:0, pointerEvents:'none' }">
                 <iframe
-                  :key="iframeKey+'m'" ref="mobileIframeRef" :src="previewPage"
+                  :key="iframeKey+'m'" ref="mobileIframeRef" :src="previewUrl"
                   @load="onIframeLoad"
                   class="border-0"
                   :style="{ width:`${MOB_W}px`, height:`${MOB_H}px`, display:'block' }"

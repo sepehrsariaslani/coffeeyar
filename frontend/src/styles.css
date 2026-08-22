@@ -945,3 +945,54 @@ html.ui-pill textarea {
   --input: rgba(255, 255, 255, 0.32);
   --sidebar: rgba(255, 255, 255, 0.48);
 }
+
+/* A minimal component override must be able to escape the surrounding
+   page's rounded/shadow language. Keep its color tokens inherited on a
+   minimal page so the separate color system still works. */
+html:not([data-design-theme="minimal"]) .design-component-scope[data-design-theme="minimal"] {
+  --background: #faf6f1;
+  --foreground: #111111;
+  --card: #fafaf8;
+  --card-foreground: #111111;
+  --popover: #fafaf8;
+  --popover-foreground: #111111;
+  --primary: #111111;
+  --primary-foreground: #faf6f1;
+  --secondary: #f1eee9;
+  --secondary-foreground: #111111;
+  --muted: #f0ede8;
+  --muted-foreground: #6b6560;
+  --accent: #ebe6df;
+  --accent-foreground: #111111;
+  --border: #e8e4de;
+  --input: #e8e4de;
+  --sidebar: #faf9f7;
+}
+html:not([data-design-theme="minimal"]) .design-component-scope[data-design-theme="minimal"] > header,
+html:not([data-design-theme="minimal"]) .design-component-scope[data-design-theme="minimal"] > footer {
+  border-radius: 0 !important;
+  box-shadow: none !important;
+}
+html:not([data-design-theme="minimal"]) .design-component-scope[data-design-theme="minimal"] .card,
+html:not([data-design-theme="minimal"]) .design-component-scope[data-design-theme="minimal"] .card-compact,
+html:not([data-design-theme="minimal"]) .design-component-scope[data-design-theme="minimal"] .card-h {
+  border: 1px solid #e8e4de !important;
+  border-radius: 0 !important;
+  background: #fafaf8 !important;
+  box-shadow: none !important;
+}
+html:not([data-design-theme="minimal"]) .design-component-scope[data-design-theme="minimal"] .hero {
+  clip-path: none !important;
+}
+html:not([data-design-theme="minimal"]) .design-component-scope[data-design-theme="minimal"] .section-header {
+  border-bottom: 1px solid #e8e4de;
+}
+html:not([data-design-theme="minimal"]) .design-component-scope[data-design-theme="minimal"] .featured__grid {
+  gap: 1px;
+  background: #e8e4de;
+  border: 1px solid #e8e4de;
+}
+html:not([data-design-theme="minimal"]) .design-component-scope[data-design-theme="minimal"] .featured__item {
+  border-radius: 0;
+  background: #fafaf8;
+}

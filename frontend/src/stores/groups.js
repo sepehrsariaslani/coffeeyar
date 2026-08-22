@@ -1,6 +1,7 @@
 import { defineStore } from "pinia";
 import { ref } from "vue";
 import { api } from "@/lib/api";
+import { isDemoMode } from "@/lib/demo.js";
 
 const STORAGE_KEY = "navar_groups_v1";
 
@@ -78,6 +79,11 @@ export const useGroupsStore = defineStore("groups", () => {
 
   async function fetchGroups() {
     loading.value = true;
+    if (isDemoMode) {
+      groups.value = loadGroups();
+      loading.value = false;
+      return;
+    }
     try {
       const data = await api.admin.groups.get();
       if (Array.isArray(data) && data.length > 0) {
@@ -102,6 +108,7 @@ export const useGroupsStore = defineStore("groups", () => {
   }
 
   async function saveToServer() {
+    if (isDemoMode) return;
     try {
       await api.admin.groups.update(groups.value);
     } catch {

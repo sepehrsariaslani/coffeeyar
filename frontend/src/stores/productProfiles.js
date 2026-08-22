@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import { api } from '@/lib/api'
+import { isDemoMode } from '@/lib/demo.js'
 
 const PROFILES_KEY = 'navar_product_profiles'
 const ASSIGNMENTS_KEY = 'navar_product_assignments'
@@ -44,6 +45,12 @@ export const useProductProfilesStore = defineStore('productProfiles', () => {
 
   async function fetchProfiles() {
     loading.value = true
+    if (isDemoMode) {
+      profiles.value = JSON.parse(localStorage.getItem(PROFILES_KEY) ?? 'null') ?? DEFAULT_PROFILES
+      assignments.value = JSON.parse(localStorage.getItem(ASSIGNMENTS_KEY) ?? 'null') ?? DEFAULT_ASSIGNMENTS
+      loading.value = false
+      return
+    }
     try {
       const data = await api.admin.profiles.get()
       if (data && data.profiles && data.profiles.length > 0) {
@@ -62,6 +69,7 @@ export const useProductProfilesStore = defineStore('productProfiles', () => {
   }
 
   async function saveToServer() {
+    if (isDemoMode) return
     try {
       await api.admin.profiles.update({
         profiles: profiles.value,

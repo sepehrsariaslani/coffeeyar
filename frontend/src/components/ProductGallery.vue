@@ -11,9 +11,9 @@
       />
       <div v-else class="gallery__placeholder">
         <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
-          <rect x="8" y="12" width="32" height="24" rx="2" stroke="#C8C2BA" stroke-width="1.5"/>
-          <circle cx="18" cy="21" r="3" stroke="#C8C2BA" stroke-width="1.5"/>
-          <path d="M8 32L16 24L22 30L30 22L40 32" stroke="#C8C2BA" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          <rect x="8" y="12" width="32" height="24" rx="2" stroke="var(--border, #C8C2BA)" stroke-width="1.5"/>
+          <circle cx="18" cy="21" r="3" stroke="var(--border, #C8C2BA)" stroke-width="1.5"/>
+          <path d="M8 32L16 24L22 30L30 22L40 32" stroke="var(--border, #C8C2BA)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
         </svg>
       </div>
       <div v-if="image && !loaded" class="gallery__shimmer" />
@@ -45,8 +45,8 @@ const loaded = ref(false)
   /* Mobile: aspect-ratio for natural gallery proportions */
   aspect-ratio: 4 / 5;
   overflow: hidden;
-  background-color: #F0EDE8;
-  border: 1px solid #E8E4DE;
+  background-color: var(--muted, #F0EDE8);
+  border: 1px solid var(--border, #E8E4DE);
 }
 
 .gallery__img {
@@ -72,13 +72,13 @@ const loaded = ref(false)
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #EDE9E4, #E4DFD9);
+  background: linear-gradient(135deg, var(--muted, #EDE9E4), var(--muted, #E4DFD9));
 }
 
 .gallery__shimmer {
   position: absolute;
   inset: 0;
-  background: linear-gradient(90deg, #F0EDE8 25%, #E8E4DE 50%, #F0EDE8 75%);
+  background: linear-gradient(90deg, var(--muted, #F0EDE8) 25%, var(--border, #E8E4DE) 50%, var(--muted, #F0EDE8) 75%);
   background-size: 200% 100%;
   animation: shimmer 1.5s infinite;
 }
@@ -92,7 +92,7 @@ const loaded = ref(false)
   position: absolute;
   top: 1.25rem;
   right: 1.25rem;
-  background-color: #800000;
+  background-color: var(--maroon, #800000);
   color: #fff;
   font-family: 'Vazirmatn', sans-serif;
   font-size: 0.7rem;
