@@ -5,7 +5,9 @@ import { resolve } from "path";
 
 export default defineConfig({
   // آدرس پایه برای فراپه معمولا باید به این شکل باشد تا فایل‌ها از مسیر درست لود شوند
-  base: process.env.VITE_BASE_URL || "/assets/coffeeyar/frontend/",
+  // Keep the sandbox at the root for easy preview navigation. Production
+  // builds keep Frappe's asset prefix unless a custom base is supplied.
+  base: process.env.VITE_BASE_URL || (process.env.NODE_ENV === "production" ? "/assets/coffeeyar/frontend/" : "/"),
   
   plugins: [vue(), tailwindcss()],
   
