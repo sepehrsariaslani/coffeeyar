@@ -260,56 +260,60 @@ html.theme-earthy .hero::after {
 }
 
 /* ─── Theme: Liquid Glass ───────────────────────────── */
+/*
+   Liquid Glass is intentionally warm and restrained: clear milk-glass
+   surfaces over sand, clay and sage gradients. It avoids the neon purple /
+   blue wallpaper that made the previous preset compete with the products.
+*/
 .theme-glass {
-  --radius: 1.1rem;
-  --ui-card-radius:  20px;
-  --ui-btn-radius:   14px;
-  --ui-glass-blur:   28px;
+  --radius: 1rem;
+  --ui-card-radius: 16px;
+  --ui-btn-radius: 10px;
+  --ui-glass-blur: 24px;
   --ui-card-shadow:
-    inset 0 2px 1px rgba(255,255,255,0.65),
-    inset 0 -1px 1px rgba(0,0,0,0.08),
-    0 12px 48px rgba(80,60,200,0.18),
-    0 4px 16px rgba(0,0,0,0.10);
+    inset 0 1px 0 rgba(255, 255, 255, 0.78),
+    inset 0 -1px 0 rgba(91, 63, 45, 0.08),
+    0 14px 40px rgba(91, 63, 45, 0.12),
+    0 4px 14px rgba(91, 63, 45, 0.07);
 
-  --background:              oklch(0.97 0.01 250 / 0.38);
-  --foreground:              oklch(0.1 0.02 255);
-  --card:                    oklch(0.99 0.003 250 / 0.52);
-  --card-foreground:         oklch(0.1 0.02 255);
-  --popover:                 oklch(0.99 0.003 250 / 0.88);
-  --popover-foreground:      oklch(0.1 0.02 255);
-  --primary:                 oklch(0.38 0.17 270);
-  --primary-foreground:      oklch(1 0 0);
-  --secondary:               oklch(0.97 0.008 255 / 0.35);
-  --secondary-foreground:    oklch(0.1 0.02 255);
-  --muted:                   oklch(0.96 0.008 255 / 0.28);
-  --muted-foreground:        oklch(0.45 0.05 260);
-  --accent:                  oklch(0.96 0.01 255 / 0.22);
-  --accent-foreground:       oklch(0.1 0.02 255);
-  --maroon:                  oklch(0.48 0.2 278);
-  --maroon-foreground:       oklch(1 0 0);
-  --destructive:             oklch(0.577 0.245 27.325);
-  --destructive-foreground:  oklch(1 0 0);
-  --border:                  oklch(1 0 0 / 0.38);
-  --input:                   oklch(1 0 0 / 0.32);
-  --ring:                    oklch(0.48 0.2 278);
-  --sidebar:                 oklch(0.99 0.005 255 / 0.48);
-  --sidebar-foreground:      oklch(0.1 0.02 255);
-  --sidebar-primary:         oklch(0.38 0.17 270);
-  --sidebar-primary-foreground: oklch(1 0 0);
-  --sidebar-accent:          oklch(0.96 0.01 255 / 0.22);
-  --sidebar-accent-foreground: oklch(0.1 0.02 255);
-  --sidebar-border:          oklch(1 0 0 / 0.28);
-  --sidebar-ring:            oklch(0.48 0.2 278);
+  --background: oklch(0.96 0.018 75 / 0.55);
+  --foreground: oklch(0.24 0.03 55);
+  --card: oklch(0.99 0.012 80 / 0.58);
+  --card-foreground: oklch(0.24 0.03 55);
+  --popover: oklch(0.99 0.012 80 / 0.9);
+  --popover-foreground: oklch(0.24 0.03 55);
+  --primary: oklch(0.3 0.04 50);
+  --primary-foreground: oklch(0.98 0.01 80);
+  --secondary: oklch(0.94 0.02 75 / 0.52);
+  --secondary-foreground: oklch(0.24 0.03 55);
+  --muted: oklch(0.94 0.02 75 / 0.38);
+  --muted-foreground: oklch(0.43 0.035 55);
+  --accent: oklch(0.91 0.035 65 / 0.4);
+  --accent-foreground: oklch(0.24 0.03 55);
+  --maroon: oklch(0.46 0.1 40);
+  --maroon-foreground: oklch(0.99 0.01 80);
+  --destructive: oklch(0.577 0.245 27.325);
+  --destructive-foreground: oklch(1 0 0);
+  --border: rgba(255, 255, 255, 0.58);
+  --input: rgba(255, 255, 255, 0.44);
+  --ring: oklch(0.46 0.1 40);
+  --sidebar: oklch(0.98 0.015 80 / 0.58);
+  --sidebar-foreground: oklch(0.24 0.03 55);
+  --sidebar-primary: oklch(0.3 0.04 50);
+  --sidebar-primary-foreground: oklch(0.98 0.01 80);
+  --sidebar-accent: oklch(0.91 0.035 65 / 0.4);
+  --sidebar-accent-foreground: oklch(0.24 0.03 55);
+  --sidebar-border: rgba(255, 255, 255, 0.5);
+  --sidebar-ring: oklch(0.46 0.1 40);
 }
 
-/* ── Liquid Glass: rich multi-layer gradient wallpaper ── */
+/* ── Liquid Glass: warm, quiet wallpaper ── */
 html.theme-glass body {
   background:
-    radial-gradient(ellipse 90% 70% at 10% 10%,  oklch(0.72 0.18 280) 0%, transparent 55%),
-    radial-gradient(ellipse 75% 65% at 92% 80%,  oklch(0.7  0.20 340) 0%, transparent 50%),
-    radial-gradient(ellipse 60% 55% at 60% 25%,  oklch(0.74 0.15 200) 0%, transparent 50%),
-    radial-gradient(ellipse 50% 50% at 30% 80%,  oklch(0.75 0.14 160) 0%, transparent 50%),
-    oklch(0.78 0.08 270);
+    radial-gradient(ellipse 85% 70% at 8% 4%, oklch(0.78 0.08 48 / 0.48) 0%, transparent 58%),
+    radial-gradient(ellipse 75% 70% at 94% 88%, oklch(0.78 0.06 125 / 0.38) 0%, transparent 56%),
+    radial-gradient(ellipse 65% 55% at 62% 14%, oklch(0.92 0.045 82 / 0.72) 0%, transparent 56%),
+    linear-gradient(135deg, #eee8df 0%, #e5ddd2 48%, #ebe7df 100%);
   background-attachment: fixed;
   min-height: 100dvh;
 }
@@ -320,46 +324,45 @@ html.theme-glass header,
 html.theme-glass aside,
 html.theme-glass [role="dialog"],
 html.theme-glass dialog {
-  backdrop-filter: blur(var(--ui-glass-blur)) saturate(180%) brightness(1.08);
-  -webkit-backdrop-filter: blur(var(--ui-glass-blur)) saturate(180%) brightness(1.08);
+  backdrop-filter: blur(var(--ui-glass-blur)) saturate(120%) brightness(1.04);
+  -webkit-backdrop-filter: blur(var(--ui-glass-blur)) saturate(120%) brightness(1.04);
 }
 
 /* ── Glass: header / nav bar ── */
 html.theme-glass header {
-  background: oklch(0.99 0.003 250 / 0.52) !important;
-  border-bottom: 1px solid oklch(1 0 0 / 0.45) !important;
+  background: rgba(255, 252, 247, 0.62) !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.58) !important;
   box-shadow:
-    0 1px 0 oklch(1 0 0 / 0.55) inset,
-    0 8px 32px oklch(0.62 0.15 270 / 0.12);
+    0 1px 0 rgba(255, 255, 255, 0.78) inset,
+    0 8px 28px rgba(91, 63, 45, 0.1);
 }
 
 /* ── Glass: sidebar ── */
 html.theme-glass aside {
-  background: oklch(0.99 0.004 255 / 0.50) !important;
-  border-color: oklch(1 0 0 / 0.32) !important;
+  background: rgba(255, 252, 247, 0.64) !important;
+  border-color: rgba(255, 255, 255, 0.54) !important;
   box-shadow:
-    1px 0 0 oklch(1 0 0 / 0.45) inset,
-    4px 0 24px oklch(0.62 0.15 270 / 0.10);
+    1px 0 0 rgba(255, 255, 255, 0.7) inset,
+    4px 0 24px rgba(91, 63, 45, 0.1);
 }
 
 /* ── Glass: product & content cards ── */
 html.theme-glass .card {
-  background: oklch(0.99 0.003 250 / 0.50) !important;
-  backdrop-filter: blur(var(--ui-glass-blur)) saturate(170%) brightness(1.06);
-  -webkit-backdrop-filter: blur(var(--ui-glass-blur)) saturate(170%) brightness(1.06);
+  background: rgba(255, 252, 247, 0.58) !important;
+  backdrop-filter: blur(var(--ui-glass-blur)) saturate(120%) brightness(1.03);
+  -webkit-backdrop-filter: blur(var(--ui-glass-blur)) saturate(120%) brightness(1.03);
   border-radius: var(--ui-card-radius) !important;
-  border: 1px solid oklch(1 0 0 / 0.42) !important;
+  border: 1px solid rgba(255, 255, 255, 0.6) !important;
   box-shadow: var(--ui-card-shadow) !important;
   overflow: hidden;
-  /* specular top-edge highlight */
-  outline: 1px solid oklch(1 0 0 / 0.0);
+  outline: 1px solid rgba(255, 255, 255, 0);
 }
 html.theme-glass .card::before {
   content: '';
   position: absolute;
   inset: 0;
   border-radius: inherit;
-  background: linear-gradient(160deg, oklch(1 0 0 / 0.18) 0%, transparent 45%);
+  background: linear-gradient(160deg, rgba(255, 255, 255, 0.2) 0%, transparent 48%);
   pointer-events: none;
   z-index: 0;
 }
@@ -369,10 +372,10 @@ html.theme-glass input,
 html.theme-glass select,
 html.theme-glass textarea {
   border-radius: 10px !important;
-  background: oklch(0.99 0 0 / 0.45) !important;
+  background: rgba(255, 252, 247, 0.5) !important;
   backdrop-filter: blur(10px);
-  border: 1px solid oklch(1 0 0 / 0.40) !important;
-  box-shadow: 0 1px 0 oklch(1 0 0 / 0.55) inset;
+  border: 1px solid rgba(255, 255, 255, 0.58) !important;
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.7) inset;
 }
 
 /* ── Glass: buttons ── */
@@ -382,44 +385,44 @@ html.theme-glass button:not([class*="bg-maroon"]):not([class*="bg-foreground"]):
 html.theme-glass button[class*="bg-maroon"] {
   border-radius: var(--ui-btn-radius) !important;
   box-shadow:
-    0 1px 0 oklch(1 0 0 / 0.25) inset,
-    0 4px 14px oklch(0.48 0.2 278 / 0.35);
+    0 1px 0 rgba(255, 255, 255, 0.28) inset,
+    0 4px 14px rgba(91, 63, 45, 0.2);
 }
 
 /* ── Glass: panels / bordered divs ── */
 html.theme-glass [class*="border border-border"],
 html.theme-glass [class*="border-border"] {
-  backdrop-filter: blur(16px) saturate(160%);
-  -webkit-backdrop-filter: blur(16px) saturate(160%);
+  backdrop-filter: blur(14px) saturate(120%);
+  -webkit-backdrop-filter: blur(14px) saturate(120%);
 }
 
 /* ── Glass: drawers (full-width side panels) ── */
 html.theme-glass aside[class*="fixed"] {
-  background: oklch(0.99 0.004 255 / 0.65) !important;
-  backdrop-filter: blur(36px) saturate(200%) brightness(1.05);
-  -webkit-backdrop-filter: blur(36px) saturate(200%) brightness(1.05);
+  background: rgba(255, 252, 247, 0.72) !important;
+  backdrop-filter: blur(30px) saturate(125%) brightness(1.04);
+  -webkit-backdrop-filter: blur(30px) saturate(125%) brightness(1.04);
   box-shadow:
-    0 1px 0 oklch(1 0 0 / 0.5) inset,
-    -8px 0 64px oklch(0.62 0.15 270 / 0.15);
+    0 1px 0 rgba(255, 255, 255, 0.72) inset,
+    -8px 0 54px rgba(91, 63, 45, 0.12);
 }
 
 /* ── Glass: hero content overlay ── */
 html.theme-glass .hero__content {
-  background: oklch(0.99 0.003 250 / 0.32);
-  backdrop-filter: blur(18px) saturate(160%);
-  -webkit-backdrop-filter: blur(18px) saturate(160%);
-  border-radius: 20px;
+  background: rgba(255, 252, 247, 0.38);
+  backdrop-filter: blur(18px) saturate(120%);
+  -webkit-backdrop-filter: blur(18px) saturate(120%);
+  border-radius: 16px;
   margin: 0 0 2rem 3rem;
   padding: 2.5rem 3rem;
-  border: 1px solid oklch(1 0 0 / 0.42);
+  border: 1px solid rgba(255, 255, 255, 0.58);
   box-shadow:
-    0 1px 0 oklch(1 0 0 / 0.55) inset,
-    0 16px 64px oklch(0.62 0.18 270 / 0.16);
+    0 1px 0 rgba(255, 255, 255, 0.75) inset,
+    0 16px 54px rgba(91, 63, 45, 0.12);
 }
 
 /* ── Glass: admin main content area ── */
 html.theme-glass main {
-  background: oklch(0.99 0.003 250 / 0.12);
+  background: rgba(255, 252, 247, 0.14);
 }
 
 /* Dark: card overrides */
@@ -927,23 +930,23 @@ html.ui-pill textarea {
 }
 
 .design-component-scope[data-design-theme="glass"] {
-  --background: rgba(238, 244, 255, 0.38);
-  --foreground: #10133b;
-  --card: rgba(255, 255, 255, 0.52);
-  --card-foreground: #10133b;
-  --popover: rgba(255, 255, 255, 0.88);
-  --popover-foreground: #10133b;
-  --primary: #26327f;
-  --primary-foreground: #ffffff;
-  --secondary: rgba(255, 255, 255, 0.35);
-  --secondary-foreground: #10133b;
-  --muted: rgba(255, 255, 255, 0.3);
-  --muted-foreground: #53609b;
-  --accent: rgba(255, 255, 255, 0.25);
-  --accent-foreground: #10133b;
-  --border: rgba(255, 255, 255, 0.45);
-  --input: rgba(255, 255, 255, 0.32);
-  --sidebar: rgba(255, 255, 255, 0.48);
+  --background: rgba(245, 239, 231, 0.46);
+  --foreground: #3d2f26;
+  --card: rgba(255, 252, 247, 0.58);
+  --card-foreground: #3d2f26;
+  --popover: rgba(255, 252, 247, 0.9);
+  --popover-foreground: #3d2f26;
+  --primary: #604333;
+  --primary-foreground: #fffaf5;
+  --secondary: rgba(255, 252, 247, 0.42);
+  --secondary-foreground: #3d2f26;
+  --muted: rgba(245, 239, 231, 0.52);
+  --muted-foreground: #6f5b4c;
+  --accent: rgba(186, 139, 103, 0.16);
+  --accent-foreground: #3d2f26;
+  --border: rgba(255, 255, 255, 0.58);
+  --input: rgba(255, 255, 255, 0.44);
+  --sidebar: rgba(255, 252, 247, 0.62);
 }
 
 /* A minimal component override must be able to escape the surrounding

@@ -159,19 +159,19 @@ const COMP_PREVIEW = {
   },
   glass: {
     wrapIsGradient: true,
-    wrap: { background: "linear-gradient(135deg, oklch(0.72 0.18 280) 0%, oklch(0.78 0.08 270) 50%, oklch(0.7 0.2 340) 100%)", padding: "16px" },
-    nav:  { background: "rgba(255,255,255,0.45)", backdropFilter: "blur(20px)", borderBottom: "1px solid rgba(255,255,255,0.45)", padding: "10px 16px", display: "flex", alignItems: "center", justifyContent: "space-between" },
-    navLogo: { fontWeight: "600", fontSize: "14px", color: "#1A237E" },
+    wrap: { background: "linear-gradient(135deg, #e5d8c9 0%, #eee8df 52%, #dbe2d4 100%)", padding: "16px" },
+    nav:  { background: "rgba(255,252,247,0.62)", backdropFilter: "blur(20px)", borderBottom: "1px solid rgba(255,255,255,0.58)", padding: "10px 16px", display: "flex", alignItems: "center", justifyContent: "space-between" },
+    navLogo: { fontWeight: "600", fontSize: "14px", color: "#3D2F26" },
     navLinks: { display: "flex", gap: "14px" },
-    navLink: { fontSize: "11px", color: "#3949AB" },
-    btnPrimary: { background: "rgba(92,107,192,0.85)", color: "#FFFFFF", borderRadius: "999px", padding: "8px 18px", fontSize: "12px", fontWeight: "500", boxShadow: "0 4px 16px rgba(80,60,200,0.3), inset 0 1px 0 rgba(255,255,255,0.3)", border: "1px solid rgba(255,255,255,0.3)", cursor: "default", backdropFilter: "blur(10px)" },
-    btnOutline: { background: "rgba(255,255,255,0.35)", color: "#1A237E", borderRadius: "999px", padding: "8px 18px", fontSize: "12px", border: "1px solid rgba(255,255,255,0.55)", cursor: "default", backdropFilter: "blur(10px)" },
-    card: { background: "rgba(255,255,255,0.42)", border: "1px solid rgba(255,255,255,0.55)", borderRadius: "20px", overflow: "hidden", boxShadow: "inset 0 2px 1px rgba(255,255,255,0.65), 0 12px 40px rgba(80,60,200,0.15)", backdropFilter: "blur(24px)" },
-    cardTitle: { fontSize: "12px", fontWeight: "600", color: "#1A237E", marginBottom: "2px" },
-    cardPrice: { fontSize: "11px", color: "#5C6BC0" },
-    input: { background: "rgba(255,255,255,0.45)", border: "1px solid rgba(255,255,255,0.5)", borderRadius: "10px", padding: "8px 12px", fontSize: "12px", width: "100%", color: "#1A237E", outline: "none", backdropFilter: "blur(10px)" },
-    badge: { background: "rgba(255,255,255,0.4)", color: "#3949AB", borderRadius: "999px", padding: "2px 8px", fontSize: "10px", border: "1px solid rgba(255,255,255,0.5)", display: "inline-block" },
-    accentBar: "#5C6BC0",
+    navLink: { fontSize: "11px", color: "#6F5B4C" },
+    btnPrimary: { background: "rgba(138,90,68,0.82)", color: "#FFFAF5", borderRadius: "999px", padding: "8px 18px", fontSize: "12px", fontWeight: "500", boxShadow: "0 4px 16px rgba(91,63,45,0.22), inset 0 1px 0 rgba(255,255,255,0.3)", border: "1px solid rgba(255,255,255,0.42)", cursor: "default", backdropFilter: "blur(10px)" },
+    btnOutline: { background: "rgba(255,255,255,0.38)", color: "#604333", borderRadius: "999px", padding: "8px 18px", fontSize: "12px", border: "1px solid rgba(255,255,255,0.58)", cursor: "default", backdropFilter: "blur(10px)" },
+    card: { background: "rgba(255,255,255,0.48)", border: "1px solid rgba(255,255,255,0.62)", borderRadius: "16px", overflow: "hidden", boxShadow: "inset 0 2px 1px rgba(255,255,255,0.7), 0 12px 40px rgba(91,63,45,0.12)", backdropFilter: "blur(24px)" },
+    cardTitle: { fontSize: "12px", fontWeight: "600", color: "#3D2F26", marginBottom: "2px" },
+    cardPrice: { fontSize: "11px", color: "#8A5A44" },
+    input: { background: "rgba(255,252,247,0.5)", border: "1px solid rgba(255,255,255,0.58)", borderRadius: "10px", padding: "8px 12px", fontSize: "12px", width: "100%", color: "#3D2F26", outline: "none", backdropFilter: "blur(10px)" },
+    badge: { background: "rgba(255,255,255,0.45)", color: "#6F5B4C", borderRadius: "999px", padding: "2px 8px", fontSize: "10px", border: "1px solid rgba(255,255,255,0.55)", display: "inline-block" },
+    accentBar: "#8A5A44",
   },
 };
 
@@ -252,10 +252,11 @@ function switchDevice(device) {
 }
 function reloadPreview() { previewReady.value = false; iframeKey.value++; }
 
-let rafId = null;
+let colorRafId = null;
+let designRafId = null;
 watch(() => themeStore.theme, (val) => {
-  if (rafId) cancelAnimationFrame(rafId);
-  rafId = requestAnimationFrame(() => sendColorToIframe(toRaw(val)));
+  if (colorRafId) cancelAnimationFrame(colorRafId);
+  colorRafId = requestAnimationFrame(() => sendColorToIframe(toRaw(val)));
 }, { deep: true });
 watch(
   [
@@ -266,8 +267,8 @@ watch(
     () => layoutStore.pageComponentThemes,
   ],
   () => {
-    if (rafId) cancelAnimationFrame(rafId);
-    rafId = requestAnimationFrame(() => sendDesignToIframe());
+    if (designRafId) cancelAnimationFrame(designRafId);
+    designRafId = requestAnimationFrame(() => sendDesignToIframe());
   },
   { deep: true },
 );
@@ -400,14 +401,14 @@ function isBgPresetActive(p) {
         <!-- ══ TAB: DESIGN THEME ═════════════════════════ -->
         <div v-if="activeTab === 'design'" class="p-6 space-y-6">
 
-          <p class="text-xs text-muted-foreground">تم طراحی سبک بصری کامپوننت‌ها رو تعیین می‌کنه — شکل، گوشه‌ها، سایه. رنگ‌ها تغییر نمی‌کنن.</p>
+          <p class="text-xs text-muted-foreground">تم طراحی سبک بصری کامپوننت‌ها و پالت رنگ هماهنگ را فعال می‌کند — بعداً می‌توانید رنگ‌ها را از تب «تم رنگی» شخصی‌سازی کنید.</p>
 
           <!-- Theme grid -->
           <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
             <button
               v-for="(theme, key) in DESIGN_THEMES" :key="key"
               type="button"
-              @click="layoutStore.themeName = key"
+              @click="layoutStore.setThemeName(key)"
               :class="['group relative border-2 text-right overflow-hidden transition-all', layoutStore.themeName === key ? 'border-maroon ring-2 ring-maroon/20' : 'border-border hover:border-maroon/40']"
             >
               <!-- Visual mockup -->

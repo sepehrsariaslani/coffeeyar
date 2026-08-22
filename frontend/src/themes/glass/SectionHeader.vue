@@ -30,7 +30,7 @@ defineProps({
 .gl-sh__tag {
   display: inline-block;
   font-size: 0.65rem; letter-spacing: 0.18em; text-transform: uppercase;
-  color: oklch(0.42 0.20 278); font-weight: 600;
+  color: var(--maroon, #8a5a44); font-weight: 600;
   background: rgba(255,255,255,0.55);
   backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
   border: 1px solid rgba(255,255,255,0.7);
@@ -39,13 +39,13 @@ defineProps({
 }
 .gl-sh__title {
   font-size: clamp(1.3rem, 2.5vw, 1.8rem);
-  font-weight: 300; color: #18103a;
+  font-weight: 300; color: var(--foreground, #3d2f26);
   margin: 0; letter-spacing: -0.015em;
 }
 .gl-sh__link {
   display: inline-flex; align-items: center; gap: 0.4rem;
   font-size: 0.78rem; font-weight: 500;
-  color: oklch(0.42 0.20 278);
+  color: var(--maroon, #8a5a44);
   text-decoration: none;
   padding: 0.3rem 0.85rem;
   background: rgba(255,255,255,0.52);
@@ -56,6 +56,6 @@ defineProps({
 }
 .gl-sh__link:hover {
   background: rgba(255,255,255,0.75);
-  color: oklch(0.35 0.22 278);
+  color: var(--maroon, #6f4635);
 }
 </style>

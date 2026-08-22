@@ -51,7 +51,7 @@ onMounted(() => window.addEventListener("mousedown", onClickOutside));
 onUnmounted(() => window.removeEventListener("mousedown", onClickOutside));
 
 function reset() {
-  layoutStore.themeName   = "minimal";
+  layoutStore.setThemeName("minimal");
   layoutStore.accentColor = "default";
   layoutStore.buttonStyle = "sharp";
 }
@@ -109,7 +109,7 @@ function reset() {
                 v-for="t in themes"
                 :key="t.key"
                 type="button"
-                @click="layoutStore.themeName = t.key"
+                @click="layoutStore.setThemeName(t.key)"
                 :title="t.label"
                 :class="[
                   'flex flex-col items-center gap-1.5 p-1.5 transition-colors',

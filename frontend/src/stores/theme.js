@@ -104,10 +104,17 @@ export const useThemeStore = defineStore("theme", () => {
   }
 
   function setThemeClass(cls) {
+    // Kept for backwards compatibility with older admin screens. Design
+    // selection now lives in layoutStore; this field is no longer used to
+    // toggle document classes.
     theme.value.themeClass = cls;
+  }
+
+  function setColorPreset(preset = {}) {
+    theme.value = { ...theme.value, ...preset };
   }
 
   fetchTheme();
 
-  return { theme, reset, defaults, setThemeClass };
+  return { theme, reset, defaults, setThemeClass, setColorPreset };
 });

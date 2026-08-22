@@ -55,9 +55,9 @@ defineProps({
 .gl-hero__img-overlay {
   position: absolute; inset: 0;
   background: linear-gradient(135deg,
-    rgba(120,80,255,0.15) 0%,
-    rgba(255,100,180,0.10) 50%,
-    rgba(80,200,200,0.10) 100%
+    rgba(177, 126, 91, 0.16) 0%,
+    rgba(210, 185, 151, 0.12) 50%,
+    rgba(127, 151, 119, 0.10) 100%
   );
 }
 .gl-hero__content {
@@ -72,35 +72,35 @@ defineProps({
 .gl-hero__panel {
   max-width: 560px;
   padding: 2.5rem 2.75rem;
-  background: rgba(255,255,255,0.52);
-  backdrop-filter: blur(32px) saturate(200%);
-  -webkit-backdrop-filter: blur(32px) saturate(200%);
-  border: 1px solid rgba(255,255,255,0.72);
+  background: rgba(255, 252, 247, 0.58);
+  backdrop-filter: blur(28px) saturate(125%);
+  -webkit-backdrop-filter: blur(28px) saturate(125%);
+  border: 1px solid rgba(255, 255, 255, 0.78);
   border-radius: 1.5rem;
   box-shadow:
     inset 0 2px 0 rgba(255,255,255,0.8),
-    0 24px 64px rgba(100,60,220,0.14),
-    0 4px 16px rgba(0,0,0,0.06);
+    0 24px 64px rgba(91, 63, 45, 0.12),
+    0 4px 16px rgba(91, 63, 45, 0.06);
 }
 .gl-hero__eyebrow {
   font-size: 0.72rem;
   letter-spacing: 0.2em;
   text-transform: uppercase;
-  color: oklch(0.46 0.22 278);
+  color: var(--maroon, #8a5a44);
   margin-bottom: 1rem;
   font-weight: 500;
 }
 .gl-hero__title {
   font-size: clamp(2rem, 5vw, 3.8rem);
   font-weight: 300;
-  color: #18103a;
+  color: var(--foreground, #3d2f26);
   line-height: 1.18;
   margin: 0 0 1rem;
   letter-spacing: -0.02em;
 }
 .gl-hero__subtitle {
   font-size: 0.95rem;
-  color: rgba(20,10,60,0.6);
+  color: rgba(61,47,38,0.62);
   line-height: 1.75;
   margin-bottom: 2rem;
   max-width: 400px;
@@ -111,18 +111,18 @@ defineProps({
   align-items: center;
   gap: 0.6rem;
   padding: 0.65rem 1.4rem;
-  background: oklch(0.46 0.22 278);
+  background: var(--maroon, #8a5a44);
   color: white;
   font-size: 0.85rem;
   font-weight: 500;
   text-decoration: none;
   border-radius: 9999px;
-  box-shadow: 0 4px 16px rgba(100,60,220,0.35);
+  box-shadow: 0 4px 16px rgba(91,63,45,0.22);
   transition: all 0.2s;
 }
 .gl-hero__cta:hover {
   opacity: 0.88;
   gap: 0.9rem;
-  box-shadow: 0 8px 24px rgba(100,60,220,0.45);
+  box-shadow: 0 8px 24px rgba(91,63,45,0.30);
 }
 </style>

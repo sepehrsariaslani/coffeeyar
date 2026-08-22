@@ -55,7 +55,7 @@ function isActive(link) {
           <Search class="h-4 w-4" />
         </button>
         <RouterLink to="/wishlist" class="gl-icon-btn relative">
-          <Heart class="h-4 w-4" :class="wishlistStore.count > 0 ? 'fill-violet-600 text-violet-600' : ''" />
+          <Heart class="h-4 w-4" :class="wishlistStore.count > 0 ? 'fill-amber-700 text-amber-700' : ''" />
           <span v-if="wishlistStore.count > 0" class="gl-badge">{{ toFa(wishlistStore.count) }}</span>
         </RouterLink>
         <RouterLink to="/cart" class="gl-cart-btn">
@@ -67,7 +67,7 @@ function isActive(link) {
           <RouterLink to="/account" class="gl-icon-btn"><User class="h-4 w-4" /></RouterLink>
           <button @click="authStore.logout()" class="gl-icon-btn hidden md:flex"><LogOut class="h-4 w-4" /></button>
         </template>
-        <RouterLink v-else to="/auth" class="hidden md:block text-xs text-slate-600 hover:text-violet-700 transition-colors">ورود</RouterLink>
+        <RouterLink v-else to="/auth" class="hidden md:block text-xs text-stone-600 hover:text-amber-800 transition-colors">ورود</RouterLink>
         <button class="gl-icon-btn md:hidden" @click="open = !open">
           <X v-if="open" class="h-5 w-5" /><Menu v-else class="h-5 w-5" />
         </button>
@@ -77,7 +77,7 @@ function isActive(link) {
     <!-- Mobile menu -->
     <div v-if="open" class="gl-mobile-menu">
       <RouterLink v-for="l in links" :key="l.to" :to="l.to" @click="open = false" class="gl-mobile-link">{{ l.label }}</RouterLink>
-      <RouterLink v-if="!authStore.isLoggedIn" to="/auth" @click="open = false" class="gl-mobile-link text-violet-700">ورود / ثبت‌نام</RouterLink>
+      <RouterLink v-if="!authStore.isLoggedIn" to="/auth" @click="open = false" class="gl-mobile-link text-amber-800">ورود / ثبت‌نام</RouterLink>
     </div>
   </header>
 
@@ -100,36 +100,36 @@ function isActive(link) {
   padding: 0 1.25rem;
   height: 3.25rem;
   background: rgba(255, 255, 255, 0.48);
-  backdrop-filter: blur(28px) saturate(200%);
-  -webkit-backdrop-filter: blur(28px) saturate(200%);
+  backdrop-filter: blur(28px) saturate(125%);
+  -webkit-backdrop-filter: blur(28px) saturate(125%);
   border: 1px solid rgba(255, 255, 255, 0.65);
   border-radius: 1rem;
   box-shadow:
     inset 0 1.5px 0 rgba(255,255,255,0.75),
-    0 8px 32px rgba(100, 60, 220, 0.12),
+    0 8px 32px rgba(91, 63, 45, 0.10),
     0 2px 8px rgba(0,0,0,0.06);
 }
 .gl-logo {
   font-size: 1.1rem;
   font-weight: 600;
   text-decoration: none;
-  color: #18103a;
+  color: var(--foreground, #3d2f26);
   letter-spacing: -0.01em;
 }
-.gl-logo__dot { color: oklch(0.46 0.22 278); }
+.gl-logo__dot { color: var(--maroon, #8a5a44); }
 .gl-nav { align-items: center; gap: 0.15rem; }
 .gl-nav__link {
   padding: 0.35rem 0.85rem;
   border-radius: 0.6rem;
   font-size: 0.82rem;
   text-decoration: none;
-  color: rgba(20,10,60,0.6);
+  color: rgba(61,47,38,0.60);
   transition: all 0.2s;
 }
-.gl-nav__link:hover { background: rgba(255,255,255,0.55); color: #18103a; }
+.gl-nav__link:hover { background: rgba(255,255,255,0.55); color: var(--foreground, #3d2f26); }
 .gl-nav__link--active {
   background: rgba(255,255,255,0.65);
-  color: oklch(0.38 0.20 278);
+  color: var(--maroon, #8a5a44);
   font-weight: 600;
 }
 .gl-actions { display: flex; align-items: center; gap: 0.4rem; }
@@ -141,7 +141,7 @@ function isActive(link) {
   border-radius: 50%;
   background: rgba(255,255,255,0.5);
   border: 1px solid rgba(255,255,255,0.7);
-  color: rgba(20,10,60,0.65);
+  color: rgba(61,47,38,0.65);
   cursor: pointer;
   text-decoration: none;
   transition: all 0.2s;
@@ -149,12 +149,12 @@ function isActive(link) {
 }
 .gl-icon-btn:hover {
   background: rgba(255,255,255,0.75);
-  color: oklch(0.38 0.20 278);
+  color: var(--maroon, #8a5a44);
 }
 .gl-badge {
   position: absolute;
   top: -4px; left: -4px;
-  background: oklch(0.46 0.22 278);
+  background: var(--maroon, #8a5a44);
   color: white;
   font-size: 0.6rem;
   min-width: 16px; height: 16px;
@@ -168,13 +168,13 @@ function isActive(link) {
   gap: 0.35rem;
   padding: 0.4rem 0.9rem;
   border-radius: 9999px;
-  background: oklch(0.46 0.22 278);
+  background: var(--maroon, #8a5a44);
   color: white;
   font-size: 0.78rem;
   font-weight: 500;
   text-decoration: none;
   transition: opacity 0.2s;
-  box-shadow: 0 2px 12px rgba(100,60,220,0.35);
+  box-shadow: 0 2px 12px rgba(91,63,45,0.22);
 }
 .gl-cart-btn:hover { opacity: 0.88; }
 .gl-mobile-menu {
@@ -195,7 +195,7 @@ function isActive(link) {
   border-radius: 0.6rem;
   font-size: 0.9rem;
   text-decoration: none;
-  color: rgba(20,10,60,0.7);
+  color: rgba(61,47,38,0.70);
   transition: background 0.15s;
 }
 .gl-mobile-link:hover { background: rgba(255,255,255,0.6); }

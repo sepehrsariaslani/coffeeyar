@@ -2,6 +2,7 @@ import { defineStore } from "pinia";
 import { ref, watch } from "vue";
 import { api } from "@/lib/api";
 import { isDemoMode } from "@/lib/demo.js";
+import { useThemeStore } from "@/stores/theme.js";
 
 export const DESIGN_THEMES = {
   minimal: {
@@ -50,11 +51,24 @@ export const DESIGN_THEMES = {
     label: "Liquid Glass",
     desc: "شفاف، عمق، آینده‌نگر",
     class: "theme-glass",
-    preview: { bg: "#dce8ff", text: "#1A237E", accent: "#5C6BC0", border: "rgba(255,255,255,0.5)" },
+    preview: { bg: "#ebe5dd", text: "#3d2f26", accent: "#8A5A44", border: "rgba(255,255,255,0.58)" },
   },
 };
 
 export const THEMES = DESIGN_THEMES;
+
+// A design preset carries a matching palette as well as component shapes.
+// Manual color controls can still override these values afterwards.
+export const DESIGN_COLOR_PRESETS = {
+  minimal: { accentHue: 22, accentChroma: 0.09, accentLightness: 0.42, bgLightness: 0.982, bgChroma: 0.006, bgHue: 75 },
+  bento: { accentHue: 22, accentChroma: 0.06, accentLightness: 0.28, bgLightness: 0.965, bgChroma: 0, bgHue: 0 },
+  modern: { accentHue: 265, accentChroma: 0.2, accentLightness: 0.45, bgLightness: 1, bgChroma: 0, bgHue: 240 },
+  dark: { accentHue: 40, accentChroma: 0.1, accentLightness: 0.62, bgLightness: 0.12, bgChroma: 0.005, bgHue: 60 },
+  earthy: { accentHue: 145, accentChroma: 0.13, accentLightness: 0.42, bgLightness: 0.972, bgChroma: 0.009, bgHue: 100 },
+  scandinavian: { accentHue: 40, accentChroma: 0.1, accentLightness: 0.42, bgLightness: 0.972, bgChroma: 0.01, bgHue: 75 },
+  swiss: { accentHue: 0, accentChroma: 0, accentLightness: 0.08, bgLightness: 1, bgChroma: 0, bgHue: 0 },
+  glass: { accentHue: 28, accentChroma: 0.1, accentLightness: 0.46, bgLightness: 0.955, bgChroma: 0.018, bgHue: 75 },
+};
 
 export const HEADER_VARIANTS = [
   { id: 1, label: "کلاسیک",  desc: "لوگو راست، ناوبری وسط" },
@@ -159,6 +173,16 @@ export function resolvePagePath(path = "") {
   if (path.startsWith("/products/")) return "/products/:id";
   if (path.startsWith("/blog/")) return "/blog/:slug";
   return path;
+}
+
+function syncDesignColor(themeKey) {
+  const preset = DESIGN_COLOR_PRESETS[themeKey];
+  if (!preset) return;
+  try {
+    useThemeStore().setColorPreset(preset);
+  } catch {
+    // The layout store can also be used in isolated tooling without Pinia.
+  }
 }
 
 if (typeof window !== "undefined") {
@@ -269,6 +293,12 @@ export const useLayoutStore = defineStore("layout", () => {
     saveToServer();
   }
 
+  function setThemeName(name) {
+    if (!DESIGN_THEMES[name]) return;
+    themeName.value = name;
+    syncDesignColor(name);
+  }
+
   function setPageDesign(path, theme) {
     pageDesigns.value = { ...pageDesigns.value, [path]: theme };
     save();
@@ -327,7 +357,7 @@ export const useLayoutStore = defineStore("layout", () => {
     themeName, headerVariant, footerVariant, heroVariant,
     cardVariant, buttonStyle, accentColor, pageDesigns,
     componentThemes, pageComponentThemes,
-    setPageDesign, getEffectiveDesign, getComponentTheme,
+    setThemeName, setPageDesign, getEffectiveDesign, getComponentTheme,
     setComponentTheme, clearComponentThemes,
   };
 });
