@@ -60,14 +60,14 @@ export const THEMES = DESIGN_THEMES;
 // A design preset carries a matching palette as well as component shapes.
 // Manual color controls can still override these values afterwards.
 export const DESIGN_COLOR_PRESETS = {
-  minimal: { accentHue: 22, accentChroma: 0.09, accentLightness: 0.42, bgLightness: 0.982, bgChroma: 0.006, bgHue: 75 },
-  bento: { accentHue: 22, accentChroma: 0.06, accentLightness: 0.28, bgLightness: 0.965, bgChroma: 0, bgHue: 0 },
-  modern: { accentHue: 265, accentChroma: 0.2, accentLightness: 0.45, bgLightness: 1, bgChroma: 0, bgHue: 240 },
-  dark: { accentHue: 40, accentChroma: 0.1, accentLightness: 0.62, bgLightness: 0.12, bgChroma: 0.005, bgHue: 60 },
-  earthy: { accentHue: 145, accentChroma: 0.13, accentLightness: 0.42, bgLightness: 0.972, bgChroma: 0.009, bgHue: 100 },
-  scandinavian: { accentHue: 40, accentChroma: 0.1, accentLightness: 0.42, bgLightness: 0.972, bgChroma: 0.01, bgHue: 75 },
-  swiss: { accentHue: 0, accentChroma: 0, accentLightness: 0.08, bgLightness: 1, bgChroma: 0, bgHue: 0 },
-  glass: { accentHue: 28, accentChroma: 0.1, accentLightness: 0.46, bgLightness: 0.955, bgChroma: 0.018, bgHue: 75 },
+  minimal: { accentHue: 22, accentChroma: 0.09, accentLightness: 0.42, accentColor: "default", bgLightness: 0.982, bgChroma: 0.006, bgHue: 75 },
+  bento: { accentHue: 22, accentChroma: 0.09, accentLightness: 0.42, accentColor: "default", bgLightness: 0.965, bgChroma: 0, bgHue: 0 },
+  modern: { accentHue: 265, accentChroma: 0.22, accentLightness: 0.47, accentColor: "blue", bgLightness: 1, bgChroma: 0, bgHue: 240 },
+  dark: { accentHue: 55, accentChroma: 0.14, accentLightness: 0.52, accentColor: "amber", bgLightness: 0.12, bgChroma: 0.005, bgHue: 60 },
+  earthy: { accentHue: 185, accentChroma: 0.12, accentLightness: 0.43, accentColor: "teal", bgLightness: 0.972, bgChroma: 0.009, bgHue: 100 },
+  scandinavian: { accentHue: 55, accentChroma: 0.14, accentLightness: 0.52, accentColor: "amber", bgLightness: 0.972, bgChroma: 0.01, bgHue: 75 },
+  swiss: { accentHue: 22, accentChroma: 0.09, accentLightness: 0.42, accentColor: "default", bgLightness: 1, bgChroma: 0, bgHue: 0 },
+  glass: { accentHue: 55, accentChroma: 0.14, accentLightness: 0.52, accentColor: "amber", bgLightness: 0.955, bgChroma: 0.018, bgHue: 75 },
 };
 
 export const HEADER_VARIANTS = [
@@ -102,12 +102,12 @@ export const BUTTON_STYLES = [
 ];
 
 export const ACCENT_COLORS = [
-  { id: "default", label: "بورگندی",   color: "#7A2232", class: "" },
-  { id: "blue",    label: "ایندیگو",   color: "#3B5BDB", class: "accent-blue" },
-  { id: "teal",    label: "فیروزه‌ای", color: "#0F766E", class: "accent-teal" },
-  { id: "amber",   label: "کهربایی",   color: "#B45309", class: "accent-amber" },
-  { id: "purple",  label: "بنفش",      color: "#7C3AED", class: "accent-purple" },
-  { id: "rose",    label: "گلبهی",     color: "#BE185D", class: "accent-rose" },
+  { id: "default", label: "بورگندی",   color: "#7A2232", class: "", accentHue: 22, accentChroma: 0.09, accentLightness: 0.42 },
+  { id: "blue",    label: "ایندیگو",   color: "#3B5BDB", class: "accent-blue", accentHue: 265, accentChroma: 0.22, accentLightness: 0.47 },
+  { id: "teal",    label: "فیروزه‌ای", color: "#0F766E", class: "accent-teal", accentHue: 185, accentChroma: 0.12, accentLightness: 0.43 },
+  { id: "amber",   label: "کهربایی",   color: "#B45309", class: "accent-amber", accentHue: 55, accentChroma: 0.14, accentLightness: 0.52 },
+  { id: "purple",  label: "بنفش",      color: "#7C3AED", class: "accent-purple", accentHue: 295, accentChroma: 0.18, accentLightness: 0.44 },
+  { id: "rose",    label: "گلبهی",     color: "#BE185D", class: "accent-rose", accentHue: 340, accentChroma: 0.2, accentLightness: 0.47 },
 ];
 
 export const PAGE_LIST = [
@@ -178,10 +178,26 @@ export function resolvePagePath(path = "") {
 function syncDesignColor(themeKey) {
   const preset = DESIGN_COLOR_PRESETS[themeKey];
   if (!preset) return;
+  const colorPreset = { ...preset };
+  delete colorPreset.accentColor;
   try {
-    useThemeStore().setColorPreset(preset);
+    useThemeStore().setColorPreset({ ...colorPreset, designTheme: themeKey });
   } catch {
     // The layout store can also be used in isolated tooling without Pinia.
+  }
+}
+
+function syncAccentColor(accentId) {
+  const accent = ACCENT_COLORS.find((item) => item.id === accentId);
+  if (!accent || accent.accentHue === undefined) return;
+  try {
+    useThemeStore().setColorPreset({
+      accentHue: accent.accentHue,
+      accentChroma: accent.accentChroma,
+      accentLightness: accent.accentLightness,
+    });
+  } catch {
+    // Keep the quick accent picker optional in isolated tooling.
   }
 }
 
@@ -228,6 +244,17 @@ export const useLayoutStore = defineStore("layout", () => {
     });
   }
 
+  // Migrate older saved sessions and make the active design's palette the
+  // first automatic choice. Once the marker matches, manual color edits are
+  // left untouched on subsequent reloads.
+  try {
+    if (useThemeStore().theme.designTheme !== themeName.value) {
+      syncDesignColor(themeName.value);
+    }
+  } catch {
+    // Keep layout state usable in isolated tooling without a Pinia instance.
+  }
+
   applyDesignTheme(themeName.value);
   applyButtonStyle(buttonStyle.value);
   applyAccentColor(accentColor.value);
@@ -238,7 +265,14 @@ export const useLayoutStore = defineStore("layout", () => {
       const data = await api.admin.theme.get();
       if (data && data.layout) {
         const l = data.layout;
-        if (l.themeName) themeName.value = l.themeName;
+        if (l.themeName) {
+          themeName.value = l.themeName;
+          try {
+            if (useThemeStore().theme.designTheme !== l.themeName) syncDesignColor(l.themeName);
+          } catch {
+            // keep the remote layout usable if color state is unavailable
+          }
+        }
         if (l.headerVariant) headerVariant.value = l.headerVariant;
         if (l.footerVariant) footerVariant.value = l.footerVariant;
         if (l.heroVariant) heroVariant.value = l.heroVariant;
@@ -296,6 +330,9 @@ export const useLayoutStore = defineStore("layout", () => {
   function setThemeName(name) {
     if (!DESIGN_THEMES[name]) return;
     themeName.value = name;
+    if (DESIGN_COLOR_PRESETS[name]?.accentColor) {
+      accentColor.value = DESIGN_COLOR_PRESETS[name].accentColor;
+    }
     syncDesignColor(name);
   }
 
@@ -348,7 +385,7 @@ export const useLayoutStore = defineStore("layout", () => {
 
   watch(themeName,   (n) => { applyDesignTheme(n);  save(); });
   watch(buttonStyle, (n) => { applyButtonStyle(n);  save(); });
-  watch(accentColor, (n) => { applyAccentColor(n);  save(); });
+  watch(accentColor, (n) => { applyAccentColor(n); syncAccentColor(n); save(); });
   watch([headerVariant, footerVariant, heroVariant, cardVariant], save);
 
   fetchLayout();

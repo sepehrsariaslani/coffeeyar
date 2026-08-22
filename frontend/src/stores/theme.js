@@ -12,6 +12,9 @@ const defaults = {
   bgLightness: 0.982,
   bgChroma: 0.006,
   bgHue: 75,
+  // Used to keep the automatically selected design palette stable across
+  // reloads without preventing a later manual color override.
+  designTheme: "minimal",
   themeClass: "",
 };
 
@@ -69,7 +72,7 @@ export const useThemeStore = defineStore("theme", () => {
       // Public endpoint — no auth needed, works for all visitors
       const data = await api.theme.get();
       if (data && data.theme && Object.keys(data.theme).length) {
-        const merged = { ...defaults, ...data.theme };
+        const merged = { ...defaults, ...theme.value, ...data.theme };
         theme.value = merged;
         localStorage.setItem(STORAGE_KEY, JSON.stringify(merged));
         applyTheme(merged);
